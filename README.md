@@ -1,8 +1,4 @@
-Sure! Here's a **starter `README.md`** file for your project. It's designed to evolve as the project grows, so I've marked sections for you to complete later.
 
----
-
-```markdown
 # 🏋️ Athlete Performance & Injury Prediction Platform
 
 This project is a modular web-based platform designed to help coaches, teams, and athletes monitor performance, assess injury risk, and receive personalized training recommendations using machine learning.
@@ -39,9 +35,9 @@ project/
 │
 ├── infrastructure/         # DB & external services
 │   ├── db/                 # SQLAlchemy setup, migrations
-│   └── external\_services/  # e.g., ML model or Stripe
+│   └── external_services/   # e.g., ML model or Stripe
 │
-├── ml\_models/              # Pretrained models and loader scripts
+├── ml_models/               # Pretrained models and loader scripts
 ├── static/                 # (optional) frontend assets
 ├── templates/              # Jinja templates if using Flask
 ├── tests/                  # Unit and integration tests
@@ -139,7 +135,4 @@ TBD — Add license when project is ready for production release.
 
 ---
 
-```
 
-Let me know when you’re ready and I’ll help you fill in the rest or update it with the front-end and deployment steps!
-```
