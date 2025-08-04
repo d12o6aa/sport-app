@@ -13,38 +13,34 @@ auth_bp = Blueprint("auth", __name__)
 
 user_schema = UserSchema()
 
+@auth_bp.route("/register", methods=["GET"])
+def register_page():
+    return render_template("register.html")
+
 @auth_bp.route("/register", methods=["POST"])
-@jwt_required()
 def register():
-    current_user_id = get_jwt_identity()
-    current_user = User.query.get(current_user_id)
-
-    if not current_user:
-        return jsonify({"msg": "Invalid creator"}), 403
-
     data = request.get_json()
+    name = data.get("name")
     email = data.get("email")
     password = data.get("password")
-    role = data.get("role")
-
-    # تحكم في الصلاحيات
-    if current_user.role == "coach" and role != "athlete":
-        return jsonify({"msg": "Coaches can only add athletes"}), 403
-    elif current_user.role == "admin" and role not in ["admin", "coach"]:
-        return jsonify({"msg": "Admins can only add coaches or admins"}), 403
-    elif current_user.role != "admin" and current_user.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
+    role = 'athlete'
+    
+    is_active = False
 
     if User.query.filter_by(email=email).first():
         return jsonify({"msg": "Email already exists"}), 400
 
-    new_user = User(email=email, role=role, created_by_id=current_user.id)
+    new_user = User(email=email, role=role, name=name, is_active=is_active)
     new_user.set_password(password)
 
     db.session.add(new_user)
     db.session.commit()
 
-    return user_schema.jsonify(new_user), 201
+    return jsonify({"msg": "Registered successfully. Please wait for admin approval."}), 201
+
+@auth_bp.route("/register-pending")
+def register_pending():
+    return render_template("register-pending.html")
 
 
 @auth_bp.route("/login", methods=["GET"])
@@ -64,8 +60,10 @@ def login_post():
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password):
         return jsonify({"msg": "Invalid email or password"}), 401
-
-    print("User ID:", user.id, "Type:", type(user.id))
+    
+    if not user.is_active:
+        return jsonify({'msg': 'Account is inactive. Please wait for admin approval.'}), 403
+    
     if not isinstance(user.id, (int, str)):
         print("Invalid user ID type:", type(user.id))
         return jsonify({"msg": "Internal server error: Invalid user ID"}), 500

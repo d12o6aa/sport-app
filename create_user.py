@@ -6,21 +6,25 @@ from werkzeug.security import generate_password_hash
 app = create_app()
 
 with app.app_context():
-    email = "test@example2.com"
+    email = "test@example.com"
     plain_password = secrets.token_urlsafe(16)
     print("📧 The email is:", email)
     print("🔑 The generated password is:", plain_password)
 
-    user = User(email=email, role='coach')
+    user = User(email=email, role='admin', is_active=True)
     user.set_password(plain_password)
 
     db.session.add(user)
     db.session.commit()
 
-
+# admin
 # test@example.com
-# e-ZQUuh8QcSP6FE3Cjpn4Q
+# UT3rHoAnp12A1aLlpdeZXw
 
+# coach
 # test@example2.com
-# UGMAwy3A_VREUN7APH7tXg
+# aI5S_PhVWFJKwTCv_BIdJw
 
+# athlete
+# athlete@example2.com
+# pvRvs3sn7pCoLPqTYPV47w

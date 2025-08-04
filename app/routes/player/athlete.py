@@ -1,16 +1,8 @@
-from flask import Blueprint, request, jsonify, session, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
-from werkzeug.security import generate_password_hash, hash_password
+from flask import Blueprint, jsonify
 
-from flask_jwt_extended import JWTManager
-from flask import current_app
-
-from app import db
 from app.models.user import User
-from app.schemas.user import UserSchema
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from flask import render_template
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import render_template, abort, jsonify
 
 athlete_bp = Blueprint("athlete", __name__)
 
@@ -26,3 +18,14 @@ def get_unassigned_athletes():
     athletes = User.query.filter_by(role='athlete', coach_id=None).all()
     result = [{"id": a.id, "email": a.email} for a in athletes]
     return jsonify(result)
+
+@athlete_bp.route("/profile")
+@jwt_required()
+def profile():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user or user.role != "athlete":
+        return abort(403)
+
+    return render_template("athlete/profile.html", user=user)
