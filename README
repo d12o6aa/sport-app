@@ -1,0 +1,3 @@
+flask db migrate -m "Add is_superadmin to User"
+flask db migrate -m "Add permissions to User"
+flask db upgrade

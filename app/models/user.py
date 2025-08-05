@@ -1,6 +1,7 @@
 from app.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy import Boolean, JSON
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -12,6 +13,8 @@ class User(db.Model):
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     athletes = db.relationship('User')  # Coaches can have multiple athletes
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  
+    is_superadmin = db.Column(db.Boolean, default=False)
+    permissions = db.Column(db.JSON, default=[])  # أمثلة: ["manage_users", "view_reports"]
 
     age = db.Column(db.Integer)
     bio = db.Column(db.Text)

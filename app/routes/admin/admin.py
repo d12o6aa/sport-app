@@ -157,22 +157,6 @@ def user_management():
         unassigned=unassigned
     )
 
-@admin_bp.route('/admin_views')
-@jwt_required()
-def admin_views():
-    admin_count = User.query.filter_by(role='admin').count()
-    active_count = User.query.filter_by(role='admin', is_active=True).count()
-    suspended_count = User.query.filter_by(role='admin', is_active=False).count()
-    print("Admin:", admin_count)
-    print("Active:", active_count)
-    print("Suspended:", suspended_count)
-
-    return render_template(
-        'admin/manage_admins.html',
-        admin_count=admin_count,
-        active_count=active_count,
-        suspended_count=suspended_count
-    )
 
 
 
@@ -186,4 +170,101 @@ def manage_admins():
         return "Unauthorized", 403
 
     admins = User.query.filter_by(role="admin").all()
-    return render_template("admin/manage_admins.html", admins=admins)
+    admin_count = User.query.filter_by(role='admin').count()
+    active_count = User.query.filter_by(role='admin', is_active=True).count()
+    suspended_count = User.query.filter_by(role='admin', is_active=False).count()
+    return render_template("admin/manage_admins.html",
+                           admins=admins,
+                           admin_count=admin_count,
+                            active_count=active_count,
+                            suspended_count=suspended_count)
+
+@admin_bp.route("/edit_admin/<int:id>", methods=["GET", "POST"])
+@jwt_required()
+def edit_admin(id):
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(current_user_id)
+
+    if not current_user or current_user.role != "admin":
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    admin = User.query.get_or_404(id)
+
+    if request.method == "POST":
+        data = request.get_json()
+        admin.name = data.get("name", admin.name)
+        admin.email = data.get("email", admin.email)
+        db.session.commit()
+        return jsonify({"msg": "Admin updated successfully"}), 200
+
+    return jsonify({
+        "id": admin.id,
+        "name": admin.name,
+        "email": admin.email
+    }), 200
+
+@admin_bp.route("/delete_admin/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_admin(id):
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(current_user_id)
+
+    if not current_user or current_user.role != "admin":
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    admin = User.query.get_or_404(id)
+
+    db.session.delete(admin)
+    db.session.commit()
+
+    return jsonify({"msg": "Admin deleted successfully"}), 200
+
+@admin_bp.route("/toggle_active/<int:id>", methods=["PATCH"])
+@jwt_required()
+def toggle_active(id):
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(current_user_id)
+
+    if not current_user or current_user.role != "admin":
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    admin = User.query.get_or_404(id)
+    admin.is_active = not admin.is_active
+    db.session.commit()
+
+    return jsonify({
+        "msg": f"Admin {'activated' if admin.is_active else 'deactivated'} successfully",
+        "is_active": admin.is_active
+    }), 200
+
+@admin_bp.route("/update_admin/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_admin(id):
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user.is_superadmin:
+        return jsonify({"msg": "Only super admin can edit permissions"}), 403
+
+    data = request.get_json()
+    admin = User.query.filter_by(id=id, role="admin").first()
+    if not admin:
+        return jsonify({"msg": "Admin not found"}), 404
+
+    admin.is_active = data.get("is_active", admin.is_active)
+    admin.permissions = data.get("permissions", admin.permissions)
+
+    db.session.commit()
+    return jsonify({"msg": "Admin updated successfully"}), 200
+
+@admin_bp.route("/some-protected-route")
+@jwt_required()
+def protected_area():
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+
+    if "manage_users" not in user.permissions:
+        return "Unauthorized", 403
+
+    # allowed logic here
+    
