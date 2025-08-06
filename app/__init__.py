@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, g
 from flask_cors import CORS
 from app.models.user import User
 from app.extensions import db, ma, jwt, migrate
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 
 
 
@@ -31,9 +32,21 @@ def create_app():
         "allow_headers": ["Content-Type", "Authorization"],
         "methods": ["GET", "POST", "OPTIONS"]
     }})
-    
+    @app.context_processor
+    def inject_user():
+        try:
+            verify_jwt_in_request(optional=True)
+            identity = get_jwt_identity()
+            if identity:
+                user = User.query.get(identity)
+                return dict(user=user)
+        except Exception:
+            pass
+        return dict(user=None)
+
     from app.routes.home import home_bp
     from app.routes.auth import auth_bp
+    from app.routes.user import user_bp
     from app.routes.admin.admin import admin_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.player.athlete import athlete_bp
@@ -45,12 +58,15 @@ def create_app():
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(home_bp)
+    app.register_blueprint(user_bp, url_prefix="/user")
+
     
     with app.app_context():
         from app.models.user import User
         db.create_all()
     
     return app
+
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):

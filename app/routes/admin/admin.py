@@ -241,21 +241,22 @@ def toggle_active(id):
 @jwt_required()
 def update_admin(id):
     identity = get_jwt_identity()
-    current_user = User.query.get(identity)
+    user = User.query.get(identity)
 
-    if not current_user.is_superadmin:
-        return jsonify({"msg": "Only super admin can edit permissions"}), 403
+    if not user or not user.is_superadmin:
+        return jsonify({"msg": "Only super admin can update admins"}), 403
 
     data = request.get_json()
+
     admin = User.query.filter_by(id=id, role="admin").first()
     if not admin:
         return jsonify({"msg": "Admin not found"}), 404
 
-    admin.is_active = data.get("is_active", admin.is_active)
     admin.permissions = data.get("permissions", admin.permissions)
 
     db.session.commit()
     return jsonify({"msg": "Admin updated successfully"}), 200
+
 
 @admin_bp.route("/some-protected-route")
 @jwt_required()
@@ -267,4 +268,65 @@ def protected_area():
         return "Unauthorized", 403
 
     # allowed logic here
-    
+
+
+@admin_bp.route("/get_admin/<int:id>")
+@jwt_required()
+def get_admin(id):
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+
+    if not user or not user.is_superadmin:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    admin = User.query.filter_by(id=id, role="admin").first()
+    if not admin:
+        return jsonify({"msg": "Admin not found"}), 404
+
+    return jsonify({
+        "permissions": admin.permissions,
+    })
+
+@admin_bp.route("/profile")
+@jwt_required()
+def user_profile():
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    return render_template("users-profile.html", user=user)
+
+@admin_bp.route("/image")
+@jwt_required()
+def image_profile():
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    return render_template("shared/base.html", user=user)
+
+@admin_bp.route("/profile", methods=["POST"])
+@jwt_required()
+def update_profile():
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    data = request.form
+    user.name = data.get("name")
+    db.session.commit()
+    return redirect(url_for("admin.user_profile"))
+
+@admin_bp.route("/update-password", methods=["POST"])
+@jwt_required()
+def update_password():
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    data = request.form
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
+
+    if not user.check_password(current_password):
+        return jsonify({"msg": "Wrong current password"}), 400
+
+    if new_password != confirm_password:
+        return jsonify({"msg": "Passwords do not match"}), 400
+
+    user.set_password(new_password)
+    db.session.commit()
+    return jsonify({"msg": "Password updated successfully"}), 200

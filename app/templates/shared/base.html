@@ -26,6 +26,12 @@
   <link href="{{ url_for('static', filename='assets/vendor/remixicon/remixicon.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='assets/vendor/simple-datatables/style.css') }}" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='assets/css/style.css') }}" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" />
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" defer></script>
 
   <!-- Template Main CSS File -->
   <link href="{{ url_for('static', filename='bootstrap-styles.css') }}" rel="stylesheet">
@@ -213,15 +219,16 @@
             </li><!-- End Messages Nav -->
 
             <li class="nav-item dropdown pe-3">
-
-            <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-                <img src="images/profile.jpg" alt="Profile" class="rounded-circle">
-                <span class="d-none d-md-block dropdown-toggle ps-2">Leslie Alexander</span>
-            </a><!-- End Profile Iamge Icon -->
+ 
+                <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+                    <img src="{{ url_for('static', filename='uploads/' ~ (user.profile_image or 'default.jpeg')) }}" alt="Profile" class="rounded-circle">
+                    <span class="d-none d-md-block dropdown-toggle ps-2">{{ user.name }}</span>
+                </a>
+                  <!-- End Profile Iamge Icon -->
 
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                 <li class="dropdown-header">
-                <h6>Leslie Alexander</h6>
+                <h6>{{ user.name }}</h6>
                 <span>System Administrator</span>
                 </li>
                 <li>
@@ -229,7 +236,7 @@
                 </li>
 
                 <li>
-                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('admin.user_profile') }}">
                     <i class="bi bi-person"></i>
                     <span>My Profile</span>
                 </a>
@@ -239,7 +246,7 @@
                 </li>
 
                 <li>
-                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('admin.user_profile') }}">
                     <i class="bi bi-gear"></i>
                     <span>Account Settings</span>
                 </a>
@@ -278,185 +285,46 @@
 
         <ul class="sidebar-nav" id="sidebar-nav">
 
-        <li class="nav-item">
-            <a class="nav-link " href="admin-dashboard.html">
-            <i class="bi bi-grid"></i>
-            <span>Overview</span>
-            </a>
-        </li><!-- End Dashboard Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="{{ url_for('admin.manage_admins') }}">
-            <i class="bi bi-menu-button-wide"></i><span>User Management</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="workout-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-                <a href="{{ url_for('admin.manage_admins') }}">
-                <i class="bi bi-circle"></i><span>Admins</span>
+            <li class="nav-item">
+                <a class="nav-link " href="admin-dashboard.html">
+                <i class="bi bi-grid"></i>
+                <span>Overview</span>
                 </a>
-            </li>
-            <li>
-                <a href="workout.html">
-                <i class="bi bi-circle"></i><span>Coaches</span>
-                </a>
-            </li>
-            <li>
-                <a href="workout.html">
-                <i class="bi bi-circle"></i><span>Athletes</span>
-                </a>
-            </li>
-            <li>
-                <a href="workout.html">
-                <i class="bi bi-circle text-primary"></i><span>Unassigned Users</span>
-                </a>
-            </li>
-            
-            </ul>
-        </li><!-- End Workout Nav -->
+            </li><!-- End Dashboard Nav -->
 
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#">
-            <i class="bi bi-journal-text"></i>
-            <span>Diet Plan</span>
-            <i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-        </li><!-- End Diet Plan Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#">
-            <i class="bi bi-bullseye"></i>
-            <span>Goals</span>
-            </a>
-        </li><!-- End Goals Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="schedule.html">
-            <i class="bi bi-calendar"></i>
-            <span>My Schedule</span>
-            </a>
-        </li><!-- End My Schedule Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="progress.html">
-            <i class="bi bi-bar-chart"></i>
-            <span>Progress</span>
-            </a>
-        </li><!-- End Progress Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="index.html">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-            </a>
-        </li><!-- End Profile Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#auth-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person-check"></i><span>Authentication</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="auth-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Login</span>
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="{{ url_for('admin.manage_admins') }}">
+                <i class="bi bi-menu-button-wide"></i><span>User Management</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-            </li>
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Register</span>
-                </a>
-            </li>
-            </ul>
-        </li><!-- End Authentication Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#">
-            <i class="bi bi-layers"></i>
-            <span>Step</span>
-            </a>
-        </li><!-- End Step Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-journal-text"></i><span>Form</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Form Elements</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Form Layouts</span>
-                </a>
-            </li>
-            </ul>
-        </li><!-- End Forms Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#">
-            <i class="bi bi-gem"></i>
-            <span>Advance Elements</span>
-            </a>
-        </li><!-- End Advance Elements Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#bootstrap-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-bootstrap"></i><span>Bootstrap</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="bootstrap-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Alerts</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Badges</span>
-                </a>
-            </li>
-            </ul>
-        </li><!-- End Bootstrap Nav -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-gem"></i><span>Icons</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="icons-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Bootstrap Icons</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Remix Icons</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                <i class="bi bi-circle"></i><span>Boxicons</span>
-                </a>
-            </li>
-            </ul>
-        </li><!-- End Icons Nav -->
-
+                <ul id="workout-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ url_for('admin.manage_admins') }}">
+                    <i class="bi bi-circle"></i><span>Admins</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="workout.html">
+                    <i class="bi bi-circle"></i><span>Coaches</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="workout.html">
+                    <i class="bi bi-circle"></i><span>Athletes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="workout.html">
+                    <i class="bi bi-circle text-primary"></i><span>Unassigned Users</span>
+                    </a>
+                </li>
+                
+                </ul>
+            </li><!-- End Workout Nav -->       
+       
         </ul>
 
         <!-- Premium Membership Card -->
-        <div class="premium-card mt-4 mx-3">
-        <div class="card bg-light">
-            <div class="card-body text-center">
-            <div class="premium-icon mb-3">
-                <i class="bi bi-people-fill text-primary fs-1"></i>
-            </div>
-            <h6 class="card-title">Premium Membership</h6>
-            <p class="card-text small">Monitor progress, set goals, and achieve results faster!</p>
-            <button class="btn btn-primary btn-sm">Upgrade</button>
-            </div>
-        </div>
-        </div>
-
+        
     </aside><!-- End Sidebar-->
     <!-- ======= Main Content Wrapper ======= -->
     <main id="main" class="main">
@@ -473,8 +341,18 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/apexcharts/apexcharts.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/php-email-form/validate.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/chart.js/chart.umd.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/echarts/echarts.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/tinymce/tinymce.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/simple-datatables/simple-datatables.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/quill/quill.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
 
-  
+
+
     <!-- Template Main JS File -->
     <script src="{{ url_for('static', filename='bootstrap-admin.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

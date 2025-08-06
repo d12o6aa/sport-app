@@ -45,16 +45,17 @@
   <!-- Search and Filters -->
   <div class="row mb-3">
     <div class="col-md-6">
-      <input type="text" class="form-control" placeholder="Search by name or email...">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email...">
     </div>
     <div class="col-md-3">
-      <select class="form-select">
+      <select id="statusFilter" class="form-select">
         <option value="">Filter by Status</option>
         <option value="active">Active</option>
         <option value="inactive">Suspended</option>
       </select>
     </div>
   </div>
+  
   <!-- Add Admin Form -->
   <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -95,7 +96,7 @@
   <!-- Admins Table -->
   <div class="card shadow-sm">
     <div class="card-body">
-      <table class="table table-hover">
+      <table class="table table-hover" class="table" id="adminTable">
         <thead class="table-light">
           <tr>
             <th>#</th>
@@ -110,9 +111,9 @@
             {% for admin in admins %}
             <tr>
               <td>{{ loop.index }}</td>
-              <td>{{ admin.name }}</td>
-              <td>{{ admin.email }}</td>
-              <td>
+              <td class="name">{{ admin.name }}</td>
+              <td class="email">{{ admin.email }}</td>
+              <td class="status">
                 {% if admin.is_active %}
                   <button class="btn btn-sm badge bg-success" onclick="toggleActive({{ admin.id }})">Active</button>
                 {% else %}
@@ -130,6 +131,8 @@
       </table>
     </div>
   </div>
+
+
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -147,16 +150,38 @@
       </div>
     </div>
   </div>
-  <!-- صلاحيات -->
-  <div class="mb-3">
-    <label class="form-label">Permissions</label>
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="perm_manage_users" value="manage_users">
-      <label class="form-check-label" for="perm_manage_users">Manage Users</label>
-    </div>
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="perm_view_reports" value="view_reports">
-      <label class="form-check-label" for="perm_view_reports">View Reports</label>
+  
+
+  <!-- Edit Admin Modal -->
+  <div class="modal fade" id="editAdminModal" tabindex="-1" aria-labelledby="editAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="editAdminForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editAdminModalLabel">Edit Admin</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- صلاحيات -->
+            <div class="mb-3">
+              <label class="form-label">Permissions</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="manage_users">Manage Users</button>
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="view_reports">View Reports</button>
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="edit_coaches">Edit Coaches</button>
+              </div>
+            </div>
+            
+            <input type="hidden" id="editUserId">
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -205,24 +230,144 @@
       window.location.reload();
     }
   }
-  const permissions = [];
-  if (document.getElementById("perm_manage_users").checked) {
-    permissions.push("manage_users");
-  }
-  if (document.getElementById("perm_view_reports").checked) {
-    permissions.push("view_reports");
-  }
+  let deleteId = null;
 
-  const is_active = document.getElementById("editStatus").value === "true";
-
-  const res = await fetch(`/admin/update_admin/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ permissions, is_active })
+  // Handle Delete Button Click
+  document.querySelectorAll(".delete-btn").forEach(button => {
+    button.addEventListener("click", function () {
+      deleteId = this.dataset.id;
+      const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+      modal.show();
+    });
   });
+
+  // Handle Confirm Delete
+  document.getElementById("confirmDeleteBtn").addEventListener("click", async function () {
+    if (!deleteId) return;
+
+    const token = localStorage.getItem("access_token");
+
+    const res = await fetch(`/admin/delete_admin/${deleteId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      window.location.reload(); // reload to reflect changes
+    } else {
+      alert(result.msg || "Failed to delete admin.");
+    }
+  });
+
+
+  ////////////////////////
+  
+  let currentEditId = null;
+  let selectedPermissions = [];
+
+  // Toggle button
+  function togglePermission(btn) {
+    const perm = btn.dataset.perm;
+
+    if (selectedPermissions.includes(perm)) {
+      selectedPermissions = selectedPermissions.filter(p => p !== perm);
+      btn.classList.remove("btn-success");
+      btn.classList.add("btn-outline-secondary");
+    } else {
+      selectedPermissions.push(perm);
+      btn.classList.remove("btn-outline-secondary");
+      btn.classList.add("btn-success");
+    }
+  }
+
+  document.querySelectorAll(".perm-btn").forEach((btn) => {
+    btn.addEventListener("click", () => togglePermission(btn));
+  });
+
+  // Load current user info into modal
+  document.querySelectorAll(".edit-btn").forEach((btn) => {
+    btn.addEventListener("click", async function () {
+      const userId = this.dataset.id;
+      currentEditId = userId;
+      document.getElementById("editUserId").value = userId;
+
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(`/admin/get_admin/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      selectedPermissions = data.permissions || [];
+
+      document.querySelectorAll(".perm-btn").forEach((btn) => {
+        const perm = btn.dataset.perm;
+        if (selectedPermissions.includes(perm)) {
+          btn.classList.remove("btn-outline-secondary");
+          btn.classList.add("btn-success");
+        } else {
+          btn.classList.remove("btn-success");
+          btn.classList.add("btn-outline-secondary");
+        }
+      });
+
+      const modal = new bootstrap.Modal(document.getElementById("editAdminModal"));
+      modal.show();
+    });
+  });
+
+  // Submit form
+  document.getElementById("editAdminForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const userId = document.getElementById("editUserId").value;
+    const token = localStorage.getItem("access_token");
+
+    const res = await fetch(`/admin/update_admin/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ permissions: selectedPermissions })
+    });
+
+    if (res.ok) {
+      location.reload();
+    } 
+  });
+
+  const searchInput = document.getElementById("searchInput");
+  const statusFilter = document.getElementById("statusFilter");
+  const table = document.getElementById("adminTable");
+  const rows = table.querySelectorAll("tbody tr");
+
+  function filterTable() {
+    const searchValue = searchInput.value.toLowerCase();
+    const statusValue = statusFilter.value;
+
+    rows.forEach(row => {
+      const name = row.querySelector(".name").textContent.toLowerCase();
+      const email = row.querySelector(".email").textContent.toLowerCase();
+      const status = row.querySelector(".status").textContent.toLowerCase();
+
+      const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
+      const matchesStatus = !statusValue || status.includes(statusValue);
+
+      if (matchesSearch && matchesStatus) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+  }
+
+  searchInput.addEventListener("input", filterTable);
+  statusFilter.addEventListener("change", filterTable);
 
 </script>
 

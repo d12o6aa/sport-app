@@ -19,7 +19,7 @@ class User(db.Model):
     age = db.Column(db.Integer)
     bio = db.Column(db.Text)
     team = db.Column(db.String(100))
-    profile_image = db.Column(db.String(255))
+    profile_image = db.Column(db.String(255), default='default.jpg')
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
         
