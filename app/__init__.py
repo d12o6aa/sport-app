@@ -48,9 +48,11 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.user import user_bp
     from app.routes.admin.admin import admin_bp
+    from app.routes.coach.views import coach_bp
     from app.routes.dashboard import dashboard_bp
-    from app.routes.player.athlete import athlete_bp
+    from app.routes.player.views import athlete_bp
     app.register_blueprint(athlete_bp, url_prefix="/athlete")
+    app.register_blueprint(coach_bp, url_prefix="/coach")
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")

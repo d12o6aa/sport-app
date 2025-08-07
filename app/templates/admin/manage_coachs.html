@@ -1,0 +1,357 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<main class="col-lg-10 bg-light min-vh-100 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold">Manage Coaches</h4>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCoachModal">
+          <i class="bi bi-plus-lg me-1"></i> Add Coach
+        </button>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <input type="text" class="form-control" placeholder="Search by name or email...">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select">
+            <option value="">Filter by Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Suspended</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Last Active</th>
+              <th>Athletes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for coach in coaches %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ coach.name }}</td>
+              <td>{{ coach.email }}</td>
+              <td>
+                {% if coach.is_active %}
+                  <span class="badge bg-success">Active</span>
+                {% else %}
+                  <span class="badge bg-secondary">Suspended</span>
+                {% endif %}
+              </td>
+              <td>{{ coach.last_active.strftime("%Y-%m-%d") if coach.last_active else "N/A" }}</td>
+              <td>
+                {{ coach.athletes|length }}
+                <button class="btn btn-link btn-sm text-primary p-0" onclick="viewAthletes('{{ coach.id }}')">
+                  View
+                </button>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-light" onclick="openEditModal('{{ coach.id }}')">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-light text-danger" onclick="confirmDelete('{{ coach.id }}')">
+                  <i class="bi bi-trash"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-dark" onclick="toggleStatus('{{ coach.id }}')">
+                  {% if coach.is_active %}
+                    Deactivate
+                  {% else %}
+                    Activate
+                  {% endif %}
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal fade" id="addCoachModal" tabindex="-1" aria-labelledby="addCoachModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form id="addCoachForm">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addCoachModalLabel">Add New Coach</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Password</label>
+                  <input type="password" name="password" class="form-control" required>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" type="submit">Add Coach</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editCoachModal" tabindex="-1" aria-labelledby="editCoachModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form id="editCoachForm" class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Edit Coach</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="editCoachId">
+              <div class="mb-3">
+                <label>Name</label>
+                <input type="text" id="editCoachName" class="form-control">
+              </div>
+              <div class="mb-3">
+                <label>Email</label>
+                <input type="email" id="editCoachEmail" class="form-control" disabled>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="modal fade" id="athleteModal" tabindex="-1" aria-labelledby="athleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="athleteModalLabel">Athletes</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div id="athleteList" class="list-group">
+                <!-- القائمة هتتعبّأ ديناميكيًا بالجافاسكريبت -->
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+  const addCoachForm = document.getElementById("addCoachForm");
+  if (!addCoachForm) {
+    console.error("Form with ID 'addCoachForm' not found");
+    return;
+  }
+
+  addCoachForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    if (!formData.get("name") || !formData.get("email") || !formData.get("password")) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Please login to continue");
+      return;
+    }
+
+    try {
+      const res = await fetch("/coach/add", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token
+        },
+        body: formData
+      });
+
+      // طباعة الـ response كله لو مش JSON
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Response:", text);
+        alert(`Failed to add coach: ${text}`);
+        return;
+      }
+
+      const result = await res.json();
+      if (res.ok) {
+        alert("Coach added successfully");
+        location.reload();
+      } else {
+        alert(result.msg || "Failed to add coach");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("An error occurred. Check console for details.");
+    }
+  });
+});
+      
+</script>
+
+
+<script>
+async function openEditModal(coachId) {
+    // Load coach data from server
+    const res = await fetch(`/coach/edit_coach/${coachId}`, {
+    headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+    }
+    });
+    const coach = await res.json();
+
+    // Populate modal fields
+    document.getElementById("editCoachId").value = coach.id;
+    document.getElementById("editCoachName").value = coach.name;
+    document.getElementById("editCoachEmail").value = coach.email;
+
+    // Show modal
+    const editModal = new bootstrap.Modal(document.getElementById("editCoachModal"));
+    editModal.show();
+}
+
+document.getElementById("editCoachForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const id = document.getElementById("editCoachId").value;
+    const name = document.getElementById("editCoachName").value;
+
+    const res = await fetch(`/coach/edit_coach/${id}`, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+    },
+    body: JSON.stringify({ name })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+    location.reload();
+    } else {
+    alert(data.msg || "Update failed");
+    }
+});
+</script>
+        
+<script>
+function confirmDelete(coachId) {
+    if (!confirm("Are you sure you want to delete this coach?")) return;
+
+    fetch(`/coach/delete_coach/${coachId}`, {
+    method: "DELETE",
+    headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+    }
+    })
+    .then(res => res.json())
+    .then(data => {
+    if (data.msg) {
+        alert(data.msg);
+        location.reload();
+    } else {
+        alert("Deletion failed");
+    }
+    });
+}
+</script>
+    
+<script>
+function toggleStatus(coachId) {
+    fetch(`/coach/toggle_coach_active/${coachId}`, {
+    method: "PATCH",
+    headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+    }
+    })
+    .then(res => res.json())
+    .then(data => {
+    if (data.msg) {
+        location.reload();
+    } else {
+        alert(data.msg || "Status toggle failed");
+    }
+    });
+}
+</script>
+<script>
+function viewAthletes(coachId) {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    alert("Please login to continue");
+    return;
+  }
+
+  fetch(`/coach/view_athletes/${coachId}`, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+    .then(res => {
+      if (!res.ok) {
+        return res.text().then(text => {
+          throw new Error(`Server error: ${text}`);
+        });
+      }
+      return res.json();
+    })
+    .then(data => {
+      const athleteList = document.getElementById("athleteList");
+      if (!athleteList) {
+        console.error("Element with ID 'athleteList' not found");
+        alert("Failed to display athletes. Check console for details.");
+        return;
+      }
+
+      if (data.athletes && data.athletes.length > 0) {
+        let listContent = "";
+        data.athletes.forEach(athlete => {
+          listContent += `
+            <div class="list-group-item">
+              <strong>${athlete.name}</strong> (${athlete.email})
+            </div>
+          `;
+        });
+        athleteList.innerHTML = listContent;
+
+        const athleteModal = new bootstrap.Modal(document.getElementById("athleteModal"));
+        athleteModal.show();
+      } else {
+        alert("No athletes found for this coach.");
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching athletes:", err);
+      alert("Failed to load athletes: " + err.message);
+    });
+}
+</script>     
+
+{% endblock %}

@@ -303,24 +303,23 @@
                     </a>
                 </li>
                 <li>
-                    <a href="workout.html">
+                    <a href="{{ url_for('coach.manage_coachs') }}">
                     <i class="bi bi-circle"></i><span>Coaches</span>
                     </a>
                 </li>
                 <li>
-                    <a href="workout.html">
+                    <a href="{{ url_for('athlete.manage_athletes') }}">
                     <i class="bi bi-circle"></i><span>Athletes</span>
                     </a>
                 </li>
                 <li>
-                    <a href="workout.html">
+                    <a href="{{ url_for('athlete.unassigned_athletes') }}">
                     <i class="bi bi-circle text-primary"></i><span>Unassigned Users</span>
                     </a>
                 </li>
                 
                 </ul>
-            </li><!-- End Workout Nav -->       
-       
+            </li><!-- End Workout Nav -->
         </ul>
 
         <!-- Premium Membership Card -->

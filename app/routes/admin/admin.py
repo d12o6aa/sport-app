@@ -156,10 +156,7 @@ def user_management():
         athletes=athletes,
         unassigned=unassigned
     )
-
-
-
-
+    
 @admin_bp.route("/manage_admins")
 @jwt_required()
 def manage_admins():
@@ -178,6 +175,7 @@ def manage_admins():
                            admin_count=admin_count,
                             active_count=active_count,
                             suspended_count=suspended_count)
+
 
 @admin_bp.route("/edit_admin/<int:id>", methods=["GET", "POST"])
 @jwt_required()
@@ -330,3 +328,5 @@ def update_password():
     user.set_password(new_password)
     db.session.commit()
     return jsonify({"msg": "Password updated successfully"}), 200
+
+

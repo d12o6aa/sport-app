@@ -1,0 +1,173 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<main class="col-lg-10 bg-light min-vh-100 p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold">Manage Athletes</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAthleteModal">
+      <i class="bi bi-plus-lg me-1"></i> Add Athlete
+    </button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Coach</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for athlete in athletes %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ athlete.name }}</td>
+          <td>{{ athlete.email }}</td>
+          <td>{{ athlete.coach.name if athlete.coach else 'Unassigned' }}</td>
+          <td>
+            <button class="btn btn-sm btn-light" onclick="openEditModal('{{ athlete.id }}', '{{ athlete.name }}', '{{ athlete.email }}', '{{ athlete.coach_id or '' }}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ athlete.id }}')"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Modal -->
+  <div class="modal fade" id="addAthleteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="addAthleteForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Athlete</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control mb-3" placeholder="Name" required>
+          <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editAthleteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="editAthleteForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Athlete</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editAthleteId">
+          <input type="text" id="editAthleteName" class="form-control" placeholder="Name" required>
+          <input type="email" id="editAthleteEmail" class="form-control mt-3" disabled>
+          <select id="editAthleteCoach" class="form-select mt-3">
+            <option value="">Unassigned</option>
+            {% for coach in coaches %}
+                <option value="{{ coach.id }}">{{ coach.name }}</option>
+            {% endfor %}
+            </select>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+  // Add Athlete
+  
+  document.getElementById("addAthleteForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    const res = await fetch("/athlete/add", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+      },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      location.reload();
+    } else {
+      alert(data.msg || "Failed to add");
+    }
+  });
+
+    // Edit Athlete
+    function openEditModal(id, name, email, coachId) {
+        document.getElementById("editAthleteId").value = id;
+        document.getElementById("editAthleteName").value = name;
+        document.getElementById("editAthleteEmail").value = email;
+        document.getElementById("editAthleteCoach").value = coachId || null;
+
+        const modal = new bootstrap.Modal(document.getElementById("editAthleteModal"));
+        modal.show();
+        }
+
+  document.getElementById("editAthleteForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const id = document.getElementById("editAthleteId").value;
+  const name = document.getElementById("editAthleteName").value;
+  const coach_id = document.getElementById("editAthleteCoach").value;
+
+  const res = await fetch(`/athlete/${id}/update`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("access_token")
+    },
+    body: JSON.stringify({ name, coach_id })
+  });
+
+  const data = await res.json();
+  if (res.ok) {
+    location.reload();
+  } else {
+    alert(data.msg || "Update failed");
+  }
+});
+
+
+  // Delete Athlete
+  function confirmDelete(id) {
+    if (!confirm("Are you sure you want to delete this athlete?")) return;
+
+    fetch(`/athlete/${id}/delete`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.msg) {
+        location.reload();
+      } else {
+        alert("Failed to delete");
+      }
+    });
+  }
+</script>
+{% endblock %}
