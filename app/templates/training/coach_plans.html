@@ -1,0 +1,76 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4>My Training Plans</h4>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" id="newPlanBtn">Create New Plan</button>
+  </div>
+
+  <div id="plansList"></div>
+
+  <!-- Create modal -->
+  <div class="modal fade" id="createPlanModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="createPlanForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create Plan</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="title" class="form-control mb-2" placeholder="Plan title" required>
+          <textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadPlans(){
+  const res = await fetch('/training/coach/plans', {
+    headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') }
+  });
+  const plans = await res.json();
+  const list = document.getElementById('plansList');
+  list.innerHTML = '';
+  plans.forEach(p=>{
+    const div = document.createElement('div');
+    div.className = 'card mb-2';
+    div.innerHTML = `<div class="card-body">
+      <h5>${p.title}</h5>
+      <p>${p.description || ''}</p>
+      <small>${p.workouts.length} workouts</small>
+      <div class="mt-2">
+        <button class="btn btn-sm btn-outline-primary" onclick="openAddWorkout(${p.id})">Add Workout</button>
+        <button class="btn btn-sm btn-outline-success" onclick="openAssign(${p.id})">Assign</button>
+      </div>
+    </div>`;
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('newPlanBtn').addEventListener('click', ()=> new bootstrap.Modal(document.getElementById('createPlanModal')).show());
+
+document.getElementById('createPlanForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = { title: fd.get('title'), description: fd.get('description') };
+  const res = await fetch('/training/plans', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('access_token') },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { await loadPlans(); bootstrap.Modal.getInstance(document.getElementById('createPlanModal')).hide(); }
+  else { alert((await res.json()).msg || 'Error'); }
+});
+
+window.onload = loadPlans;
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4>My Plans</h4>
+  <div id="myPlans"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadMyPlans(){
+  const res = await fetch('/training/my-plans', { headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') }});
+  if (!res.ok) { document.getElementById('myPlans').innerText = 'No plans or unauthorized'; return; }
+  const arr = await res.json();
+  const out = document.getElementById('myPlans');
+  out.innerHTML = '';
+  arr.forEach(a=>{
+    const card = document.createElement('div');
+    card.className = 'card mb-2';
+    card.innerHTML = `<div class="card-body">
+      <h5>${a.plan.title}</h5>
+      <p>${a.plan.description || ''}</p>
+      <ul>${a.plan.workouts.map(w => `<li>${w.title} (${w.duration_minutes || '-' } min)</li>`).join('')}</ul>
+    </div>`;
+    out.appendChild(card);
+  });
+}
+window.onload = loadMyPlans;
+</script>
+{% endblock %}

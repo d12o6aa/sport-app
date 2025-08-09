@@ -21,6 +21,11 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_superadmin = db.Column(db.Boolean, default=False)
     permissions = db.Column(db.JSON, default=[])
+    # inside User model
+    
+    plans = db.relationship('TrainingPlan', back_populates='coach', lazy='dynamic')
+    assigned_plans = db.relationship('PlanAssignment', back_populates='athlete', lazy='dynamic')
+
 
     age = db.Column(db.Integer)
     bio = db.Column(db.Text)

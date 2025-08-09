@@ -1,9 +1,8 @@
 from flask import Flask, g
 from flask_cors import CORS
-from app.models.user import User
 from app.extensions import db, ma, jwt, migrate
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-
+from app.models import User, training
 
 
 
@@ -43,7 +42,10 @@ def create_app():
         except Exception:
             pass
         return dict(user=None)
-
+    with app.app_context():
+        from app.models import user, training  # لاحظ أنه مش شرط نستدعي الكلاسات هنا
+        db.create_all()
+    from app import models
     from app.routes.home import home_bp
     from app.routes.auth import auth_bp
     from app.routes.user import user_bp
@@ -51,6 +53,9 @@ def create_app():
     from app.routes.coach.views import coach_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.player.views import athlete_bp
+    from app.routes.training import training_bp
+    app.register_blueprint(training_bp)
+
     app.register_blueprint(athlete_bp, url_prefix="/athlete")
     app.register_blueprint(coach_bp, url_prefix="/coach")
 
