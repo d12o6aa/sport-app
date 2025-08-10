@@ -54,7 +54,7 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.player.views import athlete_bp
     from app.routes.training import training_bp
-    app.register_blueprint(training_bp)
+    app.register_blueprint(training_bp,url_prefix="/training")
 
     app.register_blueprint(athlete_bp, url_prefix="/athlete")
     app.register_blueprint(coach_bp, url_prefix="/coach")

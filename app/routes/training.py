@@ -9,6 +9,11 @@ from datetime import datetime
 training_bp = Blueprint('training', __name__, url_prefix='/training')
 
 # Coach creates a plan
+@training_bp.route('/my-plans-page')
+@jwt_required()
+def my_plans_page():
+    return render_template('training/my_plans.html')
+
 @training_bp.route('/plans', methods=['POST'])
 @jwt_required()
 def create_plan():

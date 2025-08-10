@@ -121,18 +121,22 @@ def assign_coach():
     data = request.get_json()
     coach_id = data.get("coach_id")
     athlete_id = data.get("athlete_id")
+    is_active = True
 
     athlete = User.query.get(athlete_id)
     coach = User.query.get(coach_id)
+    
 
     if not athlete or athlete.role != "athlete":
         return jsonify({"msg": "Invalid athlete"}), 400
     if not coach or coach.role != "coach":
         return jsonify({"msg": "Invalid coach"}), 400
 
-    print("Assigning athlete", athlete_id, "to coach", coach_id)
+    print("Assigning athlete", athlete_id, "to coach", coach_id, "is_active:", is_active)
 
     athlete.coach_id = coach_id
+    athlete.is_active = is_active
+    db.session.add(athlete)
     db.session.commit()
 
     return jsonify({"msg": "Coach assigned successfully!"}), 200
