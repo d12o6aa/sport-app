@@ -1,0 +1,84 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<main class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold">Available Workouts</h4>
+    <div class="d-flex gap-2">
+      <input type="text" id="searchBox" class="form-control" placeholder="Search workout...">
+      <select id="sortBy" class="form-select">
+        <option value="">Sort By</option>
+        <option value="duration">Duration</option>
+        <option value="difficulty">Difficulty</option>
+        <option value="category">Category</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-3">
+    <select id="filterDifficulty" class="form-select d-inline-block w-auto me-2">
+      <option value="">All Difficulties</option>
+      <option value="Beginner">Beginner</option>
+      <option value="Intermediate">Intermediate</option>
+      <option value="Advanced">Advanced</option>
+    </select>
+    <select id="filterCategory" class="form-select d-inline-block w-auto">
+      <option value="">All Categories</option>
+      <option value="Strength">Strength</option>
+      <option value="Cardio">Cardio</option>
+      <option value="Flexibility">Flexibility</option>
+      <option value="Bodyweight">Bodyweight</option>
+    </select>
+  </div>
+
+  <!-- Workout Cards -->
+  <div class="row" id="workoutList">
+    <!-- Workouts injected here -->
+  </div>
+
+  <!-- Pagination -->
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center" id="pagination">
+      <!-- Pagination injected -->
+    </ul>
+  </nav>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadWorkouts(){
+  const res = await fetch("/workouts", {
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  });
+  const data = await res.json();
+  renderWorkouts(data);
+}
+
+function renderWorkouts(workouts){
+  const container = document.getElementById("workoutList");
+  container.innerHTML = '';
+  workouts.forEach(w=>{
+    const card = document.createElement("div");
+    card.className = "col-md-4 mb-4";
+    card.innerHTML = `
+      <div class="card h-100 shadow-sm">
+        <img src="${w.image || '/static/default-workout.jpg'}" class="card-img-top" style="height:180px; object-fit:cover;">
+        <div class="card-body">
+          <h5 class="card-title">${w.title}</h5>
+          <p class="card-text">
+            <strong>Difficulty:</strong> ${w.difficulty}<br>
+            <strong>Duration:</strong> ${w.duration_minutes} min<br>
+            <strong>Category:</strong> ${w.category}
+          </p>
+          <a href="/workouts/${w.id}" class="btn btn-primary btn-sm">View Details</a>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+window.onload = loadWorkouts;
+</script>
+{% endblock %}

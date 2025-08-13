@@ -28,8 +28,8 @@ def manage_coachs():
 
     coaches = User.query.filter_by(role="coach").all()
     coach_count = User.query.filter_by(role='coach').count()
-    active_count = User.query.filter_by(role='coach', is_active=True).count()
-    suspended_count = User.query.filter_by(role='coach', is_active=False).count()
+    active_count = User.query.filter_by(role='coach', status=True).count()
+    suspended_count = User.query.filter_by(role='coach', status=False).count()
     return render_template("admin/manage_coachs.html",
                            coaches=coaches,
                            coach_count=coach_count,
@@ -60,7 +60,7 @@ def add_coach():
             name=name,
             email=email,
             role="coach",
-            is_active=True,
+            status=True,
             password_hash=generate_password_hash(password)
         )
 
@@ -124,12 +124,12 @@ def toggle_coach_active(id):
         return jsonify({"msg": "Unauthorized"}), 403
 
     coach = User.query.get_or_404(id)
-    coach.is_active = not coach.is_active
+    coach.status = not coach.status
     db.session.commit()
 
     return jsonify({
-        "msg": f"Coach {'activated' if coach.is_active else 'deactivated'} successfully",
-        "is_active": coach.is_active
+        "msg": f"Coach {'activated' if coach.status else 'deactivated'} successfully",
+        "status": coach.status
     }), 200
 
 @coach_bp.route("/view_athletes/<int:coachId>", methods=["GET"])

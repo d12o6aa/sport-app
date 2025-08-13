@@ -1,3 +1,7 @@
 flask db migrate -m "Add is_superadmin to User"
 flask db migrate -m "Add coach_id to User"
 flask db upgrade
+
+
+flask db migrate
+flask db upgrade

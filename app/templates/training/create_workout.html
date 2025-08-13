@@ -1,0 +1,218 @@
+{% extends "shared/athlete_base.html" %}
+{% block styles %}
+<style>
+    .workout-card {
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .workout-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .btn-gradient {
+    background: linear-gradient(45deg, #007bff, #00c6ff);
+    border: none;
+    color: #fff;
+    font-weight: 500;
+    }
+    .btn-gradient:hover {
+    opacity: 0.9;
+    }
+
+    .select-box, .info-box {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    }
+
+    .stats-box div {
+    text-align: center;
+    }
+
+    .exercise-item {
+    display: flex;
+    align-items: center;
+    }
+    .exercise-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    margin-right: 10px;
+    }
+
+    .exercise-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    }
+    .exercise-link img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1 class="fw-bold text-primary"><i class="bi bi-lightning-charge-fill"></i> ATHLETE - WORKOUT LIBRARY</h1>
+</div>
+
+<section class="section">
+  <div class="row g-4">
+
+    <!-- Left Column -->
+    <div class="col-lg-4">
+    <div class="card shadow-sm border-0 workout-card h-100">
+    <div class="card-body">
+        <h5 class="card-title fw-bold">💪 Custom Workout</h5>
+        <p class="text-muted small">Log each workout to track your progress over time.</p>
+
+        <div class="mb-3">
+        <label class="form-label fw-semibold">Workout name</label>
+        <input type="text" class="form-control" placeholder="Enter workout name">
+        </div>
+
+        <label class="form-label fw-semibold">Choose Level</label>
+        <div class="list-group mb-3 workout-levels">
+        {% set levels = [
+            ('Beginner','I want to start training'),
+            ('Irregular training','I train 1-2 times a week'),
+            ('Medium','I train 3-5 times a week'),
+            ('Advanced','I train more than 5 times a week')
+        ] %}
+        {% for level, desc in levels %}
+            <label class="list-group-item list-group-item-action d-flex align-items-start">
+            <input class="form-check-input me-2 mt-1" type="radio" name="level">
+            <div>
+                <strong>{{ level }}</strong><br>
+                <small class="text-muted">{{ desc }}</small>
+            </div>
+            </label>
+        {% endfor %}
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label fw-semibold">Choose Equipment</label>
+        <div class="select-box">
+            <span>2 Dumbbells, Mat</span>
+            <i class="bi bi-chevron-right"></i>
+        </div>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label fw-semibold">Choose Focus Area</label>
+        <div class="select-box">
+            <span>Legs, Core muscles</span>
+            <i class="bi bi-chevron-right"></i>
+        </div>
+        </div>
+
+        <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="warmup" checked>
+        <label class="form-check-label fw-semibold" for="warmup">Includes Warm-Up</label>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="stretching" checked>
+        <label class="form-check-label fw-semibold" for="stretching">Includes Stretching</label>
+        </div>
+
+        <button class="btn btn-gradient w-100"><i class="bi bi-plus-lg"></i> Create Workout</button>
+    </div>
+    </div>
+    </div>
+
+    <!-- Middle Column -->
+    <div class="col-lg-5">
+    <div class="card shadow-sm border-0 workout-card h-100">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">🏋️ Full Body Workout</h5>
+        <button class="btn btn-sm btn-light shadow-sm"><i class="bi bi-pencil"></i></button>
+        </div>
+
+        <div class="d-flex justify-content-around my-4 stats-box">
+        <div>
+            <h6 class="fw-bold mb-0">12</h6>
+            <small class="text-muted">Exercises</small>
+        </div>
+        <div>
+            <h6 class="fw-bold mb-0">30:00</h6>
+            <small class="text-muted">Time</small>
+        </div>
+        <div>
+            <h6 class="fw-bold mb-0">260</h6>
+            <small class="text-muted">Calories</small>
+        </div>
+        </div>
+
+        <div class="info-box mb-2"><span>2 Dumbbells, Mat</span><i class="bi bi-chevron-right"></i></div>
+        <div class="info-box mb-4"><span>Legs, Core muscles</span><i class="bi bi-chevron-right"></i></div>
+
+        <h6 class="fw-bold">Warm-Up</h6>
+        {% for img, name, reps in [
+        ('double-heel.jpg','Double Heel','x 20'),
+        ('lung-jumps.jpg','Lung Jumps Alternated','x 20')
+        ] %}
+        <div class="exercise-item mb-3">
+            <img src="/static/images/{{ img }}" alt="{{ name }}">
+            <div>
+            <strong>{{ name }}</strong><br>
+            <small>{{ reps }}</small>
+            </div>
+        </div>
+        {% endfor %}
+
+        <h6 class="fw-bold mt-4">Workout</h6>
+        <button class="btn btn-outline-primary w-100 mb-4"><i class="bi bi-plus"></i> Add Exercises</button>
+
+        <h6 class="fw-bold">Stretching</h6>
+        <div class="exercise-item">
+        <img src="/static/images/double-heel-tabs.jpg" alt="">
+        <div>
+            <strong>Double Heel Tabs</strong><br>
+            <small>x 20</small>
+        </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-3">
+    <div class="card shadow-sm border-0 workout-card h-100">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">🔥 Best Exercises</h5>
+        <button class="btn btn-sm btn-primary shadow-sm">All</button>
+        </div>
+
+        <div class="list-group workout-list">
+        {% for img, name, time in [
+            ('sumo-squat.jpg','Sumo Squat','00:40 - 09:15'),
+            ('front-lunge.jpg','Front Lunge','00:40 - 09:15'),
+            ('arm-circles.jpg','Arm Circles','00:40 - 09:15')
+        ] %}
+            <a href="#" class="list-group-item list-group-item-action exercise-link">
+            <img src="/static/images/{{ img }}" alt="{{ name }}">
+            <div>
+                <strong>{{ name }}</strong><br>
+                <small>{{ time }}</small>
+            </div>
+            </a>
+        {% endfor %}
+        </div>
+    </div>
+    </div>
+    </div>
+
+</div>
+</section>
+
+{% endblock %}

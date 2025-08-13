@@ -95,7 +95,7 @@ def get_unassigned_athletes():
 
     # Get all athletes with no coach assigned
     unassigned_athletes = User.query.filter_by(role="athlete", coach_id=None).all()
-    coaches = User.query.filter_by(role="coach", is_active=True).all()
+    coaches = User.query.filter_by(role="coach", status=True).all()
 
     return render_template("admin/unassigned_athletes.html", athletes=unassigned_athletes, coaches=coaches)
 
@@ -110,7 +110,7 @@ def get_unassigned_athletes():
         return jsonify({"msg": "Unauthorized"}), 403
 
     athletes = User.query.filter_by(role="athlete", coach_id=None).all()
-    coaches = User.query.filter_by(role="coach", is_active=True).all()
+    coaches = User.query.filter_by(role="coach", status=True).all()
     return render_template("admin/unassigned.html", athletes=athletes, coaches=coaches)
 
 
@@ -121,7 +121,7 @@ def assign_coach():
     data = request.get_json()
     coach_id = data.get("coach_id")
     athlete_id = data.get("athlete_id")
-    is_active = True
+    status = True
 
     athlete = User.query.get(athlete_id)
     coach = User.query.get(coach_id)
@@ -132,10 +132,10 @@ def assign_coach():
     if not coach or coach.role != "coach":
         return jsonify({"msg": "Invalid coach"}), 400
 
-    print("Assigning athlete", athlete_id, "to coach", coach_id, "is_active:", is_active)
+    print("Assigning athlete", athlete_id, "to coach", coach_id, "status:", status)
 
     athlete.coach_id = coach_id
-    athlete.is_active = is_active
+    athlete.status = status
     db.session.add(athlete)
     db.session.commit()
 

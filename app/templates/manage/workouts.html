@@ -1,0 +1,92 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<main class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold">Manage Workouts</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWorkoutModal">
+      <i class="bi bi-plus-lg me-1"></i> Add Workout
+    </button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Difficulty</th>
+          <th>Duration</th>
+          <th>Category</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="workoutTable">
+        <!-- Injected -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Workout Modal -->
+  <div class="modal fade" id="addWorkoutModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="addWorkoutForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Workout</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="title" class="form-control mb-3" placeholder="Title" required>
+          <textarea name="description" class="form-control mb-3" placeholder="Description"></textarea>
+          <select name="difficulty" class="form-select mb-3" required>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+          <input type="number" name="duration_minutes" class="form-control mb-3" placeholder="Duration (min)" required>
+          <select name="category" class="form-select mb-3" required>
+            <option value="Strength">Strength</option>
+            <option value="Cardio">Cardio</option>
+            <option value="Flexibility">Flexibility</option>
+            <option value="Bodyweight">Bodyweight</option>
+          </select>
+          <input type="file" name="image" class="form-control">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadManageWorkouts(){
+  const res = await fetch("/manage/workouts", {
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  });
+  const data = await res.json();
+  const table = document.getElementById("workoutTable");
+  table.innerHTML = '';
+  data.forEach((w, i)=>{
+    table.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${w.title}</td>
+        <td>${w.difficulty}</td>
+        <td>${w.duration_minutes} min</td>
+        <td>${w.category}</td>
+        <td>
+          <button class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.onload = loadManageWorkouts;
+</script>
+{% endblock %}

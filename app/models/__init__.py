@@ -1,2 +1,27 @@
 from .user import User
-from .training import TrainingPlan, Workout, PlanAssignment
+from .coach_profile import CoachProfile
+from .athlete_profile import AthleteProfile
+from .admin_profile import AdminProfile
+
+from .training_group import TrainingGroup
+from .training_plan import TrainingPlan
+
+from .athlete_group import AthleteGroup
+from .athlete_plan import AthletePlan
+from .coach_athlete import CoachAthlete
+
+from .subscription import Subscription
+from .activity_log import ActivityLog
+from .workout_file import WorkoutFile
+from .workout_log import WorkoutLog
+from .ml_insight import MLInsight
+from .message import Message
+
+__all__ = [
+    "User",
+    "CoachProfile", "AthleteProfile", "AdminProfile",
+    "TrainingGroup", "TrainingPlan",
+    "AthleteGroup", "AthletePlan", "CoachAthlete",
+    "Subscription", "ActivityLog", "WorkoutFile", "WorkoutLog", "MLInsight",
+    "Message",
+]

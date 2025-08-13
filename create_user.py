@@ -1,21 +1,31 @@
 from app import create_app, db
 from app.models.user import User
-import secrets
-from werkzeug.security import generate_password_hash
 
 app = create_app()
 
 with app.app_context():
-    email = "test2@example.com"
-    plain_password = secrets.token_urlsafe(16)
-    print("📧 The email is:", email)
-    print("🔑 The generated password is:", plain_password)
+    # بيانات أول مستخدم
+    email = "admin@example.com"
+    password = "admin1234"  # تقدر تغيره
+    role = "admin"  # admin, coach, athlete
 
-    user = User(email=email, role='admin', is_active=True,is_superadmin=True)
-    user.set_password(plain_password)
-
-    db.session.add(user)
-    db.session.commit()
+    # لو الإيميل موجود بالفعل، ما يضيفش
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        print(f"⚠️ User with email '{email}' already exists.")
+    else:
+        user = User(
+            email=email,
+            name="Super Admin",  # ممكن تغير الاسم
+            role=role,
+            status="active"
+        )
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        print(f"✅ {role.capitalize()} created successfully!")
+        print(f"📧 Email: {email}")
+        print(f"🔑 Password: {password}")
 
 # admin
 # test@example.com

@@ -15,7 +15,7 @@ user_schema = UserSchema()
 
 @auth_bp.route("/register", methods=["GET"])
 def register_page():
-    return render_template("register.html")
+    return render_template("auth/register.html")
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
@@ -25,12 +25,12 @@ def register():
     password = data.get("password")
     role = 'athlete'
     
-    is_active = False
+    status = False
 
     if User.query.filter_by(email=email).first():
         return jsonify({"msg": "Email already exists"}), 400
 
-    new_user = User(email=email, role=role, name=name, is_active=is_active)
+    new_user = User(email=email, role=role, name=name, status=status)
     new_user.set_password(password)
 
     db.session.add(new_user)
@@ -40,12 +40,12 @@ def register():
 
 @auth_bp.route("/register-pending")
 def register_pending():
-    return render_template("register-pending.html")
+    return render_template("auth/register-pending.html")
 
 
 @auth_bp.route("/login", methods=["GET"])
 def login_page():
-    return render_template("login.html")  
+    return render_template("auth/login.html")  
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -61,7 +61,7 @@ def login_post():
     if not user or not user.check_password(password):
         return jsonify({"msg": "Invalid email or password"}), 401
     
-    if not user.is_active:
+    if not user.status:
         return jsonify({'msg': 'Account is inactive. Please wait for admin approval.'}), 403
     
     if not isinstance(user.id, (int, str)):

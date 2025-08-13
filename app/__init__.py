@@ -2,15 +2,13 @@ from flask import Flask, g
 from flask_cors import CORS
 from app.extensions import db, ma, jwt, migrate
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-from app.models import User, training
-
-
+from app.models import User, Subscription, WorkoutFile
 
 def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = 'supersecretkey'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://myapp_user:your_secure_password@localhost:5432/myapp_dev'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = 'jwt-secret'
     app.config["JWT_HEADER_NAME"] = "Authorization"
@@ -21,16 +19,16 @@ def create_app():
     app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False 
 
-    
     db.init_app(app)
     ma.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
     CORS(app, resources={r"/*": {
-        "origins": ["http://127.0.0.1:5000", "http://localhost:3000"],  # ضيف الـ frontend URL
+        "origins": ["http://127.0.0.1:5000", "http://localhost:3000"],
         "allow_headers": ["Content-Type", "Authorization"],
         "methods": ["GET", "POST", "OPTIONS"]
     }})
+
     @app.context_processor
     def inject_user():
         try:
@@ -42,10 +40,7 @@ def create_app():
         except Exception:
             pass
         return dict(user=None)
-    with app.app_context():
-        from app.models import user, training  # لاحظ أنه مش شرط نستدعي الكلاسات هنا
-        db.create_all()
-    from app import models
+    
     from app.routes.home import home_bp
     from app.routes.auth import auth_bp
     from app.routes.user import user_bp
@@ -53,27 +48,22 @@ def create_app():
     from app.routes.coach.views import coach_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.player.views import athlete_bp
-    from app.routes.training import training_bp
-    app.register_blueprint(training_bp,url_prefix="/training")
-
+    
     app.register_blueprint(athlete_bp, url_prefix="/athlete")
     app.register_blueprint(coach_bp, url_prefix="/coach")
-
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")
-    
-
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(home_bp)
     app.register_blueprint(user_bp, url_prefix="/user")
 
-    
+    # إنشاء الجداول باستخدام Flask-Migrate بدل db.create_all()
     with app.app_context():
         from app.models.user import User
-        db.create_all()
+        # db.create_all()  # معلّق لأننا هنستخدم Migrate
+        migrate.init_app(app, db)
     
     return app
-
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):

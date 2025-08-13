@@ -18,8 +18,8 @@ admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route("/add_admin", methods=["GET"])
 def add_admin_page():
-    return render_template("manage_admins.html")
-   
+    return render_template("admins/manage_admins.html")
+
 @admin_bp.route("/add_admin", methods=["POST"])
 @jwt_required()
 def add_admin():
@@ -61,7 +61,7 @@ def add_admin():
 @admin_bp.route("/add_user", methods=["GET"])
 def add_user_page():
     return render_template("add_user.html")
-   
+
 @admin_bp.route("/add_user", methods=["POST"])
 @jwt_required()
 def add_user():
@@ -146,7 +146,7 @@ def user_management():
     admins = User.query.filter_by(role='admin').count()
     coaches = User.query.filter_by(role='coach').count()
     athletes = User.query.filter_by(role='athlete').count()
-    unassigned = User.query.filter_by(is_active=False).count()
+    unassigned = User.query.filter_by(status=False).count()
 
     return render_template(
         'admin/user_management.html',
@@ -168,11 +168,11 @@ def manage_admins():
 
     admins = User.query.filter_by(role="admin").all()
     admin_count = User.query.filter_by(role='admin').count()
-    active_count = User.query.filter_by(role='admin', is_active=True).count()
-    suspended_count = User.query.filter_by(role='admin', is_active=False).count()
+    active_count = User.query.filter_by(role='admin', status=True).count()
+    suspended_count = User.query.filter_by(role='admin', status=False).count()
     return render_template("admin/manage_admins.html",
-                           admins=admins,
-                           admin_count=admin_count,
+                            admins=admins,
+                            admin_count=admin_count,
                             active_count=active_count,
                             suspended_count=suspended_count)
 
@@ -227,12 +227,12 @@ def toggle_active(id):
         return jsonify({"msg": "Unauthorized"}), 403
 
     admin = User.query.get_or_404(id)
-    admin.is_active = not admin.is_active
+    admin.status = not admin.status
     db.session.commit()
 
     return jsonify({
-        "msg": f"Admin {'activated' if admin.is_active else 'deactivated'} successfully",
-        "is_active": admin.is_active
+        "msg": f"Admin {'activated' if admin.status else 'deactivated'} successfully",
+        "status": admin.status
     }), 200
 
 @admin_bp.route("/update_admin/<int:id>", methods=["PUT"])
