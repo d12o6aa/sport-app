@@ -29,3 +29,42 @@ def profile():
         return abort(403)
 
     return render_template("athlete/profile.html", user=user)
+
+# Dashboard
+@athlete_bp.route("/dashboard")
+@jwt_required()
+def dashboard():
+    return render_template("athlete/dashboard.html")
+
+# Training
+@athlete_bp.route("/my_plans")
+@jwt_required()
+def my_plans():
+    return render_template("athlete/my_plans.html")
+
+@athlete_bp.route("/my_calendar")
+@jwt_required()
+def my_calendar():
+    return render_template("athlete/my_calendar.html")
+
+# Performance
+@athlete_bp.route("/my_stats")
+@jwt_required()
+def my_stats():
+    return render_template("athlete/my_stats.html")
+
+@athlete_bp.route("/workout_history")
+@jwt_required()
+def workout_history():
+    return render_template("athlete/workout_history.html")
+
+# Feedback
+@athlete_bp.route("/send_feedback")
+@jwt_required()
+def send_feedback():
+    return render_template("athlete/send_feedback.html")
+
+@athlete_bp.route("/view_coach_feedback")
+@jwt_required()
+def view_coach_feedback():
+    return render_template("athlete/view_coach_feedback.html")

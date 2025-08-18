@@ -1,0 +1,44 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3>Compliance Tracking</h3>
+
+  <div class="row">
+    <div class="col-md-6">
+      <canvas id="complianceChart"></canvas>
+    </div>
+    <div class="col-md-6">
+      <table class="table table-bordered">
+        <thead>
+          <tr><th>Date</th><th>Status</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          {% for log in workout_logs %}
+          <tr>
+            <td>{{ log.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ log.status }}</td>
+            <td>{{ log.notes }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+const ctx2 = document.getElementById('complianceChart').getContext('2d');
+new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    labels: ['Completed', 'Missed'],
+    datasets: [{
+      data: [{{ completed_count }}, {{ missed_count }}],
+      backgroundColor: ['green', 'red']
+    }]
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}

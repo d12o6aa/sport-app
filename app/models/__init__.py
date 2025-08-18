@@ -14,14 +14,15 @@ from .subscription import Subscription
 from .activity_log import ActivityLog
 from .workout_file import WorkoutFile
 from .workout_log import WorkoutLog
+from .readiness_scores import ReadinessScore
 from .ml_insight import MLInsight
 from .message import Message
-
+from .feedbacks import Feedback
 __all__ = [
     "User",
     "CoachProfile", "AthleteProfile", "AdminProfile",
-    "TrainingGroup", "TrainingPlan",
+    "TrainingGroup", "TrainingPlan","Feedback",
     "AthleteGroup", "AthletePlan", "CoachAthlete",
-    "Subscription", "ActivityLog", "WorkoutFile", "WorkoutLog", "MLInsight",
+    "Subscription", "ActivityLog", "WorkoutFile", "WorkoutLog","ReadinessScore" , "MLInsight",
     "Message",
 ]

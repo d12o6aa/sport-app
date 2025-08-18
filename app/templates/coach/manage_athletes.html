@@ -1,0 +1,31 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3 class="mb-3">My Athletes</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Joined</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for athlete in athletes %}
+      <tr>
+        <td>{{ athlete.name }}</td>
+        <td>{{ athlete.email }}</td>
+        <td><span class="badge bg-success">{{ athlete.status }}</span></td>
+        <td>{{ athlete.created_at.strftime('%Y-%m-%d') }}</td>
+        <td>
+          <a href="{{ url_for('coach.view_athlete', athlete_id=athlete.id) }}" class="btn btn-sm btn-primary">View</a>
+          <a href="{{ url_for('coach.assign_plan', athlete_id=athlete.id) }}" class="btn btn-sm btn-warning">Assign Plan</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

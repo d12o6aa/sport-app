@@ -146,7 +146,7 @@ def user_management():
     admins = User.query.filter_by(role='admin').count()
     coaches = User.query.filter_by(role='coach').count()
     athletes = User.query.filter_by(role='athlete').count()
-    unassigned = User.query.filter_by(status=False).count()
+    unassigned = User.query.filter_by(status='suspended').count()
 
     return render_template(
         'admin/user_management.html',
@@ -168,8 +168,8 @@ def manage_admins():
 
     admins = User.query.filter_by(role="admin").all()
     admin_count = User.query.filter_by(role='admin').count()
-    active_count = User.query.filter_by(role='admin', status=True).count()
-    suspended_count = User.query.filter_by(role='admin', status=False).count()
+    active_count = User.query.filter_by(role='admin', status='active').count()
+    suspended_count = User.query.filter_by(role='admin', status='suspended').count()
     return render_template("admin/manage_admins.html",
                             admins=admins,
                             admin_count=admin_count,
@@ -227,11 +227,15 @@ def toggle_active(id):
         return jsonify({"msg": "Unauthorized"}), 403
 
     admin = User.query.get_or_404(id)
-    admin.status = not admin.status
+    if admin.status == 'active':
+        admin.status = 'suspended'
+    else:
+        admin.status = 'active'
+
     db.session.commit()
 
     return jsonify({
-        "msg": f"Admin {'activated' if admin.status else 'deactivated'} successfully",
+        "msg": f"Admin {'activated' if admin.status == 'active' else 'deactivated'} successfully",
         "status": admin.status
     }), 200
 
@@ -272,18 +276,45 @@ def protected_area():
 @jwt_required()
 def get_admin(id):
     identity = get_jwt_identity()
-    user = User.query.get(identity)
+    current_user = User.query.get(identity)
 
-    if not user or not user.is_superadmin:
+    if not current_user or current_user.role != "admin" or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
         return jsonify({"msg": "Unauthorized"}), 403
 
     admin = User.query.filter_by(id=id, role="admin").first()
-    if not admin:
-        return jsonify({"msg": "Admin not found"}), 404
+    if not admin or not admin.admin_profile:
+        return jsonify({"msg": "Admin not found or profile missing"}), 404
 
     return jsonify({
-        "permissions": admin.permissions,
+        "permissions": admin.admin_profile.permissions
     })
+
+
+
+@admin_bp.route("/change_role/<int:user_id>", methods=["POST"])
+@jwt_required()
+def change_role(user_id):
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or current_user.role != "admin" or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    data = request.get_json()
+    new_role = data.get("role")
+
+    if new_role not in ["admin", "coach", "athlete"]:
+        return jsonify({"msg": "Invalid role"}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    old_role = user.role
+    user.role = new_role
+    db.session.commit()
+
+    return jsonify({"msg": f"Role changed from {old_role} to {new_role} successfully"}), 200
 
 @admin_bp.route("/profile")
 @jwt_required()

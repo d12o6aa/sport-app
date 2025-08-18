@@ -1,0 +1,80 @@
+<aside id="sidebar" class="sidebar">
+  <ul class="sidebar-nav" id="sidebar-nav">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">
+        <i class="bi bi-grid"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
+
+    <!-- Athletes -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" data-bs-target="#athletes-nav" data-bs-toggle="collapse" href="#">
+        <i class="bi bi-people"></i><span>Athletes</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="athletes-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="{{ url_for('coach.manage_athletes') }}">
+            <i class="bi bi-circle"></i><span>My Athletes</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('coach.progress_tracking') }}">
+            <i class="bi bi-circle"></i><span>Progress & Trends</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('coach.athlete_compliance') }}">
+            <i class="bi bi-circle"></i><span>Compliance Tracking</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Training Plans -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" data-bs-target="#plans-nav" data-bs-toggle="collapse" href="#">
+        <i class="bi bi-calendar-check"></i><span>Training Plans</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="plans-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="{{ url_for('coach.create_plan') }}">
+            <i class="bi bi-circle"></i><span>Create Plan</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('coach.manage_plans') }}">
+            <i class="bi bi-circle"></i><span>Manage Plans</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('coach.calendar') }}">
+            <i class="bi bi-circle"></i><span>Calendar View</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Feedback -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" data-bs-target="#feedback-nav" data-bs-toggle="collapse" href="#">
+        <i class="bi bi-chat-dots"></i><span>Feedback</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="feedback-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="{{ url_for('coach.give_feedback') }}">
+            <i class="bi bi-circle"></i><span>Give Feedback</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('coach.view_feedback') }}">
+            <i class="bi bi-circle"></i><span>View Athlete Feedback</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+  </ul>
+</aside>

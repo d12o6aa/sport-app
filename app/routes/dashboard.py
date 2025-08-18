@@ -18,3 +18,38 @@ def dashboard():
         return render_template('dashboard/athlete_dashboard.html')
     else:
         abort(403)
+        
+
+
+##### sidebar #####
+@dashboard_bp.route("/sidebar")
+@jwt_required()
+def sidebar():
+    claims = get_jwt()
+    role = claims.get("role")
+    
+
+    if role == 'admin':
+        return render_template('shared/admin_sidebar.html')
+    elif role == 'coach':
+        return render_template('shared/coach_sidebar.html')
+    elif role == 'athlete':
+        return render_template('shared/athlete_sidebar.html')
+    else:
+        abort(403)
+
+@dashboard_bp.route("/header")
+@jwt_required()
+def header():
+    claims = get_jwt()
+    role = claims.get("role")
+
+    if role == 'admin':
+        return render_template('shared/admin_header.html')
+    elif role == 'coach':
+        return render_template('shared/coach_header.html')
+    elif role == 'athlete':
+        return render_template('shared/athlete_header.html')
+    else:
+        abort(403)
+        

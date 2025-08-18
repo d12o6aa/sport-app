@@ -1,11 +1,12 @@
 from app import create_app, db
 from app.models.user import User
+from app.models.admin_profile import AdminProfile
 
 app = create_app()
 
 with app.app_context():
     # بيانات أول مستخدم
-    email = "admin@example.com"
+    email = "admin5@example.com"
     password = "admin1234"  # تقدر تغيره
     role = "admin"  # admin, coach, athlete
 
@@ -16,13 +17,22 @@ with app.app_context():
     else:
         user = User(
             email=email,
-            name="Super Admin",  # ممكن تغير الاسم
+            name="Super Admin",
             role=role,
-            status="active"
+            status="active",
+            profile_image="default.jpg"
         )
         user.set_password(password)
         db.session.add(user)
+        db.session.commit()  # هنا بيتولد الـ id
+
+        admin_profile = AdminProfile(
+            user_id=user.id,
+            is_superadmin=True
+        )
+        db.session.add(admin_profile)
         db.session.commit()
+
         print(f"✅ {role.capitalize()} created successfully!")
         print(f"📧 Email: {email}")
         print(f"🔑 Password: {password}")

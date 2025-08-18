@@ -10,5 +10,7 @@ class AdminProfile(db.Model):
         "can_manage_users": True,
         "can_export_data": True,
     })
+    is_superadmin = db.Column(db.Boolean, default=False) 
+    
 
     user = db.relationship("User", back_populates="admin_profile")

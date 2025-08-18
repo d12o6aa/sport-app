@@ -1,0 +1,25 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3>Progress & Trends</h3>
+  <canvas id="performanceChart" height="100"></canvas>
+  <canvas id="workloadChart" height="100"></canvas>
+</div>
+
+{% block scripts %}
+<script>
+const ctx = document.getElementById('performanceChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{ dates | tojson }},
+    datasets: [{
+      label: 'Performance Score',
+      data: {{ scores | tojson }},
+      borderColor: 'blue'
+    }]
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}

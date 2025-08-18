@@ -4,47 +4,51 @@
 <main class="container mt-4">
   <h4 class="fw-bold mb-4">Unassigned Athletes</h4>
 
-  {% if athletes %}
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Registered At</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for athlete in athletes %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ athlete.name }}</td>
-          <td>{{ athlete.email }}</td>
-          <td>{{ athlete.created_at.strftime('%Y-%m-%d') if athlete.created_at else "N/A" }}</td>
-          <td>
-            <form id="assignCoachForm{{ athlete.id }}" onsubmit="assignCoach(event, '{{ athlete.id }}')">
+    {% if athletes %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Registered At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for athlete in athletes %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ athlete.name }}</td>
+            <td>{{ athlete.email }}</td>
+            <td>{{ athlete.created_at.strftime('%Y-%m-%d') if athlete.created_at else "N/A" }}</td>
+            <td>
+              <form id="assignCoachForm{{ athlete.id }}" onsubmit="assignCoach(event, '{{ athlete.id }}')" class="d-flex align-items-center gap-2">
                 <input type="hidden" name="athlete_id" value="{{ athlete.id }}">
-                <select id="coachSelect{{ athlete.id }}" name="coach_id" class="form-select mb-2" required>
-                    <option disabled selected>Select a coach</option>
-                    {% for coach in coaches %}
-                    <option value="{{ coach.id }}">{{ coach.name }}</option>
-                    {% endfor %}
+                <select id="coachSelect{{ athlete.id }}" name="coach_id" class="form-select form-select-sm" style="width: 150px;" required>
+                  <option disabled selected>Select</option>
+                  {% for coach in coaches %}
+                  <option value="{{ coach.id }}">{{ coach.name }}</option>
+                  {% endfor %}
                 </select>
-                <button class="btn btn-sm btn-primary" type="submit">Assign</button>
-            </form>
-                
+                <button class="btn btn-sm btn-primary" type="submit">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('{{ athlete.id }}')">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
             </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>No unassigned athletes found.</p>
+    {% endif %}
 
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-    <p>No unassigned athletes found.</p>
-  {% endif %}
 
   
 
@@ -81,5 +85,24 @@
     }
 }
 
+// Delete Athlete
+  function confirmDelete(id) {
+    if (!confirm("Are you sure you want to delete this athlete?")) return;
+
+    fetch(`/athlete/${id}/delete`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert(data.msg || "Failed to delete");
+      }
+    });
+  }
 </script>
 {% endblock %}

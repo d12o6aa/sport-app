@@ -105,6 +105,7 @@
             <th>Status</th>
             <th>Joined</th>
             <th>Actions</th>
+            <th>Change Role</th>
           </tr>
         </thead>
         <tbody>
@@ -114,7 +115,7 @@
               <td class="name">{{ admin.name }}</td>
               <td class="email">{{ admin.email }}</td>
               <td class="status">
-                {% if admin.is_active %}
+                {% if admin.status == 'active' %}
                   <button class="btn btn-sm badge bg-success" onclick="toggleActive({{ admin.id }})">Active</button>
                 {% else %}
                   <button class="btn btn-sm badge bg-danger" onclick="toggleActive({{ admin.id }})">Suspended</button>
@@ -125,7 +126,16 @@
                   <button class="btn btn-sm btn-light edit-btn" data-id="{{ admin.id }}"><i class="bi bi-pencil"></i></button>
                   <button class="btn btn-sm btn-light delete-btn" data-id="{{ admin.id }}"><i class="bi bi-trash"></i></button>
                 </td>
+                <td>
+                  <select class="form-select form-select-sm" onchange="changeUserRole('{{ admin.id }}', this.value)">
+                    <option value="" disabled selected>Change Role</option>
+                    <option value="admin">Admin</option>
+                    <option value="coach">Coach</option>
+                    <option value="athlete">Athlete</option>
+                  </select>
+                </td>
             </tr>
+
             {% endfor %}
           </tbody>
       </table>
@@ -369,6 +379,36 @@
   searchInput.addEventListener("input", filterTable);
   statusFilter.addEventListener("change", filterTable);
 
+</script>
+<script>
+function changeUserRole(userId, newRole) {
+    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
+
+    fetch(`/admin/change_role/${userId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("access_token")
+        },
+        body: JSON.stringify({ role: newRole })
+    })
+    .then(response => {
+        const isOk = response.ok; // نخزن قيمة ok
+        return response.json().then(data => ({ isOk, data }));
+    })
+    .then(({ isOk, data }) => {
+        if (isOk) {
+            alert(data.msg);
+            location.reload();
+        } else {
+            alert(data.msg || "Error changing role");
+        }
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        alert("Something went wrong");
+    });
+}
 </script>
 
 

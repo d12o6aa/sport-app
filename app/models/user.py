@@ -37,6 +37,7 @@ class User(db.Model):
     subscriptions = db.relationship("Subscription", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
     workout_files = db.relationship("WorkoutFile", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     workout_logs = db.relationship("WorkoutLog", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    readiness_scores = db.relationship("ReadinessScore", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     ml_insights = db.relationship("MLInsight", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
 
     # Groups
@@ -44,8 +45,8 @@ class User(db.Model):
     group_assignments = db.relationship("AthleteGroup", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
 
     # Plans
-    training_plans = db.relationship("TrainingPlan", back_populates="coach", lazy="dynamic", cascade="all, delete-orphan")
-    plan_assignments = db.relationship("AthletePlan", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    training_plans = db.relationship("TrainingPlan", back_populates="coach",foreign_keys="TrainingPlan.coach_id", lazy="dynamic", cascade="all, delete-orphan")
+    plan_assignments = db.relationship("AthletePlan", back_populates="athlete",foreign_keys="AthletePlan.athlete_id", lazy="dynamic", cascade="all, delete-orphan")
 
     # Coach <-> Athlete link (ownership / roster)
     athlete_links = db.relationship("CoachAthlete", foreign_keys="[CoachAthlete.coach_id]", back_populates="coach", lazy="dynamic", cascade="all, delete-orphan")
