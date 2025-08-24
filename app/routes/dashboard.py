@@ -1,6 +1,6 @@
 from flask import Blueprint,render_template, abort
 from flask_jwt_extended import jwt_required,get_jwt
-
+from app.models import TrainingPlan, Feedback, User
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
@@ -11,7 +11,25 @@ def dashboard():
     role = claims.get("role")
 
     if role == 'admin':
-        return render_template('dashboard/admin_dashboard.html')
+        stats = {
+            "coaches": User.query.filter_by(role="coach").count(),
+            "athletes": User.query.filter_by(role="athlete").count(),
+            "plans": TrainingPlan.query.filter_by(status="active").count(),
+            "feedbacks": Feedback.query.count()
+        }
+
+        activities = [
+            {"user": "Coach John", "action": "added new plan for Athlete Ali", "time": "2h ago"},
+            {"user": "Athlete Sara", "action": "completed workout", "time": "5h ago"},
+        ]
+
+        chart = {
+            "athlete_labels": ["Jan", "Feb", "Mar", "Apr"],
+            "athlete_data": [5, 10, 15, 20],
+            "plan_data": [70, 30]  # 70% compliant
+        }
+
+        return render_template("dashboard/admin_dashboard.html", stats=stats, activities=activities, chart=chart)
     elif role == 'coach':
         return render_template('dashboard/coach_dashboard.html')
     elif role == 'athlete':

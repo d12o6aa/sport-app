@@ -6,7 +6,7 @@ app = create_app()
 
 with app.app_context():
     # بيانات أول مستخدم
-    email = "admin5@example.com"
+    email = "admin10@example.com"
     password = "admin1234"  # تقدر تغيره
     role = "admin"  # admin, coach, athlete
 
@@ -17,7 +17,7 @@ with app.app_context():
     else:
         user = User(
             email=email,
-            name="Super Admin",
+            name="Super 10 Admin",
             role=role,
             status="active",
             profile_image="default.jpg"

@@ -8,7 +8,6 @@ class TrainingPlan(db.Model):
     athlete_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     
     coach_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-    name = db.Column(db.String(100), nullable=False)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

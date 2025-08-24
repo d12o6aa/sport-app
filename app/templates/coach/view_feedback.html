@@ -1,0 +1,20 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3>Feedback for {{ athlete.name }}</h3>
+  
+  {% if feedbacks %}
+    <ul class="list-group">
+      {% for fb in feedbacks %}
+      <li class="list-group-item">
+        <strong>{{ fb.coach.name if fb.coach else "Unknown Coach" }}</strong> 
+        <small class="text-muted">({{ fb.created_at.strftime('%Y-%m-%d %H:%M') }})</small>
+        <p>{{ fb.feedback }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No feedback yet for this athlete.</p>
+  {% endif %}
+</div>
+{% endblock %}

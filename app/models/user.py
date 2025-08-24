@@ -68,3 +68,21 @@ class User(db.Model):
         db.Index("idx_users_role", "role"),
         db.Index("idx_users_status", "status"),
     )
+    # ------- helper properties -------
+    @property
+    def is_admin(self):
+        return self.role == "admin"
+
+    @property
+    def is_superadmin(self):
+        return self.role == "admin" and self.admin_profile and self.admin_profile.is_superadmin
+
+
+    @property
+    def is_coach(self):
+        return self.role == "coach"
+
+    @property
+    def is_athlete(self):
+        return self.role == "athlete"
+    

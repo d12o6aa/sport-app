@@ -1,0 +1,29 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-4">Select Athlete for Feedback</h3>
+  
+  <div class="row">
+    {% for athlete in athletes %}
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <h5 class="card-title">{{ athlete.name }}</h5>
+          <p class="card-text text-muted mb-3">ID: {{ athlete.id }}</p>
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('coach.give_feedback', athlete_id=athlete.id) }}" 
+               class="btn btn-sm btn-primary">
+               <i class="bi bi-pencil-square"></i> Give Feedback
+            </a>
+            <a href="{{ url_for('coach.view_feedback', athlete_id=athlete.id) }}" 
+               class="btn btn-sm btn-outline-secondary">
+               <i class="bi bi-chat-dots"></i> View Feedback
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

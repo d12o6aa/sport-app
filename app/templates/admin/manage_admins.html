@@ -42,16 +42,23 @@
     </div>
   </div>
 
-  <!-- Search and Filters -->
+  <!-- Search + Filters -->
   <div class="row mb-3">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email...">
     </div>
     <div class="col-md-3">
       <select id="statusFilter" class="form-select">
         <option value="">Filter by Status</option>
         <option value="active">Active</option>
-        <option value="inactive">Suspended</option>
+        <option value="suspended">Suspended</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select id="roleFilter" class="form-select">
+        <option value="">Filter by Role</option>
+        <option value="admin">Admin</option>
+        <option value="super_admin">Super Admin</option>
       </select>
     </div>
   </div>
@@ -93,51 +100,61 @@
   
 
 
+  <!-- Bulk Actions -->
+  <div class="mb-3">
+    <button class="btn btn-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
+    <button class="btn btn-secondary btn-sm" onclick="bulkChangeRole()">Change Role</button>
+  </div>
+
   <!-- Admins Table -->
   <div class="card shadow-sm">
     <div class="card-body">
-      <table class="table table-hover" class="table" id="adminTable">
+      <table class="table table-hover" id="adminTable">
         <thead class="table-light">
           <tr>
-            <th>#</th>
-            <th>Name</th>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>Profile</th>
             <th>Email</th>
             <th>Status</th>
+            <th>Role</th>
             <th>Joined</th>
             <th>Actions</th>
-            <th>Change Role</th>
           </tr>
         </thead>
         <tbody>
-            {% for admin in admins %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td class="name">{{ admin.name }}</td>
-              <td class="email">{{ admin.email }}</td>
-              <td class="status">
-                {% if admin.status == 'active' %}
-                  <button class="btn btn-sm badge bg-success" onclick="toggleActive({{ admin.id }})">Active</button>
-                {% else %}
-                  <button class="btn btn-sm badge bg-danger" onclick="toggleActive({{ admin.id }})">Suspended</button>
-                {% endif %}
-              </td>
-              <td>{{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
-                <td>
-                  <button class="btn btn-sm btn-light edit-btn" data-id="{{ admin.id }}"><i class="bi bi-pencil"></i></button>
-                  <button class="btn btn-sm btn-light delete-btn" data-id="{{ admin.id }}"><i class="bi bi-trash"></i></button>
-                </td>
-                <td>
-                  <select class="form-select form-select-sm" onchange="changeUserRole('{{ admin.id }}', this.value)">
-                    <option value="" disabled selected>Change Role</option>
-                    <option value="admin">Admin</option>
-                    <option value="coach">Coach</option>
-                    <option value="athlete">Athlete</option>
-                  </select>
-                </td>
-            </tr>
-
-            {% endfor %}
-          </tbody>
+          {% for admin in admins %}
+          <tr>
+            <td><input type="checkbox" class="row-checkbox" value="{{ admin.id }}"></td>
+            <td class="d-flex align-items-center">
+              <img src="{{ url_for('static', filename='uploads/' ~ (admin.profile_image or 'default.jpg')) }}"
+                    alt="Profile" 
+                    class="rounded-circle me-2" width="40" height="40">
+              <span class="fw-semibold name">{{ admin.name }}</span>
+            </td>
+            <td class="email">{{ admin.email }}</td>
+            <td class="status">
+              {% if admin.status == 'active' %}
+                <button class="btn btn-sm badge bg-success" onclick="toggleActive({{ admin.id }})">Active</button>
+              {% else %}
+                <button class="btn btn-sm badge bg-danger" onclick="toggleActive({{ admin.id }})">Suspended</button>
+              {% endif %}
+            </td>
+            <td class="role">
+              {% if admin.admin_profile.is_superadmin %}
+                <span class="badge bg-primary">Super Admin</span>
+              {% else %}
+                <span class="badge bg-secondary">Admin</span>
+              {% endif %}
+            </td>
+            <td>{{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
+            <td>
+              <button class="btn btn-sm btn-light edit-btn" data-id="{{ admin.id }}"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-light delete-btn" data-id="{{ admin.id }}"><i class="bi bi-trash"></i></button>
+              <button class="btn btn-sm btn-light" onclick="resetPassword({{ admin.id }})">Reset Password</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
   </div>
@@ -182,7 +199,16 @@
                 <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="edit_coaches">Edit Coaches</button>
               </div>
             </div>
-            
+
+            <div class="mb-3">
+              <label class="form-label">Role</label>
+              <select class="form-select" id="editRole">
+                <option value="" disabled selected>Change Role</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </div>
+
             <input type="hidden" id="editUserId">
           </div>
 
@@ -274,143 +300,209 @@
 
 
   ////////////////////////
-  
-  let currentEditId = null;
-  let selectedPermissions = [];
+let currentEditId = null;
+let selectedPermissions = [];
 
-  // Toggle button
-  function togglePermission(btn) {
-    const perm = btn.dataset.perm;
+// Toggle button
+function togglePermission(btn) {
+  const perm = btn.dataset.perm;
 
-    if (selectedPermissions.includes(perm)) {
-      selectedPermissions = selectedPermissions.filter(p => p !== perm);
-      btn.classList.remove("btn-success");
-      btn.classList.add("btn-outline-secondary");
-    } else {
-      selectedPermissions.push(perm);
-      btn.classList.remove("btn-outline-secondary");
-      btn.classList.add("btn-success");
-    }
+  if (selectedPermissions.includes(perm)) {
+    selectedPermissions = selectedPermissions.filter(p => p !== perm);
+    btn.classList.remove("btn-success");
+    btn.classList.add("btn-outline-secondary");
+  } else {
+    selectedPermissions.push(perm);
+    btn.classList.remove("btn-outline-secondary");
+    btn.classList.add("btn-success");
   }
+}
 
-  document.querySelectorAll(".perm-btn").forEach((btn) => {
-    btn.addEventListener("click", () => togglePermission(btn));
-  });
+document.querySelectorAll(".perm-btn").forEach((btn) => {
+  btn.addEventListener("click", () => togglePermission(btn));
+});
 
-  // Load current user info into modal
-  document.querySelectorAll(".edit-btn").forEach((btn) => {
-    btn.addEventListener("click", async function () {
-      const userId = this.dataset.id;
-      currentEditId = userId;
-      document.getElementById("editUserId").value = userId;
+// Load current user info into modal
+document.querySelectorAll(".edit-btn").forEach((btn) => {
+  btn.addEventListener("click", async function () {
+    const userId = this.dataset.id;
+    currentEditId = userId;
+    document.getElementById("editUserId").value = userId;
 
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`/admin/get_admin/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      selectedPermissions = data.permissions || [];
-
-      document.querySelectorAll(".perm-btn").forEach((btn) => {
-        const perm = btn.dataset.perm;
-        if (selectedPermissions.includes(perm)) {
-          btn.classList.remove("btn-outline-secondary");
-          btn.classList.add("btn-success");
-        } else {
-          btn.classList.remove("btn-success");
-          btn.classList.add("btn-outline-secondary");
-        }
-      });
-
-      const modal = new bootstrap.Modal(document.getElementById("editAdminModal"));
-      modal.show();
-    });
-  });
-
-  // Submit form
-  document.getElementById("editAdminForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const userId = document.getElementById("editUserId").value;
     const token = localStorage.getItem("access_token");
-
-    const res = await fetch(`/admin/update_admin/${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ permissions: selectedPermissions })
+    const response = await fetch(`/admin/get_admin/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    if (res.ok) {
-      location.reload();
-    } 
+    const data = await response.json();
+
+    // ✅ Force array
+    selectedPermissions = Array.isArray(data.permissions) ? data.permissions : [];
+
+    document.querySelectorAll(".perm-btn").forEach((btn) => {
+      const perm = btn.dataset.perm;
+      if (selectedPermissions.includes(perm)) {
+        btn.classList.remove("btn-outline-secondary");
+        btn.classList.add("btn-success");
+      } else {
+        btn.classList.remove("btn-success");
+        btn.classList.add("btn-outline-secondary");
+      }
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById("editAdminModal"));
+    modal.show();
+  });
+});
+
+// Submit form
+document.getElementById("editAdminForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const userId = document.getElementById("editUserId").value;
+  const token = localStorage.getItem("access_token");
+  const newRole = document.getElementById("editRole").value;
+  const is_super = newRole === "super_admin" ? true : false;
+
+
+  const res = await fetch(`/admin/update_admin/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ 
+      permissions: selectedPermissions, 
+      role: newRole,
+      is_superadmin: is_super
+    })
   });
 
+  if (res.ok) {
+    location.reload();
+  } 
+});
+
+
+  // ---- Filters ----
   const searchInput = document.getElementById("searchInput");
   const statusFilter = document.getElementById("statusFilter");
+  const roleFilter = document.getElementById("roleFilter");
   const table = document.getElementById("adminTable");
   const rows = table.querySelectorAll("tbody tr");
 
   function filterTable() {
     const searchValue = searchInput.value.toLowerCase();
     const statusValue = statusFilter.value;
+    const roleValue = roleFilter.value;
 
     rows.forEach(row => {
       const name = row.querySelector(".name").textContent.toLowerCase();
       const email = row.querySelector(".email").textContent.toLowerCase();
       const status = row.querySelector(".status").textContent.toLowerCase();
+      const role = row.querySelector(".role").textContent.toLowerCase();
 
       const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
       const matchesStatus = !statusValue || status.includes(statusValue);
+      const matchesRole = !roleValue || role.includes(roleValue);
 
-      if (matchesSearch && matchesStatus) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
+      row.style.display = (matchesSearch && matchesStatus && matchesRole) ? "" : "none";
     });
   }
 
   searchInput.addEventListener("input", filterTable);
   statusFilter.addEventListener("change", filterTable);
+  roleFilter.addEventListener("change", filterTable);
+
 
 </script>
 <script>
-function changeUserRole(userId, newRole) {
-    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
+  function changeUserRole(userId, newRole) {
+      if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
 
-    fetch(`/admin/change_role/${userId}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("access_token")
-        },
-        body: JSON.stringify({ role: newRole })
-    })
-    .then(response => {
-        const isOk = response.ok; // نخزن قيمة ok
-        return response.json().then(data => ({ isOk, data }));
-    })
-    .then(({ isOk, data }) => {
-        if (isOk) {
-            alert(data.msg);
-            location.reload();
-        } else {
-            alert(data.msg || "Error changing role");
-        }
-    })
-    .catch(err => {
-        console.error("Error:", err);
-        alert("Something went wrong");
-    });
-}
+      fetch(`/admin/change_role/${userId}`, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + localStorage.getItem("access_token")
+          },
+          body: JSON.stringify({ role: newRole })
+      })
+      .then(response => {
+          const isOk = response.ok; // نخزن قيمة ok
+          return response.json().then(data => ({ isOk, data }));
+      })
+      .then(({ isOk, data }) => {
+          if (isOk) {
+              alert(data.msg);
+              location.reload();
+          } else {
+              alert(data.msg || "Error changing role");
+          }
+      })
+      .catch(err => {
+          console.error("Error:", err);
+          alert("Something went wrong");
+      });
+  }
 </script>
 
+<script>
+  // ---- Bulk Actions ----
+  function getSelectedIds() {
+    return [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
+  }
+
+  async function bulkDelete() {
+    const ids = getSelectedIds();
+    if (!ids.length) return alert("Select at least one user");
+
+    if (!confirm("Are you sure you want to delete selected users?")) return;
+
+    const token = localStorage.getItem("access_token");
+    const res = await fetch("/admin/bulk_delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ids })
+    });
+
+    if (res.ok) location.reload();
+  }
+
+  async function bulkChangeRole() {
+    const ids = getSelectedIds();
+    if (!ids.length) return alert("Select users first!");
+
+    const newRole = prompt("Enter new role (admin, coach, athlete):");
+    if (!newRole) return;
+
+    const token = localStorage.getItem("access_token");
+    const res = await fetch("/admin/bulk_change_role", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ids, role: newRole })
+    });
+
+    if (res.ok) location.reload();
+  }
+
+  // ---- Select All ----
+  document.getElementById("selectAll").addEventListener("change", function() {
+    const checked = this.checked;
+    document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = checked);
+  });
+
+  // ---- Reset Password ----
+  async function resetPassword(userId) {
+    if (!confirm("Reset this user's password?")) return;
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`/admin/reset_password/${userId}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) alert("Password reset successful!");
+  }
+</script>
 
 
 {% endblock %}

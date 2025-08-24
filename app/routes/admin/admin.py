@@ -11,7 +11,7 @@ from app.models.user import User
 from app.schemas.user import UserSchema
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask import render_template
-
+from app.models import AdminProfile
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -49,6 +49,7 @@ def add_admin():
             name=name,
             email=email,
             password_hash=password_hash,
+            status='active',
             role=role
         )
 
@@ -166,7 +167,7 @@ def manage_admins():
     if user.role != "admin":
         return "Unauthorized", 403
 
-    admins = User.query.filter_by(role="admin").all()
+    admins = User.query.filter(User.role == "admin", User.id != current_user_id).all()
     admin_count = User.query.filter_by(role='admin').count()
     active_count = User.query.filter_by(role='admin', status='active').count()
     suspended_count = User.query.filter_by(role='admin', status='suspended').count()
@@ -245,16 +246,28 @@ def update_admin(id):
     identity = get_jwt_identity()
     user = User.query.get(identity)
 
-    if not user or not user.is_superadmin:
+    if not user or not (user.admin_profile and user.admin_profile.is_superadmin):
         return jsonify({"msg": "Only super admin can update admins"}), 403
 
     data = request.get_json()
 
-    admin = User.query.filter_by(id=id, role="admin").first()
+    admin = User.query.filter_by(id=id).first()
     if not admin:
         return jsonify({"msg": "Admin not found"}), 404
 
-    admin.permissions = data.get("permissions", admin.permissions)
+    if "permissions" in data:
+        if not admin.admin_profile:
+            admin.admin_profile = AdminProfile(user_id=admin.id)
+        admin.admin_profile.permissions = data["permissions"]
+
+    if "role" in data:
+        if data["role"] in ["admin", "coach", "athlete"]:
+            admin.role = data["role"]
+
+    if "is_superadmin" in data and admin.role == "admin":
+        if not admin.admin_profile:
+            admin.admin_profile = AdminProfile(user_id=admin.id)
+        admin.admin_profile.is_superadmin = bool(data["is_superadmin"])
 
     db.session.commit()
     return jsonify({"msg": "Admin updated successfully"}), 200
@@ -361,3 +374,47 @@ def update_password():
     return jsonify({"msg": "Password updated successfully"}), 200
 
 
+@admin_bp.route("/bulk_delete", methods=["POST"])
+@jwt_required()
+def bulk_delete():
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Only super admin can delete users"}), 403
+
+    data = request.get_json()
+    ids = data.get("ids", [])
+
+    if not ids:
+        return jsonify({"msg": "No user IDs provided"}), 400
+
+    ids = [uid for uid in ids if uid != current_user.id]
+
+    User.query.filter(User.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"msg": "Users deleted successfully"}), 200
+
+@admin_bp.route("/bulk_change_role", methods=["POST"])
+@jwt_required()
+def bulk_change_role():
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Only super admin can change roles"}), 403
+
+    data = request.get_json()
+    ids = data.get("ids", [])
+    new_role = data.get("role")
+
+    if not ids or not new_role:
+        return jsonify({"msg": "IDs and new role are required"}), 400
+
+    ids = [uid for uid in ids if uid != current_user.id]
+
+    User.query.filter(User.id.in_(ids)).update({"role": new_role}, synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"msg": f"Users updated to {new_role} successfully"}), 200

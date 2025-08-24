@@ -1,0 +1,13 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3>Give Feedback to {{ athlete.name }}</h3>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="feedback" class="form-label">Your Feedback</label>
+      <textarea class="form-control" id="feedback" name="feedback" rows="5" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+  </form>
+</div>
+{% endblock %}

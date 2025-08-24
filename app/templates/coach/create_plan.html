@@ -1,0 +1,38 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3>Create Training Plan</h3>
+  <form action="{{ url_for('coach.create_plan') }}" method="POST">
+    <div class="mb-3">
+        <label for="athlete_id" class="form-label">Assign to Athlete</label>
+        <select id="athlete_id" name="athlete_id" class="form-select" required>
+        {% for athlete in athletes %}
+            <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+        {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+      <label for="title" class="form-label">Plan Title</label>
+      <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description"></textarea>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="start_date" class="form-label">Start Date</label>
+        <input type="date" class="form-control" id="start_date" name="start_date" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="end_date" class="form-label">End Date</label>
+        <input type="date" class="form-control" id="end_date" name="end_date" required>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Plan</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<div class="container">
+  <h3>Manage Training Plans</h3>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Plan Title</th>
+        <th>Athlete</th>
+        <th>Period</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for plan in plans %}
+      <tr>
+        <td>{{ plan.title }}</td>
+        <td>{{ plan.athlete.name if plan.athlete else "Unassigned" }}</td>
+        <td>
+          {{ plan.start_date.strftime('%Y-%m-%d') if plan.start_date }} → 
+          {{ plan.end_date.strftime('%Y-%m-%d') if plan.end_date }}
+        </td>
+        <td><span class="badge bg-info">{{ plan.status }}</span></td>
+        <td>
+          <a href="{{ url_for('coach.view_plan', plan_id=plan.id) }}" class="btn btn-sm btn-primary">View</a>
+          <a href="{{ url_for('coach.edit_plan', plan_id=plan.id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <form action="{{ url_for('coach.delete_plan', plan_id=plan.id) }}" method="POST" style="display:inline;">
+            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this plan?')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
