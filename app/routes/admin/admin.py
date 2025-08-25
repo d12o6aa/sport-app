@@ -418,3 +418,4 @@ def bulk_change_role():
     db.session.commit()
 
     return jsonify({"msg": f"Users updated to {new_role} successfully"}), 200
+

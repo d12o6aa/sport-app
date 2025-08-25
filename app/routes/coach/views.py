@@ -26,15 +26,21 @@ def manage_coachs():
     if user.role != "admin":
         return "Unauthorized", 403
 
-    coaches = User.query.filter_by(role="coach").all()
-    coach_count = User.query.filter_by(role='coach').count()
+    page = request.args.get("page", 1, type=int)
+    per_page = 10  # عدد الكوتشات في الصفحة
+
+    pagination = User.query.filter_by(role="coach").paginate(page=page, per_page=per_page, error_out=False)
+
+    coaches = pagination.items
+    coach_count = pagination.total
     active_count = User.query.filter_by(role='coach', status='active').count()
     suspended_count = User.query.filter_by(role='coach', status='suspended').count()
     return render_template("admin/manage_coachs.html",
                         coaches=coaches,
                         coach_count=coach_count,
                         active_count=active_count,
-                        suspended_count=suspended_count)
+                        suspended_count=suspended_count,
+                        pagination=pagination)
 
 @coach_bp.route("/add", methods=["POST"])
 @jwt_required()
@@ -136,32 +142,21 @@ def toggle_coach_active(id):
         "status": coach.status
     }), 200
 
-@coach_bp.route("/view_athletes/<int:coachId>", methods=["GET"])
+@coach_bp.route("/view_athletes/<int:coach_id>", methods=["GET"])
 @jwt_required()
-def view_athletes(coachId):
-    try:
-        current_user_id = get_jwt_identity()
-        current_user = User.query.get(current_user_id)
+def view_athletes(coach_id):
+    coach = User.query.filter_by(id=coach_id, role="coach").first_or_404()
 
-        # التأكد إن المستخدم admin
-        if not current_user or current_user.role != "admin":
-            return jsonify({"msg": "Unauthorized"}), 403
+    athletes = [
+        {
+            "id": link.athlete.id,
+            "name": link.athlete.name,
+            "email": link.athlete.email
+        }
+        for link in coach.athlete_links
+    ]
 
-        # جلب المدرب
-        coach = User.query.get(coachId)
-        if not coach:
-            return jsonify({"msg": "Coach not found"}), 404
-
-        # جلب الرياضيين المرتبطين بالمدرب
-        # هنفترض إن في علاقة في موديل User اسمها athletes
-        athletes = [
-            {"id": athlete.id, "name": athlete.name, "email": athlete.email}
-            for athlete in coach.athletes
-        ]
-
-        return jsonify({"athletes": athletes}), 200
-    except Exception as e:
-        return jsonify({"msg": f"Server error: {str(e)}"}), 500
+    return jsonify({"athletes": athletes})
 
 
 @coach_bp.route("/update_coach/<int:id>", methods=["PUT"])
@@ -563,3 +558,67 @@ def select_athlete_for_feedback():
 def athlete_profile(athlete_id):
     athlete = User.query.get_or_404(athlete_id)
     return render_template("coach/athlete_profile.html", athlete=athlete)
+
+
+@coach_bp.route("/bulk_delete", methods=["POST"])
+@jwt_required()
+def bulk_delete():
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Only super admin can delete users"}), 403
+
+    data = request.get_json()
+    ids = data.get("ids", [])
+
+    if not ids:
+        return jsonify({"msg": "No IDs provided"}), 400
+
+    ids = [uid for uid in ids if uid != current_user.id]
+
+    User.query.filter(User.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"msg": "Users deleted successfully"}), 200
+
+@coach_bp.route("/bulk_change_role", methods=["POST"])
+@jwt_required()
+def bulk_change_role():
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Only super admin can change roles"}), 403
+
+    data = request.get_json()
+    ids = data.get("ids", [])
+    new_role = data.get("role")
+
+    if not ids or not new_role:
+        return jsonify({"msg": "IDs and new role are required"}), 400
+
+    ids = [uid for uid in ids if uid != current_user.id]
+
+    User.query.filter(User.id.in_(ids)).update({"role": new_role}, synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"msg": f"Users updated to {new_role} successfully"}), 200
+
+@coach_bp.route("/reset_password/<int:user_id>", methods=["POST"])
+@jwt_required()
+def reset_password(user_id):
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Only super admin can reset passwords"}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    new_password = "Default@123"
+    user.set_password(new_password)
+    db.session.commit()
+    return jsonify({"msg": f"Password reset to {new_password}"}), 200

@@ -504,5 +504,26 @@ document.getElementById("editAdminForm").addEventListener("submit", async functi
   }
 </script>
 
+<script>
+function showAlert(message, type = "info") {
+  const container = document.getElementById("alert-container");
+  if (!container) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+  container.appendChild(wrapper);
+
+  // auto dismiss after 5s
+  setTimeout(() => {
+    const alert = bootstrap.Alert.getOrCreateInstance(wrapper.querySelector(".alert"));
+    alert.close();
+  }, 5000);
+}
+</script>
 
 {% endblock %}
