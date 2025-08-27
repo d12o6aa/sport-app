@@ -167,15 +167,25 @@ def manage_admins():
     if user.role != "admin":
         return "Unauthorized", 403
 
-    admins = User.query.filter(User.role == "admin", User.id != current_user_id).all()
-    admin_count = User.query.filter_by(role='admin').count()
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    
+    pagination = (
+        User.query
+        .filter(User.role == "admin", User.id != current_user_id)
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
+    admins = pagination.items
+    admin_count = pagination.total
     active_count = User.query.filter_by(role='admin', status='active').count()
     suspended_count = User.query.filter_by(role='admin', status='suspended').count()
     return render_template("admin/manage_admins.html",
                             admins=admins,
                             admin_count=admin_count,
                             active_count=active_count,
-                            suspended_count=suspended_count)
+                            suspended_count=suspended_count,
+                            pagination=pagination)
 
 
 @admin_bp.route("/edit_admin/<int:id>", methods=["GET", "POST"])
@@ -239,38 +249,67 @@ def toggle_active(id):
         "msg": f"Admin {'activated' if admin.status == 'active' else 'deactivated'} successfully",
         "status": admin.status
     }), 200
-
 @admin_bp.route("/update_admin/<int:id>", methods=["PUT"])
 @jwt_required()
 def update_admin(id):
     identity = get_jwt_identity()
-    user = User.query.get(identity)
+    current_user = User.query.get(identity)
 
-    if not user or not (user.admin_profile and user.admin_profile.is_superadmin):
+    # تحقق أن اللي بيعمل التعديل Super Admin
+    if not current_user or not (current_user.admin_profile and current_user.admin_profile.is_superadmin):
         return jsonify({"msg": "Only super admin can update admins"}), 403
 
     data = request.get_json()
-
     admin = User.query.filter_by(id=id).first()
     if not admin:
         return jsonify({"msg": "Admin not found"}), 404
 
+    # Delegate to update_user logic
+    return update_user_logic(admin, data)
+
+
+def update_user_logic(user, data):
+    """لوجيك مشترك لتحديث أي يوزر"""
+    new_role = data.get("role")
+
+    if new_role and new_role != user.role:
+        # reset old relations
+        if user.role == "coach":
+            for link in user.athlete_links.all():
+                db.session.delete(link)
+
+        if user.role == "athlete":
+            for group in user.group_assignments.all():
+                db.session.delete(group)
+            for plan in user.plan_assignments.all():
+                db.session.delete(plan)
+
+        # Update role (من غير super_admin)
+        if new_role in ["admin", "coach", "athlete"]:
+            user.role = new_role
+
+    # Handle super admin flag
+    if "is_superadmin" in data and user.role == "admin":
+        if not user.admin_profile:
+            user.admin_profile = AdminProfile(user_id=user.id)
+        user.admin_profile.is_superadmin = bool(data["is_superadmin"])
+
+    # update permissions
     if "permissions" in data:
-        if not admin.admin_profile:
-            admin.admin_profile = AdminProfile(user_id=admin.id)
-        admin.admin_profile.permissions = data["permissions"]
-
-    if "role" in data:
-        if data["role"] in ["admin", "coach", "athlete"]:
-            admin.role = data["role"]
-
-    if "is_superadmin" in data and admin.role == "admin":
-        if not admin.admin_profile:
-            admin.admin_profile = AdminProfile(user_id=admin.id)
-        admin.admin_profile.is_superadmin = bool(data["is_superadmin"])
+        if not user.admin_profile:
+            user.admin_profile = AdminProfile(user_id=user.id)
+        user.admin_profile.permissions = data["permissions"]
 
     db.session.commit()
-    return jsonify({"msg": "Admin updated successfully"}), 200
+    return jsonify({"msg": "User updated successfully"}), 200
+
+
+@admin_bp.route("/update_user/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_user(id):
+    data = request.get_json()
+    user = User.query.get_or_404(id)
+    return update_user_logic(user, data)
 
 
 @admin_bp.route("/some-protected-route")
@@ -279,10 +318,11 @@ def protected_area():
     identity = get_jwt_identity()
     user = User.query.get(identity)
 
-    if "manage_users" not in user.permissions:
+    # check permission properly
+    if not user.admin_profile or not user.admin_profile.permissions.get("can_manage_users", False):
         return "Unauthorized", 403
 
-    # allowed logic here
+    return jsonify({"msg": "Welcome, authorized user!"}), 200
 
 
 @admin_bp.route("/get_admin/<int:id>")
@@ -418,4 +458,22 @@ def bulk_change_role():
     db.session.commit()
 
     return jsonify({"msg": f"Users updated to {new_role} successfully"}), 200
+
+@admin_bp.route("/reset_password/<int:user_id>", methods=["POST"])
+@jwt_required()
+def reset_password(user_id):
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    if not current_user or not current_user.admin_profile or not current_user.admin_profile.is_superadmin:
+        return jsonify({"msg": "Only super admin can reset passwords"}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    new_password = "Default@123"
+    user.set_password(new_password)
+    db.session.commit()
+    return jsonify({"msg": f"Password reset to {new_password}"}), 200
 

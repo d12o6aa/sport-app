@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from app.models.user import User
 from app import db
+from app.models import AdminProfile
 
 user_bp = Blueprint("user", __name__)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -124,3 +125,66 @@ def update_password():
     user.set_password(new_password)
     db.session.commit()
     return jsonify({"msg": "Password updated successfully"}), 200
+
+
+@user_bp.route("/update/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_user(id):
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+
+    # ✅ لو اللي بيعدل غير نفسه → لازم يكون super admin
+    if current_user.id != id:
+        if not (current_user.admin_profile and current_user.admin_profile.is_superadmin):
+            return jsonify({"msg": "Not authorized"}), 403
+
+    user = User.query.get_or_404(id)
+    data = request.get_json()
+
+    new_role = data.get("role")
+    if new_role and new_role != user.role:
+        # reset old relations
+        if user.role == "coach":
+            for link in user.athlete_links.all():
+                db.session.delete(link)
+
+        if user.role == "athlete":
+            for group in user.group_assignments.all():
+                db.session.delete(group)
+            for plan in user.plan_assignments.all():
+                db.session.delete(plan)
+
+        user.role = new_role
+
+        # handle super_admin flag
+        if new_role == "super_admin":
+            if not user.admin_profile:
+                user.admin_profile = AdminProfile(user_id=user.id)
+            user.admin_profile.is_superadmin = True
+            # ✅ super admin ياخد كل الصلاحيات
+            user.admin_profile.permissions = ["manage_users", "view_reports", "edit_coaches"]
+        else:
+            if user.admin_profile:
+                user.admin_profile.is_superadmin = False
+
+    # update permissions (لو مش super admin)
+    if "permissions" in data and user.role == "admin":
+        if not user.admin_profile:
+            user.admin_profile = AdminProfile(user_id=user.id)
+        user.admin_profile.permissions = data["permissions"]
+
+    db.session.commit()
+    return jsonify({"msg": "User updated successfully"}), 200
+
+@user_bp.route("/<int:id>", methods=["GET"])
+@jwt_required()
+def get_user(id):
+    user = User.query.get_or_404(id)
+
+    return jsonify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "permissions": user.admin_profile.permissions if user.admin_profile else []
+    })

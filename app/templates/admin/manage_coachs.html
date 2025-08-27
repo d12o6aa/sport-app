@@ -49,20 +49,28 @@
           <select class="form-select" id="statusFilter">
             <option value="">Filter by Status</option>
             <option value="active">Active</option>
-            <option value="inactive">Suspended</option>
+            <option value="suspended">Suspended</option>
           </select>
         </div>
       </div>
 
       <!-- Bulk Actions -->
-      <div class="mb-3">
-        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
-        <button class="btn btn-secondary btn-sm" onclick="bulkChangeRole()">Change Role</button>
-      </div>
+        <div class="mb-3 d-flex gap-2">
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
+
+          <select id="bulkRoleSelect" class="form-select form-select-sm" style="width: 150px; display:inline-block;">
+            <option value="">Change Role...</option>
+            <option value="admin">Admin</option>
+            <option value="coach">Coach</option>
+            <option value="athlete">Athlete</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="bulkChangeRole()">Apply</button>
+        </div>
+
 
       <!-- Coach Table-->
-      <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle"  id="coachTable">
+      <div class="card shadow-sm">
+        <table class="table table-hover"  id="coachTable">
           <thead class="table-light">
             <tr>
               <th><input type="checkbox" id="selectAll"></th>
@@ -86,7 +94,7 @@
                 <span class="fw-semibold name">{{ coach.name }}</span>
               </td>
               <td class="email">{{ coach.email }}</td>
-              <td class="status">
+              <td class="status" data-status="{{ coach.status }}">
                 {% if coach.status == 'active' %}
                   <button class="btn btn-sm badge bg-success" onclick="toggleStatus({{ coach.id }})">Active</button>
                 {% else %}
@@ -239,184 +247,165 @@
 
 </main>
 {% endblock %}
-
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
+  // ---- Add Coach ----
   document.addEventListener("DOMContentLoaded", () => {
     const addCoachForm = document.getElementById("addCoachForm");
-    if (!addCoachForm) return;
+    if (addCoachForm) {
+      addCoachForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
 
-    addCoachForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const formData = new FormData(this);
-
-      if (!formData.get("name") || !formData.get("email") || !formData.get("password")) {
-        showAlert("Please fill all fields", "warning");
-        return;
-      }
-
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        showAlert("Please login to continue", "warning");
-        return;
-      }
-
-      try {
-        const res = await fetch("/coach/add", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + token },
-          body: formData
-        });
-
-        const result = await res.json().catch(() => null);
-        if (res.ok) {
-          showAlert("Coach added successfully", "success");
-          setTimeout(() => location.reload(), 1200);
-        } else {
-          showAlert(result?.msg || "Failed to add coach", "danger");
+        if (!formData.get("name") || !formData.get("email") || !formData.get("password")) {
+          showAlert("Please fill all fields", "warning");
+          return;
         }
-      } catch (error) {
-        console.error("Error submitting form:", error);
-        showAlert("An error occurred. Check console for details.", "danger");
+
+        const token = localStorage.getItem("access_token");
+        if (!token) return showAlert("Please login to continue", "warning");
+
+        try {
+          const res = await fetch("/coach/add", {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token },
+            body: formData
+          });
+
+          const result = await res.json().catch(() => null);
+          if (res.ok) {
+            showAlert("Coach added successfully", "success");
+            setTimeout(() => location.reload(), 1200);
+          } else {
+            showAlert(result?.msg || "Failed to add coach", "danger");
+          }
+        } catch {
+          showAlert("An error occurred", "danger");
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  // ---- Edit Coach ----
+  async function openEditModal(coachId) {
+    const res = await fetch(`/coach/edit_coach/${coachId}`, {
+      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    });
+    const coach = await res.json();
+    document.getElementById("editCoachId").value = coach.id;
+    document.getElementById("editCoachName").value = coach.name;
+    document.getElementById("editCoachEmail").value = coach.email;
+    new bootstrap.Modal(document.getElementById("editCoachModal")).show();
+  }
+
+  document.getElementById("editCoachForm")?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const id = document.getElementById("editCoachId").value;
+    const name = document.getElementById("editCoachName").value;
+
+    const res = await fetch(`/coach/edit_coach/${id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+      },
+      body: JSON.stringify({ name })
+    });
+
+    const data = await res.json().catch(() => null);
+    if (res.ok) {
+      showAlert("Coach updated successfully", "success");
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showAlert(data?.msg || "Update failed", "danger");
+    }
+  });
+</script>
+
+<script>
+  // ---- Delete Coach ----
+  function confirmDelete(coachId) {
+    if (!confirm("Are you sure you want to delete this coach?")) return;
+    fetch(`/coach/delete_coach/${coachId}`, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    })
+    .then(res => res.json().catch(() => null))
+    .then(data => {
+      if (data?.msg) {
+        showAlert(data.msg, "success");
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showAlert("Deletion failed", "danger");
       }
     });
-  });
-</script>
-
-
-<script>
-async function openEditModal(coachId) {
-  const res = await fetch(`/coach/edit_coach/${coachId}`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-  });
-
-  const coach = await res.json();
-  document.getElementById("editCoachId").value = coach.id;
-  document.getElementById("editCoachName").value = coach.name;
-  document.getElementById("editCoachEmail").value = coach.email;
-
-  new bootstrap.Modal(document.getElementById("editCoachModal")).show();
-}
-
-document.getElementById("editCoachForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-
-  const id = document.getElementById("editCoachId").value;
-  const name = document.getElementById("editCoachName").value;
-
-  const res = await fetch(`/coach/edit_coach/${id}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("access_token")
-    },
-    body: JSON.stringify({ name })
-  });
-
-  const data = await res.json().catch(() => null);
-  if (res.ok) {
-    showAlert("Coach updated successfully", "success");
-    setTimeout(() => location.reload(), 1200);
-  } else {
-    showAlert(data?.msg || "Update failed", "danger");
   }
-});
-</script>
-
-
-<script>
-function confirmDelete(coachId) {
-  if (!confirm("Are you sure you want to delete this coach?")) return;
-
-  fetch(`/coach/delete_coach/${coachId}`, {
-    method: "DELETE",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-  })
-  .then(res => res.json().catch(() => null))
-  .then(data => {
-    if (data?.msg) {
-      showAlert(data.msg, "success");
-      setTimeout(() => location.reload(), 1200);
-    } else {
-      showAlert("Deletion failed", "danger");
-    }
-  });
-}
 </script>
 
 <script>
-function toggleStatus(coachId) {
-  fetch(`/coach/toggle_coach_active/${coachId}`, {
-    method: "PATCH",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-  })
-  .then(res => res.json().catch(() => null))
-  .then(data => {
-    if (data?.msg) {
-      showAlert(data.msg, "success");
-      setTimeout(() => location.reload(), 1200);
-    } else {
-      showAlert("Status toggle failed", "danger");
-    }
-  });
-}
+  // ---- Toggle Status ----
+  function toggleStatus(coachId) {
+    fetch(`/coach/toggle_coach_active/${coachId}`, {
+      method: "PATCH",
+      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    })
+    .then(res => res.json().catch(() => null))
+    .then(data => {
+      if (data?.msg) {
+        showAlert(data.msg, "success");
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showAlert("Status toggle failed", "danger");
+      }
+    });
+  }
 </script>
 
 <script>
-function viewAthletes(coachId) {
-  const token = localStorage.getItem("access_token");
-  if (!token) return showAlert("Please login to continue", "warning");
+  // ---- View Athletes ----
+  function viewAthletes(coachId) {
+    const token = localStorage.getItem("access_token");
+    if (!token) return showAlert("Please login to continue", "warning");
 
-  fetch(`/coach/view_athletes/${coachId}`, {
-    headers: { Authorization: "Bearer " + token }
-  })
-  .then(res => res.json().catch(() => null))
-  .then(data => {
-    const athleteList = document.getElementById("athleteList");
-    if (!athleteList) return showAlert("Failed to display athletes", "danger");
-
-    if (data?.athletes?.length) {
-      athleteList.innerHTML = data.athletes.map(a =>
-        `<div class="list-group-item"><strong>${a.name}</strong> (${a.email})</div>`
-      ).join("");
+    fetch(`/coach/view_athletes/${coachId}`, {
+      headers: { Authorization: "Bearer " + token }
+    })
+    .then(res => res.json().catch(() => null))
+    .then(data => {
+      const athleteList = document.getElementById("athleteList");
+      if (!athleteList) return;
+      athleteList.innerHTML = data?.athletes?.length
+        ? data.athletes.map(a => `<div class="list-group-item"><strong>${a.name}</strong> (${a.email})</div>`).join("")
+        : "<div class='text-muted'>No athletes found</div>";
       new bootstrap.Modal(document.getElementById("athleteModal")).show();
-    } else {
-      showAlert("No athletes found for this coach", "info");
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    showAlert("Failed to load athletes", "danger");
-  });
-}
+    });
+  }
 </script>
 
-
 <script>
-function changeUserRole(userId, newRole) {
-  if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
-
-  fetch(`/coach/change_role/${userId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("access_token")
-    },
-    body: JSON.stringify({ role: newRole })
-  })
-  .then(res => res.json().then(data => ({ ok: res.ok, data })))
-  .then(({ ok, data }) => {
-    if (ok) {
-      showAlert(data.msg, "success");
-      setTimeout(() => location.reload(), 1200);
-    } else {
-      showAlert(data.msg || "Error changing role", "danger");
-    }
-  })
-  .catch(() => showAlert("Something went wrong", "danger"));
-}
+  // ---- Change Single Role ----
+  function changeUserRole(userId, newRole) {
+    fetch(`/coach/change_role/${userId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("access_token")
+      },
+      body: JSON.stringify({ role: newRole })
+    })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (ok) {
+        showAlert(`Role updated to ${newRole}`, "success");
+      } else {
+        showAlert(data.msg || "Error changing role", "danger");
+      }
+    });
+  }
 </script>
 
 <script>
@@ -425,131 +414,121 @@ function changeUserRole(userId, newRole) {
   const statusFilter = document.getElementById("statusFilter");
   const roleFilter = document.getElementById("roleFilter");
   const table = document.getElementById("coachTable");
-  const rows = table.querySelectorAll("tbody tr");
+  const rows = table?.querySelectorAll("tbody tr") || [];
 
   function filterTable() {
     const searchValue = searchInput.value.toLowerCase();
     const statusValue = statusFilter.value;
+    const roleValue = roleFilter.value;
 
     rows.forEach(row => {
       const name = row.querySelector(".name").textContent.toLowerCase();
       const email = row.querySelector(".email").textContent.toLowerCase();
-      const status = row.querySelector(".status").textContent.toLowerCase();
+      const status = row.querySelector(".status").dataset.status;
+      const role = row.querySelector(".role").dataset.role;
 
       const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
-      const matchesStatus = !statusValue || status.includes(statusValue);
+      const matchesStatus = !statusValue || status === statusValue;
+      const matchesRole = !roleValue || role === roleValue;
 
-      row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+      row.style.display = (matchesSearch && matchesStatus && matchesRole) ? "" : "none";
     });
   }
 
-  searchInput.addEventListener("input", filterTable);
-  statusFilter.addEventListener("change", filterTable);
-  roleFilter.addEventListener("change", filterTable);
+  searchInput?.addEventListener("input", filterTable);
+  statusFilter?.addEventListener("change", filterTable);
+  roleFilter?.addEventListener("change", filterTable);
+</script>
 
-  // ---- Bulk Actions ----
-  function getSelectedIds() {
-    return [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
-  }
-
+<script>
   // ---- Select All ----
-  document.getElementById("selectAll").addEventListener("change", function() {
-    const checked = this.checked;
-    document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = checked);
+  document.addEventListener("DOMContentLoaded", () => {
+    const selectAll = document.getElementById("selectAll");
+    if (selectAll) {
+      selectAll.addEventListener("change", function () {
+        document.querySelectorAll(".row-checkbox").forEach(cb => {
+          cb.checked = this.checked;
+        });
+      });
+    }
   });
-
 </script>
 
 <script>
-  
-async function bulkDelete() {
-  const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
-  if (!ids.length) return showAlert("Select at least one user", "warning");
+  // ---- Bulk Actions ----
+  async function bulkDelete() {
+    const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
+    if (!ids.length) return showAlert("Select at least one user", "warning");
 
-  if (!confirm("Are you sure you want to delete selected users?")) return;
+    if (!confirm("Are you sure you want to delete selected users?")) return;
 
-  const res = await fetch("/coach/bulk_delete", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("access_token")}`
-    },
-    body: JSON.stringify({ ids })
-  });
+    const res = await fetch("/coach/bulk_delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`
+      },
+      body: JSON.stringify({ ids })
+    });
 
-  if (res.ok) {
-    showAlert("Users deleted successfully", "success");
-    setTimeout(() => location.reload(), 1200);
-  } else {
-    showAlert("Bulk delete failed", "danger");
+    if (res.ok) {
+      showAlert("Users deleted successfully", "success");
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showAlert("Bulk delete failed", "danger");
+    }
   }
-}
-</script>
 
-<script>
-async function bulkChangeRole() {
-  const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
-  if (!ids.length) return showAlert("Select users first!", "warning");
+  async function bulkChangeRole() {
+    const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
+    const newRole = document.getElementById("bulkRoleSelect").value;
+    if (!ids.length) return showAlert("Select users first!", "warning");
+    if (!newRole) return showAlert("Select a role to assign", "warning");
 
-  const newRole = prompt("Enter new role (admin, coach, athlete):");
-  if (!newRole) return;
+    const res = await fetch("/coach/bulk_change_role", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`
+      },
+      body: JSON.stringify({ ids, role: newRole })
+    });
 
-  const res = await fetch("/coach/bulk_change_role", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("access_token")}`
-    },
-    body: JSON.stringify({ ids, role: newRole })
-  });
-
-  if (res.ok) {
-    showAlert("Roles updated successfully", "success");
-    setTimeout(() => location.reload(), 1200);
-  } else {
-    showAlert("Bulk role change failed", "danger");
+    if (res.ok) {
+      showAlert("Roles updated successfully", "success");
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showAlert("Bulk role change failed", "danger");
+    }
   }
-}
 </script>
 
 <script>
-async function resetPassword(userId) {
-  if (!confirm("Reset this user's password?")) return;
-
-  const res = await fetch(`/coach/reset_password/${userId}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
-  });
-
-  if (res.ok) {
-    showAlert("Password reset successful!", "success");
-  } else {
-    showAlert("Password reset failed", "danger");
+  // ---- Reset Password ----
+  async function resetPassword(userId) {
+    if (!confirm("Reset this user's password?")) return;
+    const res = await fetch(`/coach/reset_password/${userId}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+    });
+    if (res.ok) showAlert("Password reset successful!", "success");
+    else showAlert("Password reset failed", "danger");
   }
-}
 </script>
 
 <script>
-function showAlert(message, type = "info") {
-  const container = document.getElementById("alert-container");
-  if (!container) return;
-
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  `;
-  container.appendChild(wrapper);
-
-  // auto dismiss after 5s
-  setTimeout(() => {
-    const alert = bootstrap.Alert.getOrCreateInstance(wrapper.querySelector(".alert"));
-    alert.close();
-  }, 5000);
-}
+  // ---- Alert Helper ----
+  function showAlert(message, type = "info") {
+    const container = document.getElementById("alert-container");
+    if (!container) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>`;
+    container.appendChild(wrapper);
+    setTimeout(() => bootstrap.Alert.getOrCreateInstance(wrapper.querySelector(".alert")).close(), 5000);
+  }
 </script>
-
-
 {% endblock %}
