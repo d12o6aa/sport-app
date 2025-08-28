@@ -263,7 +263,9 @@ def update_admin(id):
     admin = User.query.filter_by(id=id).first()
     if not admin:
         return jsonify({"msg": "Admin not found"}), 404
-
+    if admin.role != "admin":
+        return jsonify({"msg": "User is not an admin"}), 400
+    
     # Delegate to update_user logic
     return update_user_logic(admin, data)
 
@@ -304,7 +306,7 @@ def update_user_logic(user, data):
     return jsonify({"msg": "User updated successfully"}), 200
 
 
-@admin_bp.route("/update_user/<int:id>", methods=["PUT"])
+@admin_bp.route("/update/<int:id>", methods=["PUT"])
 @jwt_required()
 def update_user(id):
     data = request.get_json()

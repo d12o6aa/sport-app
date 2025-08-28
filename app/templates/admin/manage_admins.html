@@ -474,36 +474,7 @@ async function resetPassword(id){
 }
 </script>
 
-<script>
-  function changeUserRole(userId, newRole) {
-      if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
 
-      fetch(`/admin/change_role/${userId}`, {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + localStorage.getItem("access_token")
-          },
-          body: JSON.stringify({ role: newRole })
-      })
-      .then(response => {
-          const isOk = response.ok; // نخزن قيمة ok
-          return response.json().then(data => ({ isOk, data }));
-      })
-      .then(({ isOk, data }) => {
-          if (isOk) {
-              alert(data.msg);
-              location.reload();
-          } else {
-              alert(data.msg || "Error changing role");
-          }
-      })
-      .catch(err => {
-          console.error("Error:", err);
-          alert("Something went wrong");
-      });
-  }
-</script>
 
 
 {% endblock %}
