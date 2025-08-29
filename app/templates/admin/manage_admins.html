@@ -407,7 +407,6 @@ document.getElementById("editAdminForm").addEventListener("submit", async functi
   const token = localStorage.getItem("access_token");
   let newRole = document.getElementById("editRole").value;
 
-  // Map super_admin → admin + is_superadmin flag
   let is_superadmin = false;
   if (newRole === "super_admin") {
     newRole = "admin";
