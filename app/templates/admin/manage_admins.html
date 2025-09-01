@@ -109,16 +109,16 @@
             </td>
             <td class="role" data-role="{{ 'super_admin' if admin.admin_profile.is_superadmin else 'admin' }}">
               {% if admin.admin_profile.is_superadmin %}
-                <span class="badge bg-primary">Super Admin</span>
+                <span class="btn btn-sm btn-outline-primary">Super Admin</span>
               {% else %}
-                <span class="badge bg-secondary">Admin</span>
+                <span class="btn btn-sm btn-outline-secondary">Admin</span>
               {% endif %}
             </td>
             <td>{{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ admin.id }}"><i class="bi bi-pencil"></i></button>
-              <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ admin.id }}"><i class="bi bi-trash"></i></button>
-              <button class="btn btn-sm btn-outline-warning" onclick="resetPassword({{ admin.id }})">Reset Password</button>
+              <button class="btn btn-sm btn-light" data-id="{{ admin.id }}"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-light text-danger" data-id="{{ admin.id }}"><i class="bi bi-trash"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword({{ admin.id }})">Reset Password</button>
             </td>
           </tr>
           {% endfor %}
@@ -339,6 +339,30 @@ function togglePermission(btn) {
   }
 }
 
+document.querySelectorAll(".perm-btn").forEach(btn => {
+  btn.addEventListener("click", function () {
+    togglePermission(this);
+  });
+});
+
+async function toggleActive(userId) {
+  fetch(`/admin/toggle_active/${userId}`, {
+      method: "PATCH",
+      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    })
+    .then(res => res.json().catch(() => null))
+    .then(data => {
+      if (data?.msg) {
+        showAlert(data.msg, "success");
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showAlert("Status toggle failed", "danger");
+      }
+    });
+}
+
+
+
 // Reset / Apply permissions visually
 function updatePermissionButtons() {
   document.querySelectorAll(".perm-btn").forEach(btn => {
@@ -400,6 +424,7 @@ document.getElementById("editRole").addEventListener("change", function () {
     document.querySelectorAll(".perm-btn").forEach(btn => btn.disabled = true);
   }
 });
+
 document.getElementById("editAdminForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
@@ -413,26 +438,40 @@ document.getElementById("editAdminForm").addEventListener("submit", async functi
     is_superadmin = true;
   }
 
-  const res = await fetch(`/user/update/${userId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ 
-      permissions: selectedPermissions, 
-      role: newRole,
-      is_superadmin: is_superadmin
-    })
-  });
+  try {
+    const res = await fetch(`/admin/update_admin/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ 
+        permissions: selectedPermissions, 
+        role: newRole,
+        is_superadmin: is_superadmin
+      })
+    });
 
-  if (res.ok) {
-    location.reload();
-  } else {
-    const err = await res.json();
-    alert(err.msg || "Failed to update user");
+    const contentType = res.headers.get("content-type");
+    let data = {};
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      data = { msg: await res.text() };
+    }
+
+    if (res.ok) {
+      showAlert(data.msg || "User updated successfully", "success");
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showAlert(data.msg || "Failed to update user", "danger");
+    }
+  } catch (err) {
+    console.error(err);
+    showAlert("Error connecting to server", "danger");
   }
 });
+
 
 // ---- Filters ----
 function filterTable(){

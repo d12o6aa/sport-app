@@ -56,7 +56,7 @@
 
       <!-- Bulk Actions -->
         <div class="mb-3 d-flex gap-2">
-          <button class="btn btn-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
 
           <select id="bulkRoleSelect" class="form-select form-select-sm" style="width: 150px; display:inline-block;">
             <option value="">Change Role...</option>
@@ -64,7 +64,7 @@
             <option value="coach">Coach</option>
             <option value="athlete">Athlete</option>
           </select>
-          <button class="btn btn-secondary btn-sm" onclick="bulkChangeRole()">Apply</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="bulkChangeRole()">Apply</button>
         </div>
 
 
@@ -77,10 +77,8 @@
               <th>Profile</th>
               <th>Email</th>
               <th>Status</th>
-              <th>Last Active</th>
               <th>Athletes</th>
               <th>Actions</th>
-              <th>Change Role</th>
             </tr>
           </thead>
           <tbody>
@@ -96,12 +94,11 @@
               <td class="email">{{ coach.email }}</td>
               <td class="status" data-status="{{ coach.status }}">
                 {% if coach.status == 'active' %}
-                  <button class="btn btn-sm badge bg-success" onclick="toggleStatus({{ coach.id }})">Active</button>
+                  <button class="btn btn-sm btn-outline-success" onclick="toggleStatus({{ coach.id }})">Active</button>
                 {% else %}
-                  <button class="btn btn-sm badge bg-danger" onclick="toggleStatus({{ coach.id }})">Suspended</button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="toggleStatus({{ coach.id }})">Suspended</button>
                 {% endif %}
               </td>
-              <td>{{ coach.last_active.strftime("%Y-%m-%d") if coach.last_active else "N/A" }}</td>
               <td>
                 <button class="btn btn-link btn-sm text-primary p-0" onclick="viewAthletes('{{ coach.id }}')">
                   {{ coach.athlete_links.count() }} Athletes
@@ -119,14 +116,7 @@
                   Reset Password
                 </button>
               </td>
-              <td>
-                <select class="form-select form-select-sm" onchange="changeUserRole('{{ coach.id }}', this.value)">
-                  <option value="" disabled selected>Change Role</option>
-                  <option value="admin">Admin</option>
-                  <option value="coach">Coach</option>
-                  <option value="athlete">Athlete</option>
-                </select>
-              </td>
+              
             </tr>
             {% endfor %}
           </tbody>

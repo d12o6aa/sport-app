@@ -4,7 +4,7 @@ from app.models.user import User
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import render_template, abort, jsonify
 
-athlete_bp = Blueprint("athlete", __name__)
+from . import athlete_bp
 
 @athlete_bp.route('/unassigned_athletes', methods=['GET'])
 @jwt_required()
@@ -42,16 +42,21 @@ def dashboard():
 def my_plans():
     return render_template("athlete/my_plans.html")
 
+@athlete_bp.route("/goals")
+@jwt_required()
+def goals():
+    return render_template("athlete/goals.html")
+
 @athlete_bp.route("/my_calendar")
 @jwt_required()
 def my_calendar():
-    return render_template("athlete/my_calendar.html")
+    return render_template("athlete/schedule.html")  # نربطه بملف schedule.html
 
 # Performance
 @athlete_bp.route("/my_stats")
 @jwt_required()
 def my_stats():
-    return render_template("athlete/my_stats.html")
+    return render_template("athlete/progress.html")  # نربطه بملف progress.html
 
 @athlete_bp.route("/workout_history")
 @jwt_required()

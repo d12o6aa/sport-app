@@ -1,0 +1,359 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <div class="row g-3">
+
+    <!-- Header + Add -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="m-0">Goals</h5>
+      <div>
+        <button class="btn btn-outline-secondary me-2" id="refreshGoals">
+          <i class="bi bi-arrow-repeat me-1"></i> Refresh
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#goalModal">
+          <i class="bi bi-plus-lg me-1"></i> Add Goal
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card sales-card">
+        <div class="card-body">
+          <h5 class="card-title">Active Goals</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-bullseye"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="activeGoalsCount">0</h6>
+              <span class="text-muted small">Currently in progress</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End card -->
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card revenue-card">
+        <div class="card-body">
+          <h5 class="card-title">Completed</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="completedGoalsCount">0</h6>
+              <span class="text-muted small">All time</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End card -->
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+
+          <!-- Filters -->
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Search</label>
+              <input id="goalSearch" type="text" class="form-control" placeholder="Search by title or tag">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted">Status</label>
+              <select id="goalStatusFilter" class="form-select">
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted">Sort by</label>
+              <select id="goalSort" class="form-select">
+                <option value="due_asc">Due Date ↑</option>
+                <option value="due_desc">Due Date ↓</option>
+                <option value="progress_desc">Progress ↓</option>
+                <option value="progress_asc">Progress ↑</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Goals List -->
+          <div id="goalsList" class="row g-3">
+            <!-- goals cards injected here -->
+          </div>
+
+          <!-- Empty state -->
+          <div id="goalsEmpty" class="text-center py-5 d-none">
+            <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
+            <p class="mt-2 text-muted">No goals yet. Start by adding your first goal!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Add/Edit Goal Modal -->
+<div class="modal fade" id="goalModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="goalForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="goalModalTitle">Add Goal</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="goalId">
+        <div class="mb-3">
+          <label class="form-label">Title</label>
+          <input id="goalTitle" type="text" class="form-control" required maxlength="120">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Target</label>
+          <input id="goalTarget" type="text" class="form-control" placeholder="e.g. Lose 5 kg / Run 5K under 25m" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Due Date</label>
+          <input id="goalDue" type="date" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Current Progress (%)</label>
+          <input id="goalProgress" type="number" min="0" max="100" class="form-control" value="0">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Status</label>
+          <select id="goalStatus" class="form-select">
+            <option value="active" selected>Active</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Tags (comma separated)</label>
+          <input id="goalTags" type="text" class="form-control" placeholder="fat-loss, endurance">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+
+/* ---------- Alert (shared) ---------- */
+function alertShow(message, type="info") {
+  const container = document.getElementById("alert-container") || document.body;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  container.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), 4000);
+}
+
+/* ---------- Goals State & UI ---------- */
+let GOALS = [];            // filled from API
+let editingId = null;
+
+const goalsList = document.getElementById('goalsList');
+const goalsEmpty = document.getElementById('goalsEmpty');
+const activeGoalsCount = document.getElementById('activeGoalsCount');
+const completedGoalsCount = document.getElementById('completedGoalsCount');
+
+function goalCardTpl(g) {
+  const due = new Date(g.due_date).toLocaleDateString();
+  const badge = g.status === "completed" ? "bg-success"
+              : g.status === "paused" ? "bg-warning"
+              : "bg-primary";
+  const tags = (g.tags || []).map(t => `<span class="badge rounded-pill text-bg-light me-1">${t}</span>`).join('');
+  return `
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="mb-1">${g.title}</h6>
+              <div class="small text-muted">Target: ${g.target}</div>
+            </div>
+            <span class="badge ${badge}">${g.status}</span>
+          </div>
+          <div class="my-3">
+            <div class="d-flex justify-content-between small">
+              <span>Progress</span><span>${g.progress}%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar" style="width:${g.progress}%"></div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted"><i class="bi bi-calendar2-week me-1"></i>Due: ${due}</div>
+            <div>
+              <button class="btn btn-sm btn-light me-1" onclick="openEdit(${g.id})"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-light text-danger" onclick="removeGoal(${g.id})"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+          ${tags ? `<div class="mt-2">${tags}</div>` : ``}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGoals() {
+  const q = document.getElementById('goalSearch').value.trim().toLowerCase();
+  const st = document.getElementById('goalStatusFilter').value;
+  const sortBy = document.getElementById('goalSort').value;
+
+  let list = [...GOALS];
+
+  if (q) {
+    list = list.filter(g =>
+      g.title.toLowerCase().includes(q) ||
+      (g.tags||[]).some(t => t.toLowerCase().includes(q))
+    );
+  }
+  if (st) list = list.filter(g => g.status === st);
+
+  list.sort((a,b)=>{
+    if (sortBy === 'due_asc') return new Date(a.due_date) - new Date(b.due_date);
+    if (sortBy === 'due_desc') return new Date(b.due_date) - new Date(a.due_date);
+    if (sortBy === 'progress_desc') return b.progress - a.progress;
+    if (sortBy === 'progress_asc') return a.progress - b.progress;
+    return 0;
+  });
+
+  goalsList.innerHTML = list.map(goalCardTpl).join('');
+  const empty = list.length === 0;
+  goalsEmpty.classList.toggle('d-none', !empty);
+
+  activeGoalsCount.textContent = GOALS.filter(g => g.status==='active').length;
+  completedGoalsCount.textContent = GOALS.filter(g => g.status==='completed').length;
+}
+
+/* ---------- API ---------- */
+async function fetchGoals() {
+  try {
+    const res = await fetch('/athlete/goals', { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }});
+    const data = res.ok ? await res.json() : [];
+    // Expecting: [{id, title, target, due_date, progress, status, tags:[]}, ...]
+    GOALS = Array.isArray(data) ? data : [];
+  } catch(e) {
+    console.error(e);
+    alertShow('Failed to load goals', 'danger');
+  } finally {
+    renderGoals();
+  }
+}
+
+async function createGoal(payload) {
+  const res = await fetch('/athlete/goals', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify(payload)
+  });
+  return res.json().then(d => ({ ok: res.ok, d }));
+}
+
+async function updateGoal(id, payload) {
+  const res = await fetch(`/athlete/goals/${id}`, {
+    method:'PUT',
+    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify(payload)
+  });
+  return res.json().then(d => ({ ok: res.ok, d }));
+}
+
+async function deleteGoal(id) {
+  const res = await fetch(`/athlete/goals/${id}`, {
+    method:'DELETE',
+    headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }
+  });
+  return res.json().then(d => ({ ok: res.ok, d }));
+}
+
+/* ---------- Modal Handlers ---------- */
+const goalModalEl = document.getElementById('goalModal');
+const goalModal = new bootstrap.Modal(goalModalEl);
+
+document.getElementById('refreshGoals').onclick = fetchGoals;
+
+document.getElementById('goalSearch').addEventListener('input', renderGoals);
+document.getElementById('goalStatusFilter').addEventListener('change', renderGoals);
+document.getElementById('goalSort').addEventListener('change', renderGoals);
+
+document.getElementById('goalForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById('goalTitle').value.trim(),
+    target: document.getElementById('goalTarget').value.trim(),
+    due_date: document.getElementById('goalDue').value,
+    progress: Number(document.getElementById('goalProgress').value || 0),
+    status: document.getElementById('goalStatus').value,
+    tags: document.getElementById('goalTags').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  if (!payload.title || !payload.target || !payload.due_date) {
+    alertShow('Please fill required fields', 'warning'); return;
+  }
+  let result;
+  if (editingId) result = await updateGoal(editingId, payload);
+  else result = await createGoal(payload);
+
+  if (result.ok) {
+    alertShow(editingId ? 'Goal updated' : 'Goal created', 'success');
+    goalModal.hide();
+    editingId = null;
+    await fetchGoals();
+    e.target.reset();
+    document.getElementById('goalProgress').value = 0;
+  } else {
+    alertShow(result.d?.msg || 'Operation failed', 'danger');
+  }
+});
+
+function openEdit(id) {
+  const g = GOALS.find(x => x.id === id);
+  if (!g) return;
+  editingId = id;
+  document.getElementById('goalModalTitle').textContent = 'Edit Goal';
+  document.getElementById('goalId').value = g.id;
+  document.getElementById('goalTitle').value = g.title;
+  document.getElementById('goalTarget').value = g.target;
+  document.getElementById('goalDue').value = g.due_date?.slice(0,10);
+  document.getElementById('goalProgress').value = g.progress || 0;
+  document.getElementById('goalStatus').value = g.status;
+  document.getElementById('goalTags').value = (g.tags||[]).join(', ');
+  goalModal.show();
+}
+
+async function removeGoal(id) {
+  if (!confirm('Delete this goal?')) return;
+  const { ok, d } = await deleteGoal(id);
+  if (ok) { alertShow('Goal deleted', 'success'); fetchGoals(); }
+  else { alertShow(d?.msg || 'Delete failed', 'danger'); }
+}
+
+goalModalEl.addEventListener('hidden.bs.modal', ()=>{
+  editingId = null;
+  document.getElementById('goalModalTitle').textContent = 'Add Goal';
+  document.getElementById('goalForm').reset();
+  document.getElementById('goalProgress').value = 0;
+});
+
+/* ---------- Init ---------- */
+fetchGoals();
+</script>
+{% endblock %}

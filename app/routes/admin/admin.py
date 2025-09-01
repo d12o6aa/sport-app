@@ -255,27 +255,22 @@ def update_admin(id):
     identity = get_jwt_identity()
     current_user = User.query.get(identity)
 
-    # تحقق أن اللي بيعمل التعديل Super Admin
+    # ✅ تحقق أن اللي بيعمل التعديل Super Admin
     if not current_user or not (current_user.admin_profile and current_user.admin_profile.is_superadmin):
         return jsonify({"msg": "Only super admin can update admins"}), 403
 
     data = request.get_json()
-    admin = User.query.filter_by(id=id).first()
-    if not admin:
-        return jsonify({"msg": "Admin not found"}), 404
-    if admin.role != "admin":
-        return jsonify({"msg": "User is not an admin"}), 400
-    
-    # Delegate to update_user logic
-    return update_user_logic(admin, data)
+    user = User.query.get_or_404(id)
+
+    return update_user_logic(user, data)
 
 
 def update_user_logic(user, data):
-    """لوجيك مشترك لتحديث أي يوزر"""
+    """لوجيك موحّد لتحديث أي يوزر"""
     new_role = data.get("role")
 
     if new_role and new_role != user.role:
-        # reset old relations
+        # Reset old relations
         if user.role == "coach":
             for link in user.athlete_links.all():
                 db.session.delete(link)
@@ -286,17 +281,17 @@ def update_user_logic(user, data):
             for plan in user.plan_assignments.all():
                 db.session.delete(plan)
 
-        # Update role (من غير super_admin)
+        # ✅ Update role (admin / coach / athlete)
         if new_role in ["admin", "coach", "athlete"]:
             user.role = new_role
 
-    # Handle super admin flag
+    # ✅ Handle super_admin flag
     if "is_superadmin" in data and user.role == "admin":
         if not user.admin_profile:
             user.admin_profile = AdminProfile(user_id=user.id)
         user.admin_profile.is_superadmin = bool(data["is_superadmin"])
 
-    # update permissions
+    # ✅ Update permissions
     if "permissions" in data:
         if not user.admin_profile:
             user.admin_profile = AdminProfile(user_id=user.id)
@@ -304,14 +299,6 @@ def update_user_logic(user, data):
 
     db.session.commit()
     return jsonify({"msg": "User updated successfully"}), 200
-
-
-@admin_bp.route("/update/<int:id>", methods=["PUT"])
-@jwt_required()
-def update_user(id):
-    data = request.get_json()
-    user = User.query.get_or_404(id)
-    return update_user_logic(user, data)
 
 
 @admin_bp.route("/some-protected-route")

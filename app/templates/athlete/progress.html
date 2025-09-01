@@ -1,0 +1,344 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <div class="row g-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="m-0">Progress</h5>
+      <div class="d-flex gap-2">
+        <input id="rangeFrom" type="date" class="form-control form-control-sm" style="width: 170px;">
+        <input id="rangeTo" type="date" class="form-control form-control-sm" style="width: 170px;">
+        <button id="applyRange" class="btn btn-outline-secondary btn-sm">Apply</button>
+      </div>
+    </div>
+
+    <!-- Top Stats -->
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card sales-card">
+        <div class="card-body">
+          <h5 class="card-title">Weight</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-activity"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="weightNow">-- kg</h6>
+              <span class="text-muted small">Δ <span id="weightDelta">0</span> kg</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End card -->
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card revenue-card">
+        <div class="card-body">
+          <h5 class="card-title">Workouts</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-bar-chart"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="workoutCount">0</h6>
+              <span class="text-muted small">Completed in range</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End card -->
+
+    <!-- Charts -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Weight Over Time</h6>
+          <canvas id="weightChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Workouts Per Week</h6>
+          <canvas id="workoutsChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Body Measurements</h6>
+          <canvas id="bodyChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Records -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="card-title">Personal Records</h6>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#prModal">
+              <i class="bi bi-plus-lg me-1"></i> Add PR
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Exercise</th>
+                  <th>Value</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="prTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="text-center text-muted small d-none" id="prEmpty">No PRs recorded.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Add/Edit PR Modal -->
+<div class="modal fade" id="prModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="prForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="prModalTitle">Add PR</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="prId">
+        <div class="mb-2">
+          <label class="form-label">Exercise</label>
+          <input id="prExercise" type="text" class="form-control" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Value</label>
+          <input id="prValue" type="text" class="form-control" placeholder="e.g. 120 kg / 5 km in 25:30" required>
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Date</label>
+          <input id="prDate" type="date" class="form-control" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+/* ---------- Alert (shared) ---------- */
+function alertShow(message, type="info") {
+  const container = document.getElementById("alert-container") || document.body;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  container.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), 4000);
+}
+
+/* ---------- State ---------- */
+let RANGE = { from: null, to: null };
+let WEIGHT = [];   // [{date:'YYYY-MM-DD', value: 72.3}]
+let WORKOUTS = []; // [{week:'2025-W35', count: 4}]
+let BODY = {};     // { chest: 100, waist: 82, hips: 98, thigh: 58, arm: 36 }
+let PRS = [];      // [{id, exercise, value, date}]
+
+/* ---------- Charts ---------- */
+let weightChart, workoutsChart, bodyChart;
+
+function ensureCharts(){
+  // Weight Line
+  const wctx = document.getElementById('weightChart').getContext('2d');
+  if (weightChart) weightChart.destroy();
+  weightChart = new Chart(wctx, {
+    type: 'line',
+    data: {
+      labels: WEIGHT.map(x=>x.date),
+      datasets: [{ label: 'Weight (kg)', data: WEIGHT.map(x=>x.value) }]
+    },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+
+  // Workouts Bar
+  const wkctx = document.getElementById('workoutsChart').getContext('2d');
+  if (workoutsChart) workoutsChart.destroy();
+  workoutsChart = new Chart(wkctx, {
+    type: 'bar',
+    data: {
+      labels: WORKOUTS.map(x=>x.week),
+      datasets: [{ label: 'Workouts', data: WORKOUTS.map(x=>x.count) }]
+    },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+
+  // Body Radar
+  const bctx = document.getElementById('bodyChart').getContext('2d');
+  if (bodyChart) bodyChart.destroy();
+  const keys = Object.keys(BODY);
+  bodyChart = new Chart(bctx, {
+    type: 'radar',
+    data: {
+      labels: keys,
+      datasets: [{ label: 'Measurements (cm)', data: keys.map(k=>BODY[k]) }]
+    },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+}
+
+/* ---------- UI ---------- */
+function renderTop(){
+  if (WEIGHT.length) {
+    const now = WEIGHT[WEIGHT.length-1].value;
+    const first = WEIGHT[0].value;
+    document.getElementById('weightNow').textContent = `${now} kg`;
+    document.getElementById('weightDelta').textContent = (now - first).toFixed(1);
+  } else {
+    document.getElementById('weightNow').textContent = '-- kg';
+    document.getElementById('weightDelta').textContent = '0';
+  }
+  document.getElementById('workoutCount').textContent = WORKOUTS.reduce((a,b)=>a+b.count,0);
+}
+
+/* ---------- PRs ---------- */
+const prTbody = document.getElementById('prTbody');
+const prEmpty = document.getElementById('prEmpty');
+let editingPrId = null;
+
+function renderPRs(){
+  prTbody.innerHTML = PRS.sort((a,b)=> (b.date).localeCompare(a.date)).map(p=>`
+    <tr>
+      <td>${p.exercise}</td>
+      <td>${p.value}</td>
+      <td>${p.date}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-light me-1" onclick="openEditPr(${p.id})"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-light text-danger" onclick="deletePr(${p.id})"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+  prEmpty.classList.toggle('d-none', PRS.length>0);
+}
+
+/* ---------- API ---------- */
+async function fetchProgress(){
+  try{
+    const q = new URLSearchParams();
+    if (RANGE.from) q.set('from', RANGE.from);
+    if (RANGE.to) q.set('to', RANGE.to);
+
+    const res = await fetch(`/athlete/progress?${q.toString()}`, { headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }});
+    const data = res.ok ? await res.json() : {};
+    // Expecting: { weight:[{date,value}], workouts:[{week,count}], body:{...}, prs:[...]}
+    WEIGHT = data.weight || [];
+    WORKOUTS = data.workouts || [];
+    BODY = data.body || {};
+    PRS = data.prs || [];
+  }catch(e){
+    console.error(e); alertShow('Failed to load progress','danger');
+  }finally{
+    renderTop();
+    ensureCharts();
+    renderPRs();
+  }
+}
+
+async function createPr(payload){
+  const res = await fetch('/athlete/prs', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify(payload)
+  });
+  return res.json().then(d=>({ok:res.ok,d}));
+}
+async function updatePr(id,payload){
+  const res = await fetch(`/athlete/prs/${id}`, {
+    method:'PUT',
+    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify(payload)
+  });
+  return res.json().then(d=>({ok:res.ok,d}));
+}
+async function deletePr(id){
+  if (!confirm('Delete this record?')) return;
+  const res = await fetch(`/athlete/prs/${id}`, {
+    method:'DELETE',
+    headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }
+  });
+  const d = await res.json();
+  if (res.ok){ alertShow('PR deleted','success'); fetchProgress(); }
+  else { alertShow(d?.msg || 'Delete failed','danger'); }
+}
+
+/* ---------- PR Modal ---------- */
+const prModal = new bootstrap.Modal(document.getElementById('prModal'));
+document.getElementById('prForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = {
+    exercise: document.getElementById('prExercise').value.trim(),
+    value: document.getElementById('prValue').value.trim(),
+    date: document.getElementById('prDate').value
+  };
+  if (!payload.exercise || !payload.value || !payload.date)
+    return alertShow('Fill required fields','warning');
+
+  let r;
+  if (editingPrId) r = await updatePr(editingPrId, payload);
+  else r = await createPr(payload);
+
+  if (r.ok){
+    alertShow(editingPrId ? 'PR updated' : 'PR added','success');
+    prModal.hide();
+    editingPrId = null;
+    fetchProgress();
+  } else {
+    alertShow(r.d?.msg || 'Operation failed','danger');
+  }
+});
+document.getElementById('prModal').addEventListener('hidden.bs.modal', ()=>{
+  editingPrId = null;
+  document.getElementById('prForm').reset();
+  document.getElementById('prModalTitle').textContent = 'Add PR';
+});
+function openEditPr(id){
+  const p = PRS.find(x=>x.id===id); if (!p) return;
+  editingPrId = id;
+  document.getElementById('prModalTitle').textContent = 'Edit PR';
+  document.getElementById('prExercise').value = p.exercise;
+  document.getElementById('prValue').value = p.value;
+  document.getElementById('prDate').value = p.date;
+  prModal.show();
+}
+
+/* ---------- Range ---------- */
+document.getElementById('applyRange').onclick = ()=>{
+  RANGE.from = document.getElementById('rangeFrom').value || null;
+  RANGE.to = document.getElementById('rangeTo').value || null;
+  fetchProgress();
+};
+
+/* ---------- Init ---------- */
+fetchProgress();
+</script>
+{% endblock %}

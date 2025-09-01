@@ -1,4 +1,5 @@
-from flask import Flask, g
+# app/__init__.py
+from flask import Flask
 from flask_cors import CORS
 from app.extensions import db, ma, jwt, migrate
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
@@ -7,6 +8,7 @@ from app.models import User, Subscription, WorkoutFile
 def create_app():
     app = Flask(__name__)
 
+    # الإعدادات
     app.config['SECRET_KEY'] = 'supersecretkey'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://myapp_user:your_secure_password@localhost:5432/myapp_dev'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -19,6 +21,7 @@ def create_app():
     app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False 
 
+    # تهيئة الإضافات
     db.init_app(app)
     ma.init_app(app)
     jwt.init_app(app)
@@ -29,6 +32,7 @@ def create_app():
         "methods": ["GET", "POST", "OPTIONS"]
     }})
 
+    # context processor
     @app.context_processor
     def inject_user():
         try:
@@ -40,15 +44,17 @@ def create_app():
         except Exception:
             pass
         return dict(user=None)
-    
+
+    # استيراد الـ Blueprints
     from app.routes.home import home_bp
     from app.routes.auth import auth_bp
     from app.routes.user import user_bp
     from app.routes.admin.admin import admin_bp
     from app.routes.coach.views import coach_bp
     from app.routes.dashboard import dashboard_bp
-    from app.routes.player.views import athlete_bp
-    
+    from app.routes.player import athlete_bp
+
+    # تسجيل الـ Blueprints
     app.register_blueprint(athlete_bp, url_prefix="/athlete")
     app.register_blueprint(coach_bp, url_prefix="/coach")
     app.register_blueprint(dashboard_bp)
@@ -57,14 +63,9 @@ def create_app():
     app.register_blueprint(home_bp)
     app.register_blueprint(user_bp, url_prefix="/user")
 
-    # إنشاء الجداول باستخدام Flask-Migrate بدل db.create_all()
-    with app.app_context():
-        from app.models.user import User
-        # db.create_all()  # معلّق لأننا هنستخدم Migrate
-        migrate.init_app(app, db)
-    
     return app
 
+# JWT callback
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]

@@ -1,0 +1,374 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <div class="row g-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="m-0">My Schedule</h5>
+      <div>
+        <button class="btn btn-outline-secondary me-2" id="todayBtn"><i class="bi bi-calendar2-day me-1"></i> Today</button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#eventModal">
+          <i class="bi bi-plus-lg me-1"></i> Add Session
+        </button>
+      </div>
+    </div>
+
+    <!-- Week navigator -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-light" id="prevWeek"><i class="bi bi-chevron-left"></i></button>
+            <div class="fw-semibold" id="weekLabel">Week</div>
+            <button class="btn btn-light" id="nextWeek"><i class="bi bi-chevron-right"></i></button>
+          </div>
+
+          <!-- Simple week grid -->
+          <div id="weekGrid" class="row g-2">
+            <!-- columns injected -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming table -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Upcoming Sessions</h6>
+            <div class="d-flex gap-2">
+              <select id="typeFilter" class="form-select form-select-sm" style="width:160px">
+                <option value="">All types</option>
+                <option value="workout">Workout</option>
+                <option value="run">Run</option>
+                <option value="swim">Swim</option>
+                <option value="rest">Rest</option>
+              </select>
+              <select id="coachFilter" class="form-select form-select-sm" style="width:180px">
+                <option value="">All coaches</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>When</th>
+                  <th>Type</th>
+                  <th>Title</th>
+                  <th>Coach</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="upcomingTbody">
+                <!-- rows injected -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-center text-muted small d-none" id="noUpcoming">No sessions found.</div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Add/Edit Event Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="eventForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventModalTitle">Add Session</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="eventId">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label">Date</label>
+            <input id="eventDate" type="date" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Time</label>
+            <input id="eventTime" type="time" class="form-control" required>
+          </div>
+        </div>
+        <div class="mt-2">
+          <label class="form-label">Type</label>
+          <select id="eventType" class="form-select" required>
+            <option value="workout">Workout</option>
+            <option value="run">Run</option>
+            <option value="swim">Swim</option>
+            <option value="rest">Rest</option>
+          </select>
+        </div>
+        <div class="mt-2">
+          <label class="form-label">Title</label>
+          <input id="eventTitle" type="text" class="form-control" placeholder="e.g. Push Day / Interval Run" required>
+        </div>
+        <div class="mt-2">
+          <label class="form-label">Coach</label>
+          <select id="eventCoach" class="form-select">
+            <option value="">Unassigned</option>
+          </select>
+        </div>
+        <div class="mt-2">
+          <label class="form-label">Notes</label>
+          <textarea id="eventNotes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+/* ---------- Alert (shared) ---------- */
+function alertShow(message, type="info") {
+  const container = document.getElementById("alert-container") || document.body;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  container.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), 4000);
+}
+
+/* ---------- State ---------- */
+let EVENTS = []; // {id, date:'YYYY-MM-DD', time:'HH:MM', type, title, coach_id, coach_name, notes}
+let COACHES = []; // {id, name}
+let editingEventId = null;
+
+const weekGrid = document.getElementById('weekGrid');
+const weekLabel = document.getElementById('weekLabel');
+const upcomingTbody = document.getElementById('upcomingTbody');
+const noUpcoming = document.getElementById('noUpcoming');
+const coachFilter = document.getElementById('coachFilter');
+const typeFilter = document.getElementById('typeFilter');
+
+/* ---------- Helpers ---------- */
+function fmtDate(d){ return d.toISOString().slice(0,10); }
+function combineDateTime(dateStr,timeStr){ return new Date(`${dateStr}T${timeStr}:00`); }
+function dayName(d){ return d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'}); }
+
+/* ---------- Week View ---------- */
+let anchor = new Date(); // today
+function startOfWeek(d){
+  const x = new Date(d);
+  const day = x.getDay(); // 0..6 (Sun..Sat)
+  const diff = (day === 0 ? -6 : 1 - day); // start Monday
+  x.setDate(x.getDate() + diff);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function buildWeek(){
+  const start = startOfWeek(anchor);
+  const days = [...Array(7)].map((_,i)=> new Date(start.getFullYear(), start.getMonth(), start.getDate()+i));
+  weekLabel.textContent = `${days[0].toLocaleDateString()} - ${days[6].toLocaleDateString()}`;
+  weekGrid.innerHTML = days.map(d => `
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="border rounded p-2 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-semibold">${dayName(d)}</div>
+          <button class="btn btn-sm btn-light" onclick="quickAdd('${fmtDate(d)}')"><i class="bi bi-plus-lg"></i></button>
+        </div>
+        <div class="vstack gap-2" id="day-${fmtDate(d)}"></div>
+      </div>
+    </div>
+  `).join('');
+  renderEventsIntoDays();
+}
+
+function pill(type){
+  const map = { workout:'primary', run:'success', swim:'info', rest:'secondary' };
+  return `<span class="badge text-bg-${map[type]||'light'} text-uppercase">${type}</span>`;
+}
+
+function renderEventsIntoDays(){
+  // clear
+  [...weekGrid.querySelectorAll('[id^="day-"]')].forEach(c => c.innerHTML = '');
+  // render matching events
+  const start = startOfWeek(anchor);
+  const end = new Date(start); end.setDate(end.getDate()+6);
+  EVENTS.filter(e=>{
+    const d = new Date(e.date);
+    return d >= start && d <= end;
+  }).sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time))
+  .forEach(e=>{
+    const container = document.getElementById(`day-${e.date}`);
+    if (!container) return;
+    const time = e.time?.slice(0,5) || '--:--';
+    container.insertAdjacentHTML('beforeend', `
+      <div class="border rounded px-2 py-1 d-flex justify-content-between align-items-center">
+        <div>
+          <div class="small">${time} • ${e.title}</div>
+          <div class="small text-muted">${e.coach_name || '—'}</div>
+        </div>
+        <div class="d-flex align-items-center">
+          ${pill(e.type)}
+          <button class="btn btn-sm btn-link ms-2" onclick="openEditEvent(${e.id})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-link text-danger" onclick="deleteEvent(${e.id})"><i class="bi bi-trash"></i></button>
+        </div>
+      </div>
+    `);
+  });
+}
+
+/* ---------- Upcoming Table ---------- */
+function renderUpcoming(){
+  let rows = [...EVENTS];
+  const t = typeFilter.value;
+  const c = coachFilter.value;
+  if (t) rows = rows.filter(r => r.type === t);
+  if (c) rows = rows.filter(r => String(r.coach_id) === c);
+
+  rows.sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  upcomingTbody.innerHTML = rows.map(e=>{
+    const when = combineDateTime(e.date, e.time).toLocaleString();
+    return `
+      <tr>
+        <td>${when}</td>
+        <td>${pill(e.type)}</td>
+        <td>${e.title}</td>
+        <td>${e.coach_name || '—'}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-light me-1" onclick="openEditEvent(${e.id})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-light text-danger" onclick="deleteEvent(${e.id})"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  noUpcoming.classList.toggle('d-none', rows.length>0);
+}
+
+/* ---------- API ---------- */
+async function fetchSchedule(){
+  try{
+    const res = await fetch('/athlete/schedule', { headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }});
+    const data = res.ok ? await res.json() : { events:[], coaches:[] };
+    EVENTS = data.events || [];
+    COACHES = data.coaches || [];
+    fillCoachSelects();
+  }catch(e){
+    console.error(e);
+    alertShow('Failed to load schedule','danger');
+  }finally{
+    buildWeek();
+    renderUpcoming();
+  }
+}
+function fillCoachSelects(){
+  const coachSel = document.getElementById('eventCoach');
+  const coachFilterSel = coachFilter;
+  coachSel.innerHTML = `<option value="">Unassigned</option>` + COACHES.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  coachFilterSel.innerHTML = `<option value="">All coaches</option>` + COACHES.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+async function createEvent(payload){
+  const res = await fetch('/athlete/schedule', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify(payload)
+  });
+  return res.json().then(d=>({ok:res.ok,d}));
+}
+async function updateEvent(id,payload){
+  const res = await fetch(`/athlete/schedule/${id}`, {
+    method:'PUT',
+    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify(payload)
+  });
+  return res.json().then(d=>({ok:res.ok,d}));
+}
+async function deleteEvent(id){
+  if (!confirm('Delete this session?')) return;
+  const res = await fetch(`/athlete/schedule/${id}`, {
+    method:'DELETE',
+    headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }
+  });
+  const d = await res.json();
+  if (res.ok){ alertShow('Session deleted','success'); fetchSchedule(); }
+  else { alertShow(d?.msg || 'Delete failed','danger'); }
+}
+
+/* ---------- Modal ---------- */
+const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+document.getElementById('eventForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = {
+    date: document.getElementById('eventDate').value,
+    time: document.getElementById('eventTime').value,
+    type: document.getElementById('eventType').value,
+    title: document.getElementById('eventTitle').value.trim(),
+    coach_id: document.getElementById('eventCoach').value || null,
+    notes: document.getElementById('eventNotes').value.trim()
+  };
+  if (!payload.date || !payload.time || !payload.type || !payload.title) return alertShow('Fill required fields','warning');
+
+  let r;
+  if (editingEventId) r = await updateEvent(editingEventId, payload);
+  else r = await createEvent(payload);
+
+  if (r.ok){
+    alertShow(editingEventId ? 'Session updated' : 'Session created','success');
+    eventModal.hide();
+    editingEventId = null;
+    fetchSchedule();
+  } else {
+    alertShow(r.d?.msg || 'Operation failed','danger');
+  }
+});
+document.getElementById('eventModal').addEventListener('hidden.bs.modal', ()=>{
+  editingEventId = null;
+  document.getElementById('eventForm').reset();
+  document.getElementById('eventModalTitle').textContent = 'Add Session';
+});
+
+function quickAdd(dateStr){
+  editingEventId = null;
+  document.getElementById('eventModalTitle').textContent = 'Add Session';
+  document.getElementById('eventForm').reset();
+  document.getElementById('eventDate').value = dateStr;
+  eventModal.show();
+}
+function openEditEvent(id){
+  const ev = EVENTS.find(x=>x.id===id);
+  if (!ev) return;
+  editingEventId = id;
+  document.getElementById('eventModalTitle').textContent = 'Edit Session';
+  document.getElementById('eventDate').value = ev.date;
+  document.getElementById('eventTime').value = ev.time?.slice(0,5) || '';
+  document.getElementById('eventType').value = ev.type;
+  document.getElementById('eventTitle').value = ev.title;
+  document.getElementById('eventCoach').value = ev.coach_id || '';
+  document.getElementById('eventNotes').value = ev.notes || '';
+  eventModal.show();
+}
+
+/* ---------- Controls ---------- */
+document.getElementById('prevWeek').onclick = ()=>{ anchor.setDate(anchor.getDate()-7); buildWeek(); };
+document.getElementById('nextWeek').onclick = ()=>{ anchor.setDate(anchor.getDate()+7); buildWeek(); };
+document.getElementById('todayBtn').onclick = ()=>{ anchor = new Date(); buildWeek(); };
+typeFilter.onchange = renderUpcoming;
+coachFilter.onchange = renderUpcoming;
+
+/* ---------- Init ---------- */
+fetchSchedule();
+</script>
+{% endblock %}

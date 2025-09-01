@@ -56,6 +56,11 @@ class User(db.Model):
     sent_messages = db.relationship("Message", foreign_keys="[Message.sender_id]", back_populates="sender", lazy="dynamic", cascade="all, delete-orphan")
     received_messages = db.relationship("Message", foreign_keys="[Message.receiver_id]", back_populates="receiver", lazy="dynamic", cascade="all, delete-orphan")
 
+    # Athlete Dashboard
+    goals = db.relationship("AthleteGoal", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    schedule = db.relationship("AthleteSchedule", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    progress = db.relationship("AthleteProgress", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+
     # Helpers
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
