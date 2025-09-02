@@ -52,6 +52,7 @@
       </div>
     </div><!-- End card -->
 
+    <!-- Goals List -->
     <div class="col-12">
       <div class="card">
         <div class="card-body">
@@ -83,9 +84,7 @@
           </div>
 
           <!-- Goals List -->
-          <div id="goalsList" class="row g-3">
-            <!-- goals cards injected here -->
-          </div>
+          <div id="goalsList" class="row g-3"></div>
 
           <!-- Empty state -->
           <div id="goalsEmpty" class="text-center py-5 d-none">
@@ -149,10 +148,8 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
-
 <script>
-
-/* ---------- Alert (shared) ---------- */
+/* ---------- Alert ---------- */
 function alertShow(message, type="info") {
   const container = document.getElementById("alert-container") || document.body;
   const wrapper = document.createElement("div");
@@ -165,8 +162,8 @@ function alertShow(message, type="info") {
   setTimeout(() => wrapper.remove(), 4000);
 }
 
-/* ---------- Goals State & UI ---------- */
-let GOALS = [];            // filled from API
+/* ---------- State ---------- */
+let GOALS = [];
 let editingId = null;
 
 const goalsList = document.getElementById('goalsList');
@@ -174,6 +171,7 @@ const goalsEmpty = document.getElementById('goalsEmpty');
 const activeGoalsCount = document.getElementById('activeGoalsCount');
 const completedGoalsCount = document.getElementById('completedGoalsCount');
 
+/* ---------- Templates ---------- */
 function goalCardTpl(g) {
   const due = new Date(g.due_date).toLocaleDateString();
   const badge = g.status === "completed" ? "bg-success"
@@ -213,13 +211,13 @@ function goalCardTpl(g) {
   `;
 }
 
+/* ---------- Render ---------- */
 function renderGoals() {
   const q = document.getElementById('goalSearch').value.trim().toLowerCase();
   const st = document.getElementById('goalStatusFilter').value;
   const sortBy = document.getElementById('goalSort').value;
 
   let list = [...GOALS];
-
   if (q) {
     list = list.filter(g =>
       g.title.toLowerCase().includes(q) ||
@@ -237,19 +235,16 @@ function renderGoals() {
   });
 
   goalsList.innerHTML = list.map(goalCardTpl).join('');
-  const empty = list.length === 0;
-  goalsEmpty.classList.toggle('d-none', !empty);
-
+  goalsEmpty.classList.toggle('d-none', list.length > 0);
   activeGoalsCount.textContent = GOALS.filter(g => g.status==='active').length;
   completedGoalsCount.textContent = GOALS.filter(g => g.status==='completed').length;
 }
 
-/* ---------- API ---------- */
+/* ---------- API Calls ---------- */
 async function fetchGoals() {
   try {
-    const res = await fetch('/athlete/goals', { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }});
+    const res = await fetch('/athlete/api/goals', { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }});
     const data = res.ok ? await res.json() : [];
-    // Expecting: [{id, title, target, due_date, progress, status, tags:[]}, ...]
     GOALS = Array.isArray(data) ? data : [];
   } catch(e) {
     console.error(e);
@@ -260,7 +255,7 @@ async function fetchGoals() {
 }
 
 async function createGoal(payload) {
-  const res = await fetch('/athlete/goals', {
+  const res = await fetch('/athlete/api/goals', {
     method:'POST',
     headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
     body: JSON.stringify(payload)
@@ -269,7 +264,7 @@ async function createGoal(payload) {
 }
 
 async function updateGoal(id, payload) {
-  const res = await fetch(`/athlete/goals/${id}`, {
+  const res = await fetch(`/athlete/api/goals/${id}`, {
     method:'PUT',
     headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
     body: JSON.stringify(payload)
@@ -278,19 +273,18 @@ async function updateGoal(id, payload) {
 }
 
 async function deleteGoal(id) {
-  const res = await fetch(`/athlete/goals/${id}`, {
+  const res = await fetch(`/athlete/api/goals/${id}`, {
     method:'DELETE',
     headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }
   });
   return res.json().then(d => ({ ok: res.ok, d }));
 }
 
-/* ---------- Modal Handlers ---------- */
+/* ---------- Modal ---------- */
 const goalModalEl = document.getElementById('goalModal');
 const goalModal = new bootstrap.Modal(goalModalEl);
 
 document.getElementById('refreshGoals').onclick = fetchGoals;
-
 document.getElementById('goalSearch').addEventListener('input', renderGoals);
 document.getElementById('goalStatusFilter').addEventListener('change', renderGoals);
 document.getElementById('goalSort').addEventListener('change', renderGoals);

@@ -1,0 +1,124 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="m-0">Health Tracking</h5>
+    <div>
+      <button id="refreshHealth" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-repeat me-1"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card h-100"><div class="card-body">
+        <h6 class="mb-3">Weight (kg)</h6>
+        <canvas id="chartWeight" height="160"></canvas>
+      </div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100"><div class="card-body">
+        <h6 class="mb-3">Sleep (hrs)</h6>
+        <canvas id="chartSleep" height="160"></canvas>
+      </div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100"><div class="card-body">
+        <h6 class="mb-3">Resting HR (bpm)</h6>
+        <canvas id="chartHR" height="160"></canvas>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="card-body">
+      <h6 class="mb-3">Add Health Entry</h6>
+      <form id="healthForm" class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Date</label>
+          <input id="hDate" type="date" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Weight (kg)</label>
+          <input id="hWeight" type="number" step="0.1" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Sleep (hrs)</label>
+          <input id="hSleep" type="number" step="0.1" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Resting HR</label>
+          <input id="hHR" type="number" class="form-control">
+        </div>
+        <div class="col-12 text-end">
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+function alertShow(m,t="info"){const c=document.getElementById("alert-container")||document.body,w=document.createElement("div");w.innerHTML=`<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;c.appendChild(w);setTimeout(()=>w.remove(),4e3);}
+
+let HEALTH={weight:[], sleep:[], hr:[]};
+let cw, cs, ch;
+
+function makeChart(ctx,label,labels,data){
+  return new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label, data, tension:.3, fill:false}]},options:{responsive:true,plugins:{legend:{display:true}},scales:{x:{ticks:{maxTicksLimit:7}}}}});
+}
+
+function renderCharts(){
+  const labels = HEALTH.weight.map(x=>x.date);
+  const w = HEALTH.weight.map(x=>x.value);
+  const s = HEALTH.sleep.map(x=>x.value);
+  const h = HEALTH.hr.map(x=>x.value);
+
+  if (cw) cw.destroy(); if (cs) cs.destroy(); if (ch) ch.destroy();
+
+  cw = makeChart(document.getElementById('chartWeight'), 'Weight', labels, w);
+  cs = makeChart(document.getElementById('chartSleep'), 'Sleep', labels, s);
+  ch = makeChart(document.getElementById('chartHR'), 'Resting HR', labels, h);
+}
+
+async function fetchHealth(){
+  try{
+    const res=await fetch('/athlete/health',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
+    if(!res.ok) throw new Error(await res.text());
+    const data=await res.json();
+    // Expecting { weight:[{date:'YYYY-MM-DD', value:Number}], sleep:[...], hr:[...] }
+    HEALTH = data && typeof data==='object' ? data : {weight:[],sleep:[],hr:[]};
+  }catch(e){console.error(e);HEALTH={weight:[],sleep:[],hr:[]};alertShow('Failed to load health data','danger');}
+  finally{renderCharts();}
+}
+
+document.getElementById('refreshHealth').onclick = fetchHealth;
+
+document.getElementById('healthForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const payload={
+    date:document.getElementById('hDate').value,
+    weight:document.getElementById('hWeight').value?Number(document.getElementById('hWeight').value):null,
+    sleep:document.getElementById('hSleep').value?Number(document.getElementById('hSleep').value):null,
+    hr:document.getElementById('hHR').value?Number(document.getElementById('hHR').value):null,
+  };
+  if(!payload.date){alertShow('Date is required','warning');return;}
+  try{
+    const res=await fetch('/athlete/health',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
+    const data=await (async()=>{try{return await res.json()}catch{return {}}})();
+    if(!res.ok) throw new Error(data?.msg||'Save failed');
+    alertShow('Entry saved','success'); fetchHealth();
+    e.target.reset();
+  }catch(err){alertShow(err.message,'danger');}
+});
+
+fetchHealth();
+</script>
+{% endblock %}

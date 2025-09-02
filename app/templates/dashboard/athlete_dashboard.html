@@ -2,288 +2,144 @@
 
 {% block content %}
 <section class="section dashboard">
-      <div class="row">
-
-        <!-- Left side columns -->
-        <div class="col-lg-8">
-          <div class="row">
-
-            <!-- User Stats Cards -->
-            <div class="col-xxl-4 col-md-6">
-              <div class="card info-card sales-card">
-                <div class="card-body">
-                  <h5 class="card-title">Leslie Alexander</h5>
-                  <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-person"></i>
-                    </div>
-                    <div class="ps-3">
-                      <h6>55 kg</h6>
-                      <span class="text-muted small pt-1">Weight</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End User Stats Card -->
-
-            <!-- Height Card -->
-            <div class="col-xxl-4 col-md-6">
-              <div class="card info-card revenue-card">
-                <div class="card-body">
-                  <h5 class="card-title">Height</h5>
-                  <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-rulers"></i>
-                    </div>
-                    <div class="ps-3">
-                      <h6>167 cm</h6>
-                      <span class="text-muted small pt-1">Height</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End Height Card -->
-
-            <!-- Age Card -->
-            <div class="col-xxl-4 col-xl-12">
-              <div class="card info-card customers-card">
-                <div class="card-body">
-                  <h5 class="card-title">Age</h5>
-                  <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-calendar"></i>
-                    </div>
-                    <div class="ps-3">
-                      <h6>26 years</h6>
-                      <span class="text-muted small pt-1">Age</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End Age Card -->
-
-            <!-- User Details -->
-            <div class="col-12">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Account</h5>
-                  
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="profile-info">
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Name</span>
-                          <span>Leslie Alexander <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Gender</span>
-                          <span>Male <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Date of birth</span>
-                          <span>22 may 1995 <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Height</span>
-                          <span>172 cm <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Weight</span>
-                          <span>62 kg <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Max heart rate</span>
-                          <span>195 bpm <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                      <div class="account-actions">
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span>Account</span>
-                          <i class="bi bi-chevron-right"></i>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span>My Workouts</span>
-                          <i class="bi bi-chevron-right"></i>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span>Workout reminders</span>
-                          <i class="bi bi-chevron-right"></i>
-                        </div>
-                        <div class="text-center mt-3">
-                          <button class="btn btn-primary">Log out</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End User Details -->
-
+  <div class="row g-3">
+    <!-- Cards -->
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card sales-card"><div class="card-body">
+        <h5 class="card-title">Active Goals</h5>
+        <div class="d-flex align-items-center">
+          <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+            <i class="bi bi-bullseye"></i>
           </div>
-        </div><!-- End Left side columns -->
+          <div class="ps-3">
+            <h6 id="dashGoals">0</h6>
+            <span class="text-muted small">In progress</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card revenue-card"><div class="card-body">
+        <h5 class="card-title">Plans</h5>
+        <div class="d-flex align-items-center">
+          <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+            <i class="bi bi-journal-check"></i>
+          </div>
+          <div class="ps-3">
+            <h6 id="dashPlans">0</h6>
+            <span class="text-muted small">Assigned</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card customers-card"><div class="card-body">
+        <h5 class="card-title">This Week Workouts</h5>
+        <div class="d-flex align-items-center">
+          <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+            <i class="bi bi-activity"></i>
+          </div>
+          <div class="ps-3">
+            <h6 id="dashWorkouts">0</h6>
+            <span class="text-muted small">Scheduled</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card customers-card"><div class="card-body">
+        <h5 class="card-title">Readiness</h5>
+        <div class="d-flex align-items-center">
+          <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+            <i class="bi bi-thermometer-half"></i>
+          </div>
+          <div class="ps-3">
+            <h6 id="dashReadiness">--</h6>
+            <span class="text-muted small">Today</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
 
-        <!-- Right side columns -->
-        <div class="col-lg-4">
-
-          <!-- Settings Card -->
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Settings</h5>
-              
-              <div class="settings-list">
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Preferences</span>
-                  <i class="bi bi-chevron-right"></i>
-                </div>
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Plan Settings</span>
-                  <i class="bi bi-chevron-right"></i>
-                </div>
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Notification</span>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" checked>
-                  </div>
-                </div>
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Pin Lock</span>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" checked>
-                  </div>
-                </div>
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Apple Health</span>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" checked>
-                  </div>
-                </div>
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Dark Mode</span>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="darkModeToggle">
-                  </div>
-                </div>
-                <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                  <span>Contacts Support</span>
-                  <i class="bi bi-chevron-right"></i>
-                </div>
-              </div>
-            </div>
-          </div><!-- End Settings Card -->
-
-          <!-- Weight Tracking -->
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Weight tracking</h5>
-              
-              <div class="weight-entries">
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Today</div>
-                    <div class="weight">52.7 kg</div>
-                  </div>
-                  <div class="change text-success">+0.1 kg</div>
-                </div>
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Nov 13, 2028</div>
-                    <div class="weight">52.6 kg</div>
-                  </div>
-                  <div class="change text-success">-0.3 kg</div>
-                </div>
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Nov 14, 2028</div>
-                    <div class="weight">52.9 kg</div>
-                  </div>
-                  <div class="change text-success">+0.2 kg</div>
-                </div>
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Nov 15, 2028</div>
-                    <div class="weight">52.7 kg</div>
-                  </div>
-                  <div class="change text-success">-0.2 kg</div>
-                </div>
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Nov 16, 2028</div>
-                    <div class="weight">52.9 kg</div>
-                  </div>
-                  <div class="change text-danger">-0.1 kg</div>
-                </div>
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Nov 17, 2028</div>
-                    <div class="weight">52.8 kg</div>
-                  </div>
-                  <div class="change text-danger">-0.1 kg</div>
-                </div>
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">Nov 18, 2028</div>
-                    <div class="weight">52.7 kg</div>
-                  </div>
-                  <div class="change text-success">-0.2 kg</div>
-                </div>
-              </div>
-            </div>
-          </div><!-- End Weight Tracking -->
-
-          <!-- Newsletter -->
-          <div class="card">
-            <div class="card-body">
-              <div class="newsletter-card bg-warning bg-opacity-25 p-4 rounded">
-                <div class="newsletter-icon mb-3">
-                  <i class="bi bi-envelope-heart text-warning fs-1"></i>
-                </div>
-                <h5>Subscribe to Our Newsletter</h5>
-                <p class="small">Stay updated with our latest updates, exclusive content, and special offers delivered directly to your inbox!</p>
-                <div class="input-group mb-3">
-                  <input type="email" class="form-control" placeholder="Enter Your Email">
-                </div>
-                <button class="btn btn-primary w-100">Subscribe</button>
-              </div>
-            </div>
-          </div><!-- End Newsletter -->
-
-          <!-- Music Provider -->
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Music Provider</h5>
-              <p class="small text-muted">Listen to your favorite music while exercising. The best music streaming services include access to millions of songs.</p>
-              
-              <div class="music-services">
-                <div class="service-item d-flex justify-content-between align-items-center py-2">
-                  <span>Spotify</span>
-                  <i class="bi bi-chevron-right"></i>
-                </div>
-                <div class="service-item d-flex justify-content-between align-items-center py-2">
-                  <span>Apple Music</span>
-                  <i class="bi bi-chevron-right"></i>
-                </div>
-              </div>
-            </div>
-          </div><!-- End Music Provider -->
-
-          <!-- Fitness Star -->
-          <div class="card">
-            <div class="card-body text-center">
-              <div class="fitness-star-icon mb-3">
-                <i class="bi bi-trophy-fill text-warning fs-1"></i>
-              </div>
-              <h5>Fitness Star</h5>
-              <p class="small text-muted">Get to know if you're on your fitness training journey.</p>
-            </div>
-          </div><!-- End Fitness Star -->
-
-        </div><!-- End Right side columns -->
-
+    <!-- Recent workouts & goals -->
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Recent Workouts</h6>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead class="table-light">
+                <tr><th>Title</th><th>Type</th><th>Date</th><th>Intensity</th></tr>
+              </thead>
+              <tbody id="tblRecent"><tr><td colspan="4" class="text-muted">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Active Goals</h6>
+          <ul id="ulGoals" class="list-group">
+            <li class="list-group-item text-muted">Loading...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
-
 {% endblock %}
 
+{% block scripts %}
+<script>
+function alertShow(m,t="info"){const c=document.getElementById("alert-container")||document.body,w=document.createElement("div");w.innerHTML=`<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;c.appendChild(w);setTimeout(()=>w.remove(),4e3);}
+
+async function safeJson(res){ const ct=res.headers.get('content-type')||''; if(!res.ok) throw new Error(await res.text()); if(ct.includes('application/json')) return res.json(); return {}; }
+
+async function loadSummary(){
+  try{
+    const [sum, rec, goals] = await Promise.all([
+      fetch('/athlete/summary',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}}).then(safeJson).catch(()=>({active_goals:0, plans:0, week_workouts:0, readiness:'--'})),
+      fetch('/athlete/workouts?limit=5',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}}).then(safeJson).catch(()=>[]),
+      fetch('/athlete/goals?status=active',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}}).then(safeJson).catch(()=>[])
+    ]);
+
+    document.getElementById('dashGoals').textContent = sum.active_goals ?? 0;
+    document.getElementById('dashPlans').textContent = sum.plans ?? 0;
+    document.getElementById('dashWorkouts').textContent = sum.week_workouts ?? 0;
+    document.getElementById('dashReadiness').textContent = sum.readiness ?? '--';
+
+    const tbody=document.getElementById('tblRecent');
+    if (Array.isArray(rec) && rec.length){
+      tbody.innerHTML = rec.map(w=>`<tr>
+        <td>${w.title}</td>
+        <td class="text-capitalize">${w.type||'-'}</td>
+        <td>${new Date(w.date).toLocaleDateString()}</td>
+        <td><span class="badge ${w.intensity==='hard'?'bg-danger':w.intensity==='moderate'?'bg-warning':'bg-success'}">${w.intensity}</span></td>
+      </tr>`).join('');
+    } else {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-muted">No recent workouts</td></tr>`;
+    }
+
+    const ul=document.getElementById('ulGoals');
+    if (Array.isArray(goals) && goals.length){
+      ul.innerHTML = goals.slice(0,6).map(g=>`<li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-semibold">${g.title}</div>
+          <div class="small text-muted">Due: ${new Date(g.due_date).toLocaleDateString()}</div>
+        </div>
+        <span class="badge bg-primary">${g.progress||0}%</span>
+      </li>`).join('');
+    } else {
+      ul.innerHTML = `<li class="list-group-item text-muted">No active goals</li>`;
+    }
+  }catch(e){
+    console.error(e);
+    alertShow('Failed to load dashboard','danger');
+  }
+}
+
+loadSummary();
+</script>
+{% endblock %}

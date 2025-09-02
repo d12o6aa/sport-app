@@ -27,14 +27,6 @@
         </li>
       </ul>
     </li>
-    <!-- Goals -->
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.goals') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>Goals</span>
-        </a>
-    </li>
-
     <!-- Performance -->
     <li class="nav-item">
       <a class="nav-link collapsed" data-bs-target="#performance-nav" data-bs-toggle="collapse" href="#">
@@ -72,6 +64,46 @@
         </li>
       </ul>
     </li>
+    <!-- Training Plans -->
+    <li class="nav-item">
+        <a href="{{ url_for('athlete.training_plans') }}" class="nav-link">
+            <i class="fas fa-dumbbell"></i>
+            <span>Training Plans</span>
+        </a>
+    </li>
+
+    <!-- Workouts / Sessions -->
+    <li class="nav-item">
+        <a href="{{ url_for('athlete.workouts') }}" class="nav-link">
+            <i class="fas fa-running"></i>
+            <span>Workouts / Sessions</span>
+        </a>
+    </li>
+
+    <!-- Goals & Challenges -->
+    <li class="nav-item">
+        <a href="{{ url_for('athlete.challenges') }}" class="nav-link">
+            <i class="fas fa-flag-checkered"></i>
+            <span>Goals & Challenges</span>
+        </a>
+    </li>
+
+    <!-- Health Tracking -->
+    <li class="nav-item">
+        <a href="{{ url_for('athlete.health') }}" class="nav-link">
+            <i class="fas fa-heartbeat"></i>
+            <span>Health Tracking</span>
+        </a>
+    </li>
+
+    <!-- Goals (الموجودة عندك بالفعل) -->
+    <li class="nav-item">
+        <a href="{{ url_for('athlete.goals') }}" class="nav-link">
+            <i class="fas fa-target"></i>
+            <span>Goals</span>
+        </a>
+    </li>
+  <!-- Settings -->
 
   </ul>
 </aside>

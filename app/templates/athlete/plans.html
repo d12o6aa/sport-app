@@ -1,0 +1,128 @@
+{% extends "shared/base.html" %}
+{% block content %}
+<section class="section dashboard">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="m-0">Training Plans</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#planModal">
+      <i class="bi bi-plus-lg me-1"></i> Add Plan
+    </button>
+  </div>
+
+  <!-- Plans List -->
+  <div id="plansList" class="row g-3"></div>
+
+  <!-- Empty -->
+  <div id="plansEmpty" class="text-center py-5 d-none">
+    <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
+    <p class="mt-2 text-muted">No training plans yet. Add one to get started.</p>
+  </div>
+</section>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="planModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="planForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="planModalTitle">Add Training Plan</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="planId">
+        <div class="mb-3">
+          <label class="form-label">Title</label>
+          <input id="planTitle" type="text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Duration (weeks)</label>
+          <input id="planDuration" type="number" min="1" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea id="planDesc" class="form-control"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+let PLANS = [];
+
+function planCardTpl(p) {
+  return `
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6>${p.title}</h6>
+          <p class="small text-muted">Duration: ${p.duration} weeks</p>
+          <p>${p.description || ''}</p>
+          <div class="d-flex justify-content-end">
+            <button class="btn btn-sm btn-light me-1" onclick="openEditPlan(${p.id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-light text-danger" onclick="deletePlan(${p.id})"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPlans() {
+  const list = document.getElementById('plansList');
+  list.innerHTML = PLANS.map(planCardTpl).join('');
+  document.getElementById('plansEmpty').classList.toggle('d-none', PLANS.length>0);
+}
+
+// Dummy fetch
+async function fetchPlans() {
+  PLANS = [
+    {id:1, title:'Strength Plan', duration:8, description:'8-week strength training'},
+    {id:2, title:'Cardio Plan', duration:4, description:'Improve endurance in 1 month'}
+  ];
+  renderPlans();
+}
+
+function openEditPlan(id) {
+  const p = PLANS.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('planModalTitle').textContent = 'Edit Plan';
+  document.getElementById('planId').value = p.id;
+  document.getElementById('planTitle').value = p.title;
+  document.getElementById('planDuration').value = p.duration;
+  document.getElementById('planDesc').value = p.description;
+  new bootstrap.Modal(document.getElementById('planModal')).show();
+}
+
+document.getElementById('planForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const id = document.getElementById('planId').value;
+  const payload = {
+    id: id || Date.now(),
+    title: document.getElementById('planTitle').value,
+    duration: document.getElementById('planDuration').value,
+    description: document.getElementById('planDesc').value
+  };
+  if (id) {
+    PLANS = PLANS.map(x=>x.id==id?payload:x);
+  } else {
+    PLANS.push(payload);
+  }
+  bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+  renderPlans();
+});
+
+function deletePlan(id){
+  PLANS = PLANS.filter(x=>x.id!==id);
+  renderPlans();
+}
+
+fetchPlans();
+</script>
+{% endblock %}

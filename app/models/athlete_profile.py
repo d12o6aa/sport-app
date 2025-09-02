@@ -13,3 +13,4 @@ class AthleteProfile(db.Model):
     pending_updates = db.Column(JSONB, server_default="{}", default=dict)
 
     user = db.relationship("User", back_populates="athlete_profile")
+    goals = db.relationship("AthleteGoal", back_populates="athlete_profile")

@@ -1,0 +1,168 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="m-0">Challenges</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#chModal">
+      <i class="bi bi-plus-lg me-1"></i> Create Challenge
+    </button>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3" id="chList"></div>
+          <div id="chEmpty" class="text-center py-5 d-none">
+            <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
+            <p class="mt-2 text-muted">No challenges yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Leaderboard -->
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-3">Leaderboard</h6>
+          <ol id="leaderboard" class="list-group list-group-numbered">
+            <!-- injected -->
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="chModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="chForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chModalTitle">Create Challenge</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="chId">
+        <div class="mb-3">
+          <label class="form-label">Title</label>
+          <input id="chTitle" type="text" class="form-control" required maxlength="120">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Goal (e.g. Run 50km)</label>
+          <input id="chGoal" type="text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">End Date</label>
+          <input id="chEnd" type="date" class="form-control" required>
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Tags</label>
+          <input id="chTags" type="text" class="form-control" placeholder="speed, endurance">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+function alertShow(m,t="info"){const c=document.getElementById("alert-container")||document.body,w=document.createElement("div");w.innerHTML=`<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;c.appendChild(w);setTimeout(()=>w.remove(),4e3);}
+let CHALLENGES=[], editId=null;
+
+const $list=document.getElementById('chList');
+const $empty=document.getElementById('chEmpty');
+const $leader=document.getElementById('leaderboard');
+
+function chCard(c){
+  const badge = new Date(c.end_date) < new Date() ? 'bg-secondary' : 'bg-primary';
+  return `<div class="col-md-6"><div class="card h-100"><div class="card-body d-flex flex-column">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h6 class="mb-1">${c.title}</h6>
+        <div class="small text-muted">Goal: ${c.goal}</div>
+      </div>
+      <span class="badge ${badge}">${new Date(c.end_date).toLocaleDateString()}</span>
+    </div>
+    <div class="mt-2 small text-muted">Participants: ${c.participants?.length||1}</div>
+    <div class="mt-auto d-flex justify-content-end">
+      <button class="btn btn-sm btn-light me-1" onclick="openEdit(${c.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-light text-danger" onclick="removeCh(${c.id})"><i class="bi bi-trash"></i></button>
+    </div>
+  </div></div></div>`;
+}
+
+function render(){
+  $list.innerHTML = CHALLENGES.map(chCard).join('');
+  $empty.classList.toggle('d-none', CHALLENGES.length>0);
+
+  // Leaderboard: simple mock based on points
+  const board = CHALLENGES.flatMap(c=>c.participants||[]).sort((a,b)=>b.points-a.points).slice(0,10);
+  $leader.innerHTML = board.length
+    ? board.map(p=>`<li class="list-group-item d-flex justify-content-between align-items-center">${p.name}<span class="badge bg-primary rounded-pill">${p.points}</span></li>`).join('')
+    : `<li class="list-group-item text-muted">No participants yet</li>`;
+}
+
+async function fetchChallenges(){
+  try{
+    const res=await fetch('/athlete/challenges',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
+    if(!res.ok) throw new Error(await res.text());
+    const data=await res.json();
+    CHALLENGES = Array.isArray(data)?data:[];
+  }catch(e){console.error(e);CHALLENGES=[];alertShow('Failed to load challenges','danger')}
+  finally{render();}
+}
+
+function openEdit(id){
+  const c=CHALLENGES.find(x=>x.id===id); if(!c) return;
+  editId=id;
+  document.getElementById('chModalTitle').textContent='Edit Challenge';
+  document.getElementById('chId').value=c.id;
+  document.getElementById('chTitle').value=c.title||'';
+  document.getElementById('chGoal').value=c.goal||'';
+  document.getElementById('chEnd').value=(c.end_date||'').slice(0,10);
+  document.getElementById('chTags').value=(c.tags||[]).join(', ');
+  new bootstrap.Modal(document.getElementById('chModal')).show();
+}
+
+document.getElementById('chForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const payload={
+    title:document.getElementById('chTitle').value.trim(),
+    goal:document.getElementById('chGoal').value.trim(),
+    end_date:document.getElementById('chEnd').value,
+    tags:document.getElementById('chTags').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  if(!payload.title||!payload.goal||!payload.end_date){alertShow('Please fill required fields','warning');return;}
+  let res;
+  if(editId){
+    res=await fetch(`/athlete/challenges/${editId}`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
+  }else{
+    res=await fetch('/athlete/challenges',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
+  }
+  const data=await (async()=>{try{return await res.json()}catch{return {}}})();
+  if(!res.ok){alertShow(data?.msg||'Operation failed','danger');return;}
+  alertShow(editId?'Challenge updated':'Challenge created','success');
+  bootstrap.Modal.getInstance(document.getElementById('chModal')).hide();
+  editId=null; e.target.reset(); fetchChallenges();
+});
+
+async function removeCh(id){
+  if(!confirm('Delete this challenge?')) return;
+  const res=await fetch(`/athlete/challenges/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
+  const data=await (async()=>{try{return await res.json()}catch{return {}}})();
+  if(!res.ok){alertShow(data?.msg||'Delete failed','danger');return;}
+  alertShow('Challenge deleted','success'); fetchChallenges();
+}
+
+fetchChallenges();
+</script>
+{% endblock %}

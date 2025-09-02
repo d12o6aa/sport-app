@@ -73,3 +73,24 @@ def send_feedback():
 @jwt_required()
 def view_coach_feedback():
     return render_template("athlete/view_coach_feedback.html")
+
+@athlete_bp.route("/training_plans")
+@jwt_required()
+def training_plans():
+    return render_template("athlete/plans.html")
+
+@athlete_bp.route("/workouts")
+@jwt_required()
+def workouts():
+    return render_template("athlete/workouts.html")
+
+@athlete_bp.route("/health")
+@jwt_required()
+def health():
+    return render_template("athlete/health.html")
+
+
+@athlete_bp.route("/challenges")
+@jwt_required()
+def challenges():
+    return render_template("athlete/challenges.html")
