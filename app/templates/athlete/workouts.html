@@ -131,7 +131,7 @@ function render(){
 
 async function fetchWorkouts(){
   try{
-    const res=await fetch('/athlete/workouts',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
+    const res=await fetch('/athlete/api/workouts',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
     if(!res.ok) throw new Error(await res.text());
     const data=await res.json();
     WORKOUTS=Array.isArray(data)?data:[];
@@ -156,7 +156,7 @@ document.getElementById('wForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const payload={
     title:document.getElementById('wTitle').value.trim(),
-    type:document.getElementById('wTypeInput').value,
+    session_type:document.getElementById('wTypeInput').value,
     intensity:document.getElementById('wIntensityInput').value,
     date:document.getElementById('wDate').value,
     notes:document.getElementById('wNotes').value.trim()
@@ -164,9 +164,9 @@ document.getElementById('wForm').addEventListener('submit', async e=>{
   if(!payload.title||!payload.date){alertShow('Please fill required fields','warning');return;}
   let res;
   if(editId){
-    res=await fetch(`/athlete/workouts/${editId}`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
+    res=await fetch(`/athlete/api/workouts/${editId}`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
   }else{
-    res=await fetch('/athlete/workouts',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
+    res=await fetch('/athlete/api/workouts',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
   }
   const data=await (async()=>{try{return await res.json()}catch{return {}}})();
   if(!res.ok){alertShow(data?.msg||'Operation failed','danger');return;}
@@ -177,7 +177,7 @@ document.getElementById('wForm').addEventListener('submit', async e=>{
 
 async function removeWorkout(id){
   if(!confirm('Delete this workout?')) return;
-  const res=await fetch(`/athlete/workouts/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
+  const res=await fetch(`/athlete/api/workouts/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
   const data=await (async()=>{try{return await res.json()}catch{return {}}})();
   if(!res.ok){alertShow(data?.msg||'Delete failed','danger');return;}
   alertShow('Workout deleted','success'); fetchWorkouts();

@@ -1,5 +1,13 @@
 {% extends "shared/base.html" %}
 
+{% block style %}
+<style>
+  .progress-bar {
+    transition: width 0.5s ease;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="section dashboard">
   <div class="row g-3">
@@ -33,7 +41,7 @@
           </div>
         </div>
       </div>
-    </div><!-- End card -->
+    </div>
 
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card revenue-card">
@@ -50,7 +58,7 @@
           </div>
         </div>
       </div>
-    </div><!-- End card -->
+    </div>
 
     <!-- Goals List -->
     <div class="col-12">
@@ -114,7 +122,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">Target</label>
-          <input id="goalTarget" type="text" class="form-control" placeholder="e.g. Lose 5 kg / Run 5K under 25m" required>
+          <input id="goalTarget" type="number" class="form-control" placeholder="e.g. 5" required>
         </div>
         <div class="mb-3">
           <label class="form-label">Due Date</label>
@@ -173,7 +181,7 @@ const completedGoalsCount = document.getElementById('completedGoalsCount');
 
 /* ---------- Templates ---------- */
 function goalCardTpl(g) {
-  const due = new Date(g.due_date).toLocaleDateString();
+  const due = g.due_date ? new Date(g.due_date).toLocaleDateString() : '';
   const badge = g.status === "completed" ? "bg-success"
               : g.status === "paused" ? "bg-warning"
               : "bg-primary";
@@ -194,7 +202,7 @@ function goalCardTpl(g) {
               <span>Progress</span><span>${g.progress}%</span>
             </div>
             <div class="progress">
-              <div class="progress-bar" style="width:${g.progress}%"></div>
+              <div class="progress-bar" style="width:${g.progress}%" role="progressbar">${g.progress}%</div>
             </div>
           </div>
           <div class="d-flex justify-content-between align-items-center">
@@ -293,12 +301,13 @@ document.getElementById('goalForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const payload = {
     title: document.getElementById('goalTitle').value.trim(),
-    target: document.getElementById('goalTarget').value.trim(),
+    target: Number(document.getElementById('goalTarget').value.trim()),
     due_date: document.getElementById('goalDue').value,
-    progress: Number(document.getElementById('goalProgress').value || 0),
+    current_value: Number(document.getElementById('goalProgress').value || 0), // هنا بدل progress
     status: document.getElementById('goalStatus').value,
     tags: document.getElementById('goalTags').value.split(',').map(s=>s.trim()).filter(Boolean)
   };
+
   if (!payload.title || !payload.target || !payload.due_date) {
     alertShow('Please fill required fields', 'warning'); return;
   }
@@ -327,7 +336,7 @@ function openEdit(id) {
   document.getElementById('goalTitle').value = g.title;
   document.getElementById('goalTarget').value = g.target;
   document.getElementById('goalDue').value = g.due_date?.slice(0,10);
-  document.getElementById('goalProgress').value = g.progress || 0;
+  document.getElementById('goalProgress').value = g.current_value || 0;
   document.getElementById('goalStatus').value = g.status;
   document.getElementById('goalTags').value = (g.tags||[]).join(', ');
   goalModal.show();

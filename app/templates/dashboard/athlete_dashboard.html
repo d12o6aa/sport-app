@@ -90,56 +90,83 @@
   </div>
 </section>
 {% endblock %}
-
 {% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 <script>
-function alertShow(m,t="info"){const c=document.getElementById("alert-container")||document.body,w=document.createElement("div");w.innerHTML=`<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;c.appendChild(w);setTimeout(()=>w.remove(),4e3);}
+function showAlert(message, type="info") {
+  const container = document.getElementById("alert-container") || document.body;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  container.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), 4000);
+}
 
-async function safeJson(res){ const ct=res.headers.get('content-type')||''; if(!res.ok) throw new Error(await res.text()); if(ct.includes('application/json')) return res.json(); return {}; }
+// ---- Helpers ----
+async function safeJson(res) {
+  const ct = res.headers.get("content-type") || "";
+  if (!res.ok) throw new Error(await res.text());
+  return ct.includes("application/json") ? res.json() : {};
+}
 
-async function loadSummary(){
-  try{
-    const [sum, rec, goals] = await Promise.all([
-      fetch('/athlete/summary',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}}).then(safeJson).catch(()=>({active_goals:0, plans:0, week_workouts:0, readiness:'--'})),
-      fetch('/athlete/workouts?limit=5',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}}).then(safeJson).catch(()=>[]),
-      fetch('/athlete/goals?status=active',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}}).then(safeJson).catch(()=>[])
+// ---- Load Dashboard Data ----
+async function loadDashboard() {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const [summary, workouts, goals] = await Promise.all([
+      fetch("/athlete/summary", { headers: { Authorization: `Bearer ${token}` } }).then(safeJson).catch(() => ({ active_goals:0, plans:0, week_workouts:0, readiness:"--" })),
+      fetch("/athlete/workouts?limit=5", { headers: { Authorization: `Bearer ${token}` } }).then(safeJson).catch(() => []),
+      fetch("/athlete/goals?status=active", { headers: { Authorization: `Bearer ${token}` } }).then(safeJson).catch(() => [])
     ]);
 
-    document.getElementById('dashGoals').textContent = sum.active_goals ?? 0;
-    document.getElementById('dashPlans').textContent = sum.plans ?? 0;
-    document.getElementById('dashWorkouts').textContent = sum.week_workouts ?? 0;
-    document.getElementById('dashReadiness').textContent = sum.readiness ?? '--';
+    // Update summary cards
+    document.getElementById("dashGoals").textContent = summary.active_goals ?? 0;
+    document.getElementById("dashPlans").textContent = summary.plans ?? 0;
+    document.getElementById("dashWorkouts").textContent = summary.week_workouts ?? 0;
+    document.getElementById("dashReadiness").textContent = summary.readiness ?? "--";
 
-    const tbody=document.getElementById('tblRecent');
-    if (Array.isArray(rec) && rec.length){
-      tbody.innerHTML = rec.map(w=>`<tr>
-        <td>${w.title}</td>
-        <td class="text-capitalize">${w.type||'-'}</td>
-        <td>${new Date(w.date).toLocaleDateString()}</td>
-        <td><span class="badge ${w.intensity==='hard'?'bg-danger':w.intensity==='moderate'?'bg-warning':'bg-success'}">${w.intensity}</span></td>
-      </tr>`).join('');
+    // Update workouts table
+    const tbody = document.getElementById("tblRecent");
+    if (Array.isArray(workouts) && workouts.length) {
+      tbody.innerHTML = workouts.map(w => `
+        <tr>
+          <td>${w.title}</td>
+          <td class="text-capitalize">${w.type || "-"}</td>
+          <td>${new Date(w.date).toLocaleDateString()}</td>
+          <td><span class="badge ${w.intensity === "hard" ? "bg-danger" : w.intensity === "moderate" ? "bg-warning" : "bg-success"}">${w.intensity}</span></td>
+        </tr>
+      `).join("");
     } else {
       tbody.innerHTML = `<tr><td colspan="4" class="text-muted">No recent workouts</td></tr>`;
     }
 
-    const ul=document.getElementById('ulGoals');
-    if (Array.isArray(goals) && goals.length){
-      ul.innerHTML = goals.slice(0,6).map(g=>`<li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <div class="fw-semibold">${g.title}</div>
-          <div class="small text-muted">Due: ${new Date(g.due_date).toLocaleDateString()}</div>
-        </div>
-        <span class="badge bg-primary">${g.progress||0}%</span>
-      </li>`).join('');
+    // Update goals list
+    const ul = document.getElementById("ulGoals");
+    if (Array.isArray(goals) && goals.length) {
+      ul.innerHTML = goals.slice(0, 6).map(g => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">${g.title}</div>
+            <div class="small text-muted">Due: ${new Date(g.due_date).toLocaleDateString()}</div>
+          </div>
+          <span class="badge bg-primary">${g.progress || 0}%</span>
+        </li>
+      `).join("");
     } else {
       ul.innerHTML = `<li class="list-group-item text-muted">No active goals</li>`;
     }
-  }catch(e){
-    console.error(e);
-    alertShow('Failed to load dashboard','danger');
+
+  } catch (err) {
+    console.error(err);
+    showAlert("Failed to load dashboard", "danger");
   }
 }
 
-loadSummary();
+// ---- Init ----
+document.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
 {% endblock %}

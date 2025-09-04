@@ -5,3 +5,6 @@ flask db upgrade
 
 flask db migrate
 flask db upgrade
+sudo -u postgres psql
+
+flask db init

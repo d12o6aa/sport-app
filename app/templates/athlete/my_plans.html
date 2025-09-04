@@ -153,7 +153,7 @@ function renderPlans(){
 
 async function fetchPlans(){
   try{
-    const res = await fetch('/athlete/plans', { headers:{ Authorization: `Bearer ${localStorage.getItem('access_token')}` }});
+    const res = await fetch('/athlete/api/plans', { headers:{ Authorization: `Bearer ${localStorage.getItem('access_token')}` }});
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     PLANS = Array.isArray(data) ? data : [];
@@ -191,12 +191,12 @@ document.getElementById('planForm').addEventListener('submit', async e=>{
   try{
     let res;
     if (editingPlanId){
-      res = await fetch(`/athlete/plans/${editingPlanId}`, {
+      res = await fetch(`/athlete/api/plans/${editingPlanId}`, {
         method:'PUT', headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}`},
         body: JSON.stringify(payload)
       });
     } else {
-      res = await fetch('/athlete/plans', {
+      res = await fetch('/athlete/api/plans', {
         method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}`},
         body: JSON.stringify(payload)
       });
@@ -216,7 +216,7 @@ document.getElementById('planForm').addEventListener('submit', async e=>{
 async function removePlan(id){
   if (!confirm('Delete this plan?')) return;
   try{
-    const res = await fetch(`/athlete/plans/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }});
+    const res = await fetch(`/athlete/api/plans/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }});
     const data = await (async()=>{try{return await res.json()}catch{return {}}})();
     if (!res.ok) throw new Error(data?.msg||'Delete failed');
     alertShow('Plan deleted','success');

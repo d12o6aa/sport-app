@@ -22,6 +22,7 @@ from .feedbacks import Feedback
 from .athlete_goals import AthleteGoal
 from .athlete_schedule import AthleteSchedule
 from .athlete_progress import AthleteProgress
+from . import readiness_scores
 
 __all__ = [
     "User",
@@ -30,5 +31,5 @@ __all__ = [
     "AthleteGroup", "AthletePlan", "CoachAthlete",
     "Subscription", "ActivityLog", "WorkoutFile", "WorkoutLog","ReadinessScore" , "MLInsight",
     "Message",
-    "AthleteGoal", "AthleteSchedule", "AthleteProgress"
+    "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores"
 ]

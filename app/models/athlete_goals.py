@@ -14,6 +14,9 @@ class AthleteGoal(db.Model):
     unit = db.Column(db.String(20), default="")   # kg, km, reps
     deadline = db.Column(db.Date, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    tags = db.Column(db.String(200))  # comma separated
+    progress = db.Column(db.Integer, default=0)  # %
+    status = db.Column(db.String(20), db.CheckConstraint("status IN ('not started','in progress','completed')"), default="not started")
     
     athlete = db.relationship("User", back_populates="goals")
     athlete_profile = db.relationship("AthleteProfile", back_populates="goals")

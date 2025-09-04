@@ -53,6 +53,7 @@ def create_app():
     from app.routes.coach.views import coach_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.player import athlete_bp
+    
 
     # تسجيل الـ Blueprints
     app.register_blueprint(athlete_bp, url_prefix="/athlete")

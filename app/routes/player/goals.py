@@ -11,17 +11,28 @@ from datetime import date
 def get_goals():
     user_id = get_jwt_identity()
     goals = AthleteGoal.query.filter_by(athlete_id=user_id).all()
-    return jsonify([
-        {
+
+    result = []
+    for g in goals:
+        try:
+            progress = round((g.current_value / g.target_value) * 100, 1) if g.target_value else 0
+        except TypeError:
+            progress = 0
+        # حدد الحالة بناءً على progress
+        status = "completed" if progress >= 100 else g.status or "active"
+        result.append({
             "id": g.id,
             "title": g.title,
-            "target": g.target_value,   # <-- استخدم target_value
+            "target": g.target_value,
             "current_value": g.current_value,
+            "progress": progress,
             "unit": g.unit,
             "due_date": g.deadline.isoformat() if g.deadline else None,
+            "status": status,
+            "tags": g.tags.split(",") if g.tags else [],
             "created_at": g.created_at.isoformat(),
-        } for g in goals
-    ])
+        })
+    return jsonify(result)
 
 # ---------------- API: Create goal ----------------
 @athlete_bp.route("/api/goals", methods=["POST"])
@@ -60,16 +71,18 @@ def update_goal(goal_id):
     goal = AthleteGoal.query.filter_by(id=goal_id, athlete_id=user_id).first_or_404()
     data = request.get_json()
 
-    if "due_date" in data and data["due_date"]:
+    goal.title = data.get("title", goal.title)
+    goal.target_value = data.get("target", goal.target_value)
+
+    # بدل ما تاخد progress من frontend، حدد current_value فعلياً
+    if data.get("current_value") is not None:
+        goal.current_value = data["current_value"]
+
+    if data.get("due_date"):
         try:
             goal.deadline = date.fromisoformat(data["due_date"])
         except ValueError:
             return jsonify({"msg": "Invalid date format"}), 400
-
-    goal.title = data.get("title", goal.title)
-    goal.target_value = data.get("target", goal.target_value)
-    goal.current_value = data.get("current_value", goal.current_value)
-    goal.unit = data.get("unit", goal.unit)
 
     db.session.commit()
     return jsonify({"msg": "Goal updated"})
@@ -84,3 +97,10 @@ def delete_goal(goal_id):
     db.session.delete(goal)
     db.session.commit()
     return jsonify({"msg": "Goal deleted"})
+
+@athlete_bp.route("/api/challenges", methods=["GET"])
+@jwt_required()
+def get_challenges():
+    # Placeholder for future challenge implementation   
+    
+    return jsonify([])
