@@ -52,7 +52,13 @@
     
     
     <!-- Navbar -->
-  {% include 'shared/navbar.html' %}
+  {% if user.role == 'admin' %}
+      {% include 'shared/navbar_admin.html' %}
+  {% elif user.role == 'coach' %}
+      {% include 'shared/navbar_coach.html' %}
+  {% elif user.role == 'athlete' %}
+      {% include 'shared/navbar_athlete.html' %}
+  {% endif %}
 
   <!-- Sidebar (depends on role) -->
   {% if user.role == 'admin' %}

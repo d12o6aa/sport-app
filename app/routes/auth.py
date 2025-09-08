@@ -253,3 +253,11 @@ def export_logs():
         as_attachment=True,
         download_name="activity_logs.csv"
     )
+
+
+##### logout #####
+@auth_bp.route("/logout")
+@jwt_required()
+def logout():
+    session.clear()
+    return redirect(url_for("auth.login"))

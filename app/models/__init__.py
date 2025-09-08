@@ -23,6 +23,8 @@ from .athlete_goals import AthleteGoal
 from .athlete_schedule import AthleteSchedule
 from .athlete_progress import AthleteProgress
 from . import readiness_scores
+from .injury_records import InjuryRecord
+from .health_record import HealthRecord
 
 __all__ = [
     "User",
@@ -31,5 +33,5 @@ __all__ = [
     "AthleteGroup", "AthletePlan", "CoachAthlete",
     "Subscription", "ActivityLog", "WorkoutFile", "WorkoutLog","ReadinessScore" , "MLInsight",
     "Message",
-    "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores"
+    "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores", "InjuryRecord","HealthRecord"
 ]

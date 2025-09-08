@@ -56,6 +56,24 @@ def sidebar():
     else:
         abort(403)
 
+
+##### navbar #####
+@dashboard_bp.route("/navbar")
+@jwt_required()
+def navbar():
+    claims = get_jwt()
+    role = claims.get("role")
+
+    if role == 'admin':
+        return render_template('shared/admin_navbar.html')
+    elif role == 'coach':
+        return render_template('shared/coach_navbar.html')
+    elif role == 'athlete':
+        return render_template('shared/athlete_navbar.html')
+    else:
+        abort(403)
+
+
 @dashboard_bp.route("/header")
 @jwt_required()
 def header():

@@ -27,6 +27,10 @@ class User(db.Model):
     profile_image = db.Column(db.Text, default="default.jpg")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # 🆕 Soft delete fields
+    is_deleted = db.Column(db.Boolean, default=False, index=True)
+    delete_requested_at = db.Column(db.DateTime, nullable=True)
+
     # One-to-One profiles
     coach_profile = db.relationship("CoachProfile", uselist=False, back_populates="user")
     athlete_profile = db.relationship("AthleteProfile", uselist=False, back_populates="user")
@@ -39,7 +43,9 @@ class User(db.Model):
     workout_logs = db.relationship("WorkoutLog", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     readiness_scores = db.relationship("ReadinessScore", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     ml_insights = db.relationship("MLInsight", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
-
+    injuries = db.relationship("InjuryRecord", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    health_records = db.relationship("HealthRecord", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    
     # Groups
     training_groups = db.relationship("TrainingGroup", back_populates="trainer", lazy="dynamic")  # as trainer/owner
     group_assignments = db.relationship("AthleteGroup", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
@@ -72,6 +78,7 @@ class User(db.Model):
         db.Index("idx_users_email", "email"),
         db.Index("idx_users_role", "role"),
         db.Index("idx_users_status", "status"),
+        db.Index("idx_users_deleted", "is_deleted"),
     )
     # ------- helper properties -------
     @property
@@ -90,4 +97,8 @@ class User(db.Model):
     @property
     def is_athlete(self):
         return self.role == "athlete"
+    
+    @property
+    def is_active(self):
+        return not self.is_deleted and self.status == "active"
     

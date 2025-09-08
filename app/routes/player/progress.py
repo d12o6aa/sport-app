@@ -10,7 +10,7 @@ from . import athlete_bp
 def get_progress(athlete_id):
     records = AthleteProgress.query.filter_by(athlete_id=athlete_id).all()
     return jsonify([{"id": p.id, "date": p.date.isoformat(),
-                     "weight": p.weight, "calories": p.calories_burned, "workouts": p.workouts_done}
+                    "weight": p.weight, "calories": p.calories_burned, "workouts": p.workouts_done}
                     for p in records])
 
 @athlete_bp.route("/<int:athlete_id>/progress", methods=["POST"])

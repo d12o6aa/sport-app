@@ -12,8 +12,10 @@ class HealthRecord(db.Model):
     calories_intake = db.Column(db.Integer)
     sleep_hours = db.Column(db.Float)
     recorded_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-
-    athlete = db.relationship("User", back_populates="readiness_scores")
+    bp_sys = db.Column(db.Integer)   # systolic
+    bp_dia = db.Column(db.Integer)   # diastolic
+    athlete = db.relationship("User", back_populates="health_records")
+    
     __table_args__ = (
         db.Index("idx_health_athlete_id", "athlete_id"),
         db.Index("idx_health_recorded_at", "recorded_at"),

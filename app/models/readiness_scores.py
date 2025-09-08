@@ -10,6 +10,9 @@ class ReadinessScore(db.Model):
     athlete_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     date = db.Column(db.Date, default=datetime.utcnow, index=True)
     score = db.Column(db.Integer, nullable=False)  # 0–100
+    poms_score = db.Column(db.Integer, default=15)  # Psychological mood state
+    confidence_score = db.Column(db.Float, default=0.8)
+
     injury_risk = db.Column(
         db.String(20),
         db.CheckConstraint("injury_risk IN ('low','medium','high')"),
