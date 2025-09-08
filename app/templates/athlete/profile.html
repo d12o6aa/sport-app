@@ -4,58 +4,77 @@
 <section class="section dashboard">
   <div class="row">
 
-    <!-- Left side columns -->
+    <!-- Left side -->
     <div class="col-lg-8">
       <div class="row">
 
-        <!-- Name & Weight Card -->
+        <!-- Profile Card -->
         <div class="col-xxl-4 col-md-6">
-          <div class="card info-card sales-card">
+          <div class="card info-card sales-card text-center">
             <div class="card-body">
+              <!-- صورة البروفايل -->
+              <img id="currentImage" 
+                   src="{{ url_for('static', filename='uploads/' ~ (user.profile_image or 'default.jpg')) }}" 
+                   alt="Profile" 
+                   class="rounded-circle mb-2" 
+                   style="width: 100px; height: 100px; object-fit: cover;">
               <h5 class="card-title">{{ user.full_name or "Unknown User" }}</h5>
+              <p class="small text-muted">{{ user.email }}</p>
+              <div>
+                <form id="profileImageForm" enctype="multipart/form-data" class="d-flex justify-content-center gap-2">
+                  <input type="file" name="profile_image" class="form-control form-control-sm" style="width: 60%;">
+                  <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger" id="deleteBtn">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div><!-- End Profile Card -->
+
+        <!-- Weight -->
+        <div class="col-xxl-4 col-md-6">
+          <div class="card info-card">
+            <div class="card-body">
+              <h5 class="card-title">Weight</h5>
               <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-person"></i>
-                </div>
+                <i class="bi bi-activity card-icon rounded-circle"></i>
                 <div class="ps-3">
                   <h6>{{ user.weight or '--' }} kg</h6>
-                  <span class="text-muted small">Weight</span>
+                  <span class="text-muted small">Current</span>
                 </div>
               </div>
             </div>
           </div>
         </div><!-- End -->
 
-        <!-- Height Card -->
+        <!-- Height -->
         <div class="col-xxl-4 col-md-6">
-          <div class="card info-card revenue-card">
+          <div class="card info-card">
             <div class="card-body">
               <h5 class="card-title">Height</h5>
               <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-rulers"></i>
-                </div>
+                <i class="bi bi-rulers card-icon rounded-circle"></i>
                 <div class="ps-3">
                   <h6>{{ user.height or '--' }} cm</h6>
-                  <span class="text-muted small">Height</span>
+                  <span class="text-muted small">Current</span>
                 </div>
               </div>
             </div>
           </div>
         </div><!-- End -->
 
-        <!-- Age Card -->
+        <!-- Age -->
         <div class="col-xxl-4 col-xl-12">
-          <div class="card info-card customers-card">
+          <div class="card info-card">
             <div class="card-body">
               <h5 class="card-title">Age</h5>
               <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-calendar"></i>
-                </div>
+                <i class="bi bi-calendar card-icon rounded-circle"></i>
                 <div class="ps-3">
                   <h6>{{ user.age or '--' }} years</h6>
-                  <span class="text-muted small">Age</span>
+                  <span class="text-muted small">Based on DOB</span>
                 </div>
               </div>
             </div>
@@ -67,38 +86,34 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Account</h5>
-
               <div class="row">
                 <div class="col-md-6">
                   <div class="profile-info">
                     <div class="info-item d-flex justify-content-between py-2">
                       <span class="text-muted">Name</span>
-                      <span>{{ user.full_name or "--" }} <i class="bi bi-chevron-right"></i></span>
+                      <span>{{ user.full_name or "--" }}</span>
                     </div>
                     <div class="info-item d-flex justify-content-between py-2">
                       <span class="text-muted">Gender</span>
-                      <span>{{ user.gender or "--" }} <i class="bi bi-chevron-right"></i></span>
+                      <span>{{ user.gender or "--" }}</span>
                     </div>
                     <div class="info-item d-flex justify-content-between py-2">
                       <span class="text-muted">Date of birth</span>
-                      <span>{{ user.dob or "--" }} <i class="bi bi-chevron-right"></i></span>
+                      <span>{{ user.dob or "--" }}</span>
                     </div>
                     <div class="info-item d-flex justify-content-between py-2">
                       <span class="text-muted">Max heart rate</span>
-                      <span>{{ user.max_hr or "--" }} bpm <i class="bi bi-chevron-right"></i></span>
+                      <span>{{ user.max_hr or "--" }} bpm</span>
                     </div>
                   </div>
                 </div>
-
                 <div class="col-md-6">
                   <div class="account-actions">
-                    <div class="info-item d-flex justify-content-between py-2">
-                      <span>My Workouts</span>
-                      <i class="bi bi-chevron-right"></i>
+                    <div class="info-item py-2">
+                      <a href="#" class="text-decoration-none">My Workouts</a>
                     </div>
-                    <div class="info-item d-flex justify-content-between py-2">
-                      <span>Workout reminders</span>
-                      <i class="bi bi-chevron-right"></i>
+                    <div class="info-item py-2">
+                      <a href="#" class="text-decoration-none">Workout Reminders</a>
                     </div>
                     <div class="text-center mt-3">
                       <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Log out</a>
@@ -106,17 +121,15 @@
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div><!-- End Account -->
 
       </div>
-    </div><!-- End Left side columns -->
+    </div><!-- End Left side -->
 
-    <!-- Right side columns -->
+    <!-- Right side -->
     <div class="col-lg-4">
-
       <!-- Settings -->
       <div class="card">
         <div class="card-body">
@@ -138,7 +151,7 @@
         </div>
       </div><!-- End Settings -->
 
-      <!-- Weight tracking -->
+      <!-- Weight Tracking -->
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Weight tracking</h5>
@@ -159,9 +172,47 @@
           </div>
         </div>
       </div><!-- End Weight -->
-
     </div><!-- End Right side -->
 
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // تحديث صورة البروفايل
+  document.getElementById("profileImageForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    const res = await fetch("/user/profile/image", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") },
+      body: formData
+    });
+    const data = await res.json();
+    if(res.ok){
+      document.getElementById("currentImage").src = "/static/uploads/" + data.new_image + "?ts=" + new Date().getTime();
+      alert("Image updated");
+    } else {
+      alert(data.msg || "Update failed");
+    }
+  });
+
+  // حذف صورة
+  document.getElementById("deleteBtn").addEventListener("click", async function(){
+    if (!confirm("Are you sure you want to delete your profile image?")) return;
+    const res = await fetch("/user/profile/image/delete", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    });
+    const data = await res.json();
+    if(res.ok){
+      document.getElementById("currentImage").src = "/static/uploads/default.jpg?ts=" + new Date().getTime();
+      alert("Image deleted");
+    } else {
+      alert(data.msg || "Failed to delete image");
+    }
+  });
+</script>
 {% endblock %}
