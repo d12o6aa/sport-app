@@ -4,119 +4,252 @@
 <section class="section dashboard">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="m-0">Health Tracking</h5>
-    <div>
-      <button id="refreshHealth" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-repeat me-1"></i> Refresh
-      </button>
-    </div>
+    <button id="refreshHealth" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-repeat me-1"></i> Refresh
+    </button>
   </div>
 
+  
+  <!-- Charts -->
   <div class="row g-3">
-    <div class="col-md-4">
-      <div class="card h-100"><div class="card-body">
-        <h6 class="mb-3">Weight (kg)</h6>
-        <canvas id="chartWeight" height="160"></canvas>
-      </div></div>
+    <div class="col-md-4"><div class="card h-100"><div class="card-body">
+      <h6 class="mb-3">Weight (kg)</h6>
+      <canvas id="chartWeight" height="160"></canvas>
+    </div></div></div>
+
+    <div class="col-md-4"><div class="card h-100"><div class="card-body">
+      <h6 class="mb-3">Sleep (hrs)</h6>
+      <canvas id="chartSleep" height="160"></canvas>
+    </div></div></div>
+
+    <div class="col-md-4"><div class="card h-100"><div class="card-body">
+      <h6 class="mb-3">Resting HR (bpm)</h6>
+      <canvas id="chartHR" height="160"></canvas>
+    </div></div></div>
+
+    <div class="col-md-6"><div class="card h-100"><div class="card-body">
+      <h6 class="mb-3">Calories Intake vs Burned</h6>
+      <canvas id="chartCalories" height="160"></canvas>
+    </div></div></div>
+
+    <div class="col-md-6"><div class="card h-100"><div class="card-body">
+      <h6 class="mb-3">BMI Trend</h6>
+      <canvas id="chartBMI" height="160"></canvas>
+    </div></div></div>
+  </div>
+
+  <!-- Vitals -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <div class="card p-3 text-center">
+        <h6>Blood Pressure</h6>
+        <p id="bpVal">-- / -- mmHg</p>
+      </div>
     </div>
-    <div class="col-md-4">
-      <div class="card h-100"><div class="card-body">
-        <h6 class="mb-3">Sleep (hrs)</h6>
-        <canvas id="chartSleep" height="160"></canvas>
-      </div></div>
+    <div class="col-md-3">
+      <div class="card p-3 text-center">
+        <h6>SpO₂</h6>
+        <p id="spo2Val">-- %</p>
+      </div>
     </div>
-    <div class="col-md-4">
-      <div class="card h-100"><div class="card-body">
-        <h6 class="mb-3">Resting HR (bpm)</h6>
-        <canvas id="chartHR" height="160"></canvas>
-      </div></div>
+    <div class="col-md-3">
+      <div class="card p-3 text-center">
+        <h6>HRV</h6>
+        <p id="hrvVal">-- ms</p>
+      </div>
     </div>
   </div>
 
-  <div class="card mt-3">
-    <div class="card-body">
-      <h6 class="mb-3">Add Health Entry</h6>
-      <form id="healthForm" class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Date</label>
-          <input id="hDate" type="date" class="form-control" required>
+  <!-- Wellness -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <div class="card p-3 text-center">
+        <h6>Mood</h6>
+        <p id="moodVal">🙂</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3 text-center">
+        <h6>Stress</h6>
+        <p id="stressVal">-- / 5</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3 text-center">
+        <h6>Hydration</h6>
+        <p id="hydrationVal">-- L</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- زرار فتح المودال -->
+  <div class="text-end mb-3">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#healthModal">
+      <i class="bi bi-plus-lg"></i> Add Health Entry
+    </button>
+  </div>
+
+  <!-- Health Entry Modal -->
+  <div class="modal fade" id="healthModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="healthForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Health Entry</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Weight (kg)</label>
-          <input id="hWeight" type="number" step="0.1" class="form-control">
+        <div class="modal-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Date</label>
+            <input id="hDate" type="date" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Weight (kg)</label>
+            <input id="hWeight" type="number" step="0.1" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Height (cm)</label>
+            <input id="hHeight" type="number" step="0.1" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Sleep (hrs)</label>
+            <input id="hSleep" type="number" step="0.1" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Resting HR</label>
+            <input id="hHR" type="number" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Calories In</label>
+            <input id="hCalIn" type="number" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Calories Out</label>
+            <input id="hCalOut" type="number" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">BP Sys</label>
+            <input id="hBPSys" type="number" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">BP Dia</label>
+            <input id="hBPDia" type="number" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">SpO₂ (%)</label>
+            <input id="hSpO2" type="number" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">HRV (ms)</label>
+            <input id="hHRV" type="number" step="0.1" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Mood (1-5)</label>
+            <input id="hMood" type="number" min="1" max="5" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Stress (1-5)</label>
+            <input id="hStress" type="number" min="1" max="5" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Hydration (L)</label>
+            <input id="hHydration" type="number" step="0.1" class="form-control">
+          </div>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Sleep (hrs)</label>
-          <input id="hSleep" type="number" step="0.1" class="form-control">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Resting HR</label>
-          <input id="hHR" type="number" class="form-control">
-        </div>
-        <div class="col-12 text-end">
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button class="btn btn-primary" type="submit">Save</button>
         </div>
       </form>
     </div>
   </div>
+
 </section>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-function alertShow(m,t="info"){const c=document.getElementById("alert-container")||document.body,w=document.createElement("div");w.innerHTML=`<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;c.appendChild(w);setTimeout(()=>w.remove(),4e3);}
-
-let HEALTH={weight:[], sleep:[], hr:[]};
-let cw, cs, ch;
+let HEALTH = {weight:[], sleep:[], hr:[], calIn:[], calOut:[], bmi:[]};
+let cw, cs, ch, cc, cbmi;
 
 function makeChart(ctx,label,labels,data){
-  return new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label, data, tension:.3, fill:false}]},options:{responsive:true,plugins:{legend:{display:true}},scales:{x:{ticks:{maxTicksLimit:7}}}}});
+  return new Chart(ctx,{type:'line',
+    data:{labels,datasets:[{label,data,tension:.3,fill:false,borderColor:'#007bff'}]},
+    options:{responsive:true,plugins:{legend:{display:true}}}
+  });
 }
 
 function renderCharts(){
   const labels = HEALTH.weight.map(x=>x.date);
-  const w = HEALTH.weight.map(x=>x.value);
-  const s = HEALTH.sleep.map(x=>x.value);
-  const h = HEALTH.hr.map(x=>x.value);
+  if(cw) cw.destroy(); if(cs) cs.destroy(); if(ch) ch.destroy(); if(cc) cc.destroy(); if(cbmi) cbmi.destroy();
 
-  if (cw) cw.destroy(); if (cs) cs.destroy(); if (ch) ch.destroy();
-
-  cw = makeChart(document.getElementById('chartWeight'), 'Weight', labels, w);
-  cs = makeChart(document.getElementById('chartSleep'), 'Sleep', labels, s);
-  ch = makeChart(document.getElementById('chartHR'), 'Resting HR', labels, h);
+  cw = makeChart(document.getElementById('chartWeight'),'Weight',labels,HEALTH.weight.map(x=>x.value));
+  cs = makeChart(document.getElementById('chartSleep'),'Sleep',labels,HEALTH.sleep.map(x=>x.value));
+  ch = makeChart(document.getElementById('chartHR'),'Resting HR',labels,HEALTH.hr.map(x=>x.value));
+  cc = new Chart(document.getElementById('chartCalories'),{
+    type:'bar',
+    data:{labels,
+      datasets:[
+        {label:'Calories In',data:HEALTH.calIn.map(x=>x.value),backgroundColor:'rgba(54,162,235,0.5)'},
+        {label:'Calories Out',data:HEALTH.calOut.map(x=>x.value),backgroundColor:'rgba(255,99,132,0.5)'}
+      ]
+    }
+  });
+  cbmi = makeChart(document.getElementById('chartBMI'),'BMI',labels,HEALTH.bmi.map(x=>x.value));
 }
 
 async function fetchHealth(){
   try{
-    const res=await fetch('/athlete/health',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
-    if(!res.ok) throw new Error(await res.text());
-    const data=await res.json();
-    // Expecting { weight:[{date:'YYYY-MM-DD', value:Number}], sleep:[...], hr:[...] }
-    HEALTH = data && typeof data==='object' ? data : {weight:[],sleep:[],hr:[]};
-  }catch(e){console.error(e);HEALTH={weight:[],sleep:[],hr:[]};alertShow('Failed to load health data','danger');}
-  finally{renderCharts();}
+    const res = await fetch('/athlete/health',{headers:{Authorization:`Bearer ${localStorage.getItem('access_token')}`}});
+    if(!res.ok) throw new Error("Failed to fetch");
+    HEALTH = await res.json();
+    renderCharts();
+    // vitals display (optional)
+    document.getElementById('bpVal').innerText = `${HEALTH.bp_sys||'--'} / ${HEALTH.bp_dia||'--'} mmHg`;
+    document.getElementById('spo2Val').innerText = (HEALTH.spo2||'--')+" %";
+    document.getElementById('hrvVal').innerText = (HEALTH.hrv||'--')+" ms";
+    document.getElementById('moodVal').innerText = HEALTH.mood ? "🙂".repeat(HEALTH.mood) : "--";
+    document.getElementById('stressVal').innerText = (HEALTH.stress||'--')+"/5";
+    document.getElementById('hydrationVal').innerText = (HEALTH.hydration||'--')+" L";
+  }catch(err){
+    console.error(err);
+    alert("Failed to load health data");
+  }
 }
 
-document.getElementById('refreshHealth').onclick = fetchHealth;
-
-document.getElementById('healthForm').addEventListener('submit', async e=>{
+document.getElementById('healthForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const payload={
-    date:document.getElementById('hDate').value,
-    weight:document.getElementById('hWeight').value?Number(document.getElementById('hWeight').value):null,
-    sleep:document.getElementById('hSleep').value?Number(document.getElementById('hSleep').value):null,
-    hr:document.getElementById('hHR').value?Number(document.getElementById('hHR').value):null,
+    date:hDate.value,
+    weight:hWeight.value,
+    height:hHeight.value,
+    sleep:hSleep.value,
+    hr:hHR.value,
+    calIn:hCalIn.value,
+    calOut:hCalOut.value,
+    bp_sys:hBPSys.value,
+    bp_dia:hBPDia.value,
+    spo2:hSpO2.value,
+    hrv:hHRV.value,
+    mood:hMood.value,
+    stress:hStress.value,
+    hydration:hHydration.value
   };
-  if(!payload.date){alertShow('Date is required','warning');return;}
   try{
-    const res=await fetch('/athlete/health',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},body:JSON.stringify(payload)});
-    const data=await (async()=>{try{return await res.json()}catch{return {}}})();
-    if(!res.ok) throw new Error(data?.msg||'Save failed');
-    alertShow('Entry saved','success'); fetchHealth();
+    const res=await fetch('/athlete/health',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${localStorage.getItem('access_token')}`},
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error("Save failed");
+    alert("Health record saved!");
+    fetchHealth();
     e.target.reset();
-  }catch(err){alertShow(err.message,'danger');}
+    bootstrap.Modal.getInstance(document.getElementById('healthModal')).hide(); // close modal
+  }catch(err){
+    alert(err.message);
+  }
 });
 
 fetchHealth();

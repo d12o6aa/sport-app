@@ -6,6 +6,7 @@ class AthleteProfile(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     age = db.Column(db.Integer)
+    gender = db.Column(db.String(10))
     weight = db.Column(db.Float)
     height = db.Column(db.Float)
     team = db.Column(db.String(100))

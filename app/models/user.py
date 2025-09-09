@@ -45,7 +45,8 @@ class User(db.Model):
     ml_insights = db.relationship("MLInsight", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     injuries = db.relationship("InjuryRecord", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     health_records = db.relationship("HealthRecord", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
-    
+    settings = db.relationship("UserSettings", back_populates="user", uselist=False)
+
     # Groups
     training_groups = db.relationship("TrainingGroup", back_populates="trainer", lazy="dynamic")  # as trainer/owner
     group_assignments = db.relationship("AthleteGroup", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
@@ -66,6 +67,13 @@ class User(db.Model):
     goals = db.relationship("AthleteGoal", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     schedule = db.relationship("AthleteSchedule", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     progress = db.relationship("AthleteProgress", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    workout_sessions = db.relationship(
+        "WorkoutSession",
+        back_populates="athlete",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+
 
     # Helpers
     def set_password(self, password: str):

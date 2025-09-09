@@ -13,5 +13,5 @@ class WorkoutSession(db.Model):
     calories = db.Column(db.Integer)
     performed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    athlete = db.relationship("User", back_populates="workout_logs")
+    athlete = db.relationship("User", back_populates="workout_sessions")
     plan = db.relationship("TrainingPlan", back_populates="assignments")

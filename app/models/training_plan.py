@@ -21,16 +21,19 @@ class TrainingPlan(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     duration_weeks = db.Column(db.Integer, nullable=False, default=4)
 
+    # relationships
     coach = db.relationship("User", foreign_keys=[coach_id], back_populates="training_plans")
     athlete = db.relationship("User", foreign_keys=[athlete_id])
+    assignments = db.relationship("WorkoutSession", back_populates="plan", cascade="all, delete-orphan")
+
+    # 🆕 العلاقة مع AthletePlan
     athlete_assignments = db.relationship(
         "AthletePlan",
         back_populates="plan",
-        lazy="dynamic",
         cascade="all, delete-orphan",
+        lazy="dynamic"
     )
-    
+
     __table_args__ = (
-    db.CheckConstraint(
-        "status IN ('active','completed','archived')", name="check_status"
-    ),)
+        db.CheckConstraint("status IN ('active','completed','archived')", name="check_status"),
+    )

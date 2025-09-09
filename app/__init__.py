@@ -50,7 +50,7 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.user import user_bp
     from app.routes.admin.admin import admin_bp
-    from app.routes.coach.views import coach_bp
+    from app.routes.coach import coach_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.player import athlete_bp
     from app.routes.prediction.routes import prediction_bp

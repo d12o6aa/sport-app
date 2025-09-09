@@ -12,7 +12,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 
 from app.models import User, CoachAthlete, TrainingPlan, Feedback, WorkoutLog, TrainingGroup, AthleteGroup, ActivityLog, Subscription, WorkoutFile, ReadinessScore, MLInsight, Message
 
-coach_bp = Blueprint('coach', __name__)
+from . import coach_bp
 
 
 
@@ -255,66 +255,6 @@ def update_coach_password():
 
 
 ########## Coach Athlete Management Routes #########
-@coach_bp.route("/athletes", methods=["GET"])
-@jwt_required()
-def get_coach_athletes():
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    athletes = (
-        db.session.query(User.id, User.name)
-        .join(CoachAthlete, CoachAthlete.athlete_id == User.id)
-        .filter(CoachAthlete.coach_id == coach.id)
-        .all()
-    )
-
-    return jsonify([{"id": a.id, "name": a.name} for a in athletes])
-
-@coach_bp.route("/athlete/<int:athlete_id>/progress", methods=["GET"])
-@jwt_required()
-def get_athlete_progress(athlete_id):
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    # validate athlete belongs to this coach
-    link = CoachAthlete.query.filter_by(coach_id=coach.id, athlete_id=athlete_id).first()
-    if not link:
-        return jsonify({"msg": "Not your athlete"}), 403
-
-    range_param = request.args.get("range", "month")
-
-    # mock values – replace with ML/DB queries
-    data = {
-        "total_sessions": 24,
-        "compliance": 92,
-        "compliance_label": "Excellent",
-        "avg_readiness": 8.5,
-        "injury_alerts": 3,
-        "performance_labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
-        "performance_values": [11.5, 11.3, 11.1, 11.0],
-        "readiness_values": [7, 8, 9, 8],
-        "logs": [
-            {"date": "2025-08-17", "session_type": "Sprint", "duration": "45 min", 
-             "metric": "11.2s", "status": "Completed", "status_color": "success", 
-             "feedback_action": "View"},
-            {"date": "2025-08-16", "session_type": "Strength", "duration": "60 min", 
-             "metric": "100kg Squat", "status": "Partial", "status_color": "warning", 
-             "feedback_action": "Add"}
-        ],
-        "activities": [
-            {"time": "32 min", "color": "success", 
-             "text": '<strong>Leslie</strong> completed "Sprint Training".'},
-            {"time": "56 min", "color": "danger", 
-             "text": "High injury risk detected for <strong>John</strong>."}
-        ]
-    }
-    return jsonify(data)
 
 @coach_bp.route("/athlete/<int:athlete_id>/logs", methods=["GET"])
 @jwt_required()
@@ -345,54 +285,6 @@ def get_athlete_logs(athlete_id):
         for log in logs
     ])
 
-@coach_bp.route("/athlete/<int:athlete_id>/plans", methods=["GET"])
-@jwt_required()
-def get_athlete_plans(athlete_id):
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    plans = TrainingPlan.query.filter_by(athlete_id=athlete_id).all()
-    return jsonify([
-        {
-            "id": p.id,
-            "title": p.title,
-            "start": p.start_date.isoformat(),
-            "end": p.end_date.isoformat(),
-            "status": p.status
-        }
-        for p in plans
-    ])
-
-
-@coach_bp.route("/create_plan", methods=["GET", "POST"])
-@jwt_required()
-def create_plan():
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    if request.method == "POST":
-        data = request.form
-        plan = TrainingPlan(
-            athlete_id=data.get("athlete_id"),
-            coach_id=coach.id,
-            title=data.get("title"),
-            description=data.get("description"),
-            start_date=data.get("start_date"),
-            end_date=data.get("end_date"),
-            status="active"
-        )
-        db.session.add(plan)
-        db.session.commit()
-        flash("Plan created successfully!", "success")
-        return redirect(url_for("coach.manage_plans"))
-
-    athletes = User.query.filter_by(role="athlete").all()
-    return render_template("coach/create_plan.html", athletes=athletes)
 
 # manage plans
 
@@ -419,41 +311,6 @@ def get_plans_api():
         for p in plans
     ])
 
-@coach_bp.route("/plans", methods=["GET"])
-@jwt_required()
-def manage_plans():
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-    if not coach or coach.role != "coach":
-        return redirect(url_for("auth.login"))
-
-    plans = TrainingPlan.query.filter_by(coach_id=coach.id).all()
-    return render_template("coach/manage_plans.html", plans=plans)
-
-
-@coach_bp.route("/plans/<int:plan_id>/duplicate", methods=["POST"])
-@jwt_required()
-def duplicate_plan(plan_id):
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    plan = TrainingPlan.query.get(plan_id)
-    if not plan:
-        return jsonify({"msg": "Plan not found"}), 404
-
-    new_plan = TrainingPlan(
-        athlete_id=plan.athlete_id,
-        coach_id=plan.coach_id,
-        title=plan.title + " (Copy)",
-        start_date=plan.start_date,
-        end_date=plan.end_date,
-        status=plan.status
-    )
-    db.session.add(new_plan)
-    db.session.commit()
-    return jsonify({"msg": "Plan duplicated", "id": new_plan.id}), 201
 
 @coach_bp.route("/athlete/<int:athlete_id>/activity", methods=["GET"])
 @jwt_required()
@@ -474,38 +331,10 @@ def get_activity_feed(athlete_id):
 
 
 
-@coach_bp.route("/athlete/<int:athlete_id>/give_feedback", methods=["GET", "POST"])
-@jwt_required()
-def give_feedback(athlete_id):
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    athlete = User.query.get_or_404(athlete_id)
-
-    if request.method == "POST":
-        feedback_text = request.form.get("feedback")
-        fb = Feedback(
-            athlete_id=athlete.id,
-            coach_id=coach.id,
-            text=feedback_text   # ← استخدمي text مش feedback
-        )
-        db.session.add(fb)
-        db.session.commit()
-        flash("Feedback submitted successfully!", "success")
-        return redirect(url_for("coach.view_feedback", athlete_id=athlete.id))
-
-    return render_template("coach/give_feedback.html", athlete=athlete)
-
 
 
 
 # Athletes
-@coach_bp.route("/manage_athletes")
-@jwt_required()
-def manage_athletes():
-    return render_template("coach/manage_athletes.html")
 
 @coach_bp.route("/progress_tracking")
 @jwt_required()
@@ -525,24 +354,6 @@ def athlete_compliance():
 @jwt_required()
 def calendar():
     return render_template("coach/calendar.html")
-
-# Feedback
-
-
-
-@coach_bp.route("/athlete/<int:athlete_id>/feedback", methods=["GET"])
-@jwt_required()
-def view_feedback(athlete_id):
-    identity = get_jwt_identity()
-    coach = User.query.get(identity)
-    if not coach or coach.role != "coach":
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    athlete = User.query.get_or_404(athlete_id)
-
-    feedbacks = Feedback.query.filter_by(athlete_id=athlete.id).order_by(Feedback.created_at.desc()).all()
-
-    return render_template("coach/view_feedback.html", athlete=athlete, feedbacks=feedbacks)
 
 @coach_bp.route("/feedback/select")
 @jwt_required()

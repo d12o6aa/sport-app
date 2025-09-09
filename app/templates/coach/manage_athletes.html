@@ -1,31 +1,212 @@
 {% extends "shared/base.html" %}
+
 {% block content %}
-<div class="container">
-  <h3 class="mb-3">My Athletes</h3>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Status</th>
-        <th>Joined</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for athlete in athletes %}
-      <tr>
-        <td>{{ athlete.name }}</td>
-        <td>{{ athlete.email }}</td>
-        <td><span class="badge bg-success">{{ athlete.status }}</span></td>
-        <td>{{ athlete.created_at.strftime('%Y-%m-%d') }}</td>
-        <td>
-          <a href="{{ url_for('coach.view_athlete', athlete_id=athlete.id) }}" class="btn btn-sm btn-primary">View</a>
-          <a href="{{ url_for('coach.assign_plan', athlete_id=athlete.id) }}" class="btn btn-sm btn-warning">Assign Plan</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<div class="pagetitle">
+  <h1>Manage Athletes</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Manage Athletes</li>
+    </ol>
+  </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+  <div class="row">
+
+    <!-- Athletes Table -->
+    <div class="col-12">
+      <div class="card recent-sales overflow-auto">
+        <div class="card-body">
+          <h5 class="card-title">Athletes List</h5>
+          <div class="d-flex justify-content-end mb-3">
+            <button onclick="addAthlete()" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add New Athlete</button>
+          </div>
+          <table id="athletesTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Last Activity</th>
+                <th>Compliance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- End Athletes Table -->
+
+    <!-- Add/Edit Athlete Modal -->
+    <div class="modal fade" id="athleteModal" tabindex="-1" aria-labelledby="athleteModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="athleteModalLabel">Add/Edit Athlete</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="athleteForm">
+              <input type="hidden" id="athleteId">
+              <div class="mb-3">
+                <label for="athleteName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="athleteName" required>
+              </div>
+              <div class="mb-3">
+                <label for="athleteEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="athleteEmail" required>
+              </div>
+              <div class="mb-3" id="passwordField">
+                <label for="athletePassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="athletePassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="athleteAge" class="form-label">Age</label>
+                <input type="number" class="form-control" id="athleteAge">
+              </div>
+              <div class="mb-3">
+                <label for="athleteGender" class="form-label">Gender</label>
+                <select class="form-select" id="athleteGender">
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="athleteWeight" class="form-label">Weight (kg)</label>
+                <input type="number" step="0.1" class="form-control" id="athleteWeight">
+              </div>
+              <div class="mb-3">
+                <label for="athleteHeight" class="form-label">Height (cm)</label>
+                <input type="number" step="0.1" class="form-control" id="athleteHeight">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveAthlete()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- End Modal -->
+
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  loadAthletes();
+});
+
+function loadAthletes() {
+  fetch("/coach/athletes", { headers: authHeader() })
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("#athletesTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(a => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${a.name}</td>
+            <td>${a.email}</td>
+            <td><span class="badge bg-${a.status === 'active' ? 'success' : 'warning'}">${a.status}</span></td>
+            <td>${a.last_activity || 'N/A'}</td>
+            <td>${a.compliance}%</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="editAthlete(${a.id})">Edit</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteAthlete(${a.id})">Remove</button>
+            </td>
+          </tr>`;
+      });
+      // Reinitialize datatable
+      if ($.fn.DataTable.isDataTable('#athletesTable')) {
+        $('#athletesTable').DataTable().destroy();
+      }
+      $('#athletesTable').DataTable({
+        responsive: true,
+        order: [[0, 'asc']]
+      });
+    });
+}
+
+function addAthlete() {
+  document.getElementById("athleteForm").reset();
+  document.getElementById("athleteId").value = "";
+  document.getElementById("passwordField").style.display = "block";
+  document.getElementById("athleteModalLabel").textContent = "Add New Athlete";
+  new bootstrap.Modal(document.getElementById("athleteModal")).show();
+}
+
+function editAthlete(id) {
+  fetch(`/coach/athlete/${id}`, { headers: authHeader() })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("athleteId").value = data.id;
+      document.getElementById("athleteName").value = data.name;
+      document.getElementById("athleteEmail").value = data.email;
+      document.getElementById("athleteAge").value = data.age || "";
+      document.getElementById("athleteGender").value = data.gender || "";
+      document.getElementById("athleteWeight").value = data.weight || "";
+      document.getElementById("athleteHeight").value = data.height || "";
+      document.getElementById("passwordField").style.display = "none";
+      document.getElementById("athleteModalLabel").textContent = "Edit Athlete";
+      new bootstrap.Modal(document.getElementById("athleteModal")).show();
+    });
+}
+
+function saveAthlete() {
+  const id = document.getElementById("athleteId").value;
+  const data = {
+    name: document.getElementById("athleteName").value,
+    email: document.getElementById("athleteEmail").value,
+    age: document.getElementById("athleteAge").value || null,
+    gender: document.getElementById("athleteGender").value || null,
+    weight: document.getElementById("athleteWeight").value || null,
+    height: document.getElementById("athleteHeight").value || null
+  };
+  if (!id) {
+    data.password = document.getElementById("athletePassword").value;
+  }
+
+  const url = id ? `/coach/athlete/${id}` : "/coach/athlete/add";
+  const method = id ? "PUT" : "POST";
+
+  fetch(url, {
+    method,
+    headers: { ...authHeader(), "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        bootstrap.Modal.getInstance(document.getElementById("athleteModal")).hide();
+        loadAthletes();
+      }
+    });
+}
+
+function deleteAthlete(id) {
+  if (confirm("Are you sure you want to remove this athlete?")) {
+    fetch(`/coach/athlete/${id}`, {
+      method: "DELETE",
+      headers: authHeader()
+    })
+      .then(r => r.json())
+      .then(data => {
+        alert(data.msg);
+        loadAthletes();
+      });
+  }
+}
+
+function authHeader() {
+  return { "Authorization": "Bearer " + localStorage.getItem("access_token") };
+}
+</script>
 {% endblock %}

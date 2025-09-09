@@ -2,12 +2,13 @@
 
 {% block content %}
 <div class="pagetitle">
-  <h1>Create Training Plan</h1>
+  <h1>Edit Training Plan</h1>
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="#">Home</a></li>
       <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Coach Dashboard</a></li>
-      <li class="breadcrumb-item active">Create Training Plan</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.manage_plans') }}">Manage Plans</a></li>
+      <li class="breadcrumb-item active">Edit Plan</li>
     </ol>
   </nav>
 </div><!-- End Page Title -->
@@ -17,64 +18,63 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">New Training Plan</h5>
+          <h5 class="card-title">Edit Training Plan</h5>
           <form id="planForm" onsubmit="event.preventDefault(); savePlan();">
+            <input type="hidden" id="planId" value="{{ plan.id }}">
             <div class="mb-3">
-              <label for="athleteSelect" class="form-label">Select Athlete</label>
-              <select class="form-select" id="athleteSelect" required>
-                <option value="">Select an athlete</option>
-                {% for athlete in athletes %}
-                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
-                {% endfor %}
-              </select>
+              <label for="athleteSelect" class="form-label">Athlete</label>
+              <input type="text" class="form-control" value="{{ plan.athlete.name }}" disabled>
+              <input type="hidden" id="athleteSelect" value="{{ plan.athlete_id }}">
             </div>
             <div class="mb-3">
               <label for="planTitle" class="form-label">Plan Title</label>
-              <input type="text" class="form-control" id="planTitle" required>
+              <input type="text" class="form-control" id="planTitle" value="{{ plan.title }}" required>
             </div>
             <div class="mb-3">
               <label for="planDescription" class="form-label">Description</label>
-              <textarea class="form-control" id="planDescription" rows="4"></textarea>
+              <textarea class="form-control" id="planDescription" rows="4">{{ plan.description }}</textarea>
             </div>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="startDate" class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="startDate" required>
+                <input type="date" class="form-control" id="startDate" value="{{ plan.start_date.strftime('%Y-%m-%d') }}" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="endDate" class="form-label">End Date</label>
-                <input type="date" class="form-control" id="endDate" required>
+                <input type="date" class="form-control" id="endDate" value="{{ plan.end_date.strftime('%Y-%m-%d') }}" required>
               </div>
             </div>
             <!-- Workout Sessions -->
             <div class="mb-3">
               <h6>Workout Sessions</h6>
               <div id="workoutSessions">
-                <div class="workout-session mb-3">
-                  <div class="row">
-                    <div class="col-md-4">
-                      <label class="form-label">Session Name</label>
-                      <input type="text" class="form-control" name="session_name" required>
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label">Type</label>
-                      <select class="form-select" name="session_type">
-                        <option value="strength">Strength</option>
-                        <option value="cardio">Cardio</option>
-                        <option value="flexibility">Flexibility</option>
-                        <option value="endurance">Endurance</option>
-                      </select>
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label">Duration (minutes)</label>
-                      <input type="number" class="form-control" name="session_duration">
-                    </div>
-                    <div class="col-md-2">
-                      <label class="form-label">&nbsp;</label>
-                      <button type="button" class="btn btn-danger btn-sm" onclick="removeSession(this)">Remove</button>
+                {% for session in sessions %}
+                  <div class="workout-session mb-3">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="form-label">Session Name</label>
+                        <input type="text" class="form-control" name="session_name" value="{{ session.name }}" required>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="session_type">
+                          <option value="strength" {% if session.type == 'strength' %}selected{% endif %}>Strength</option>
+                          <option value="cardio" {% if session.type == 'cardio' %}selected{% endif %}>Cardio</option>
+                          <option value="flexibility" {% if session.type == 'flexibility' %}selected{% endif %}>Flexibility</option>
+                          <option value="endurance" {% if session.type == 'endurance' %}selected{% endif %}>Endurance</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">Duration (minutes)</label>
+                        <input type="number" class="form-control" name="session_duration" value="{{ session.duration }}">
+                      </div>
+                      <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeSession(this)">Remove</button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                {% endfor %}
               </div>
               <button type="button" class="btn btn-outline-primary btn-sm" onclick="addSession()">Add Session</button>
             </div>
@@ -83,14 +83,14 @@
               <h6>Nutrition Plan</h6>
               <div class="mb-3">
                 <label for="caloriesIntake" class="form-label">Daily Calories Intake</label>
-                <input type="number" class="form-control" id="caloriesIntake">
+                <input type="number" class="form-control" id="caloriesIntake" value="{{ nutrition.calories_intake if nutrition else '' }}">
               </div>
               <div class="mb-3">
                 <label for="nutritionNotes" class="form-label">Nutrition Notes</label>
-                <textarea class="form-control" id="nutritionNotes" rows="3"></textarea>
+                <textarea class="form-control" id="nutritionNotes" rows="3">{{ nutrition.notes if nutrition else '' }}</textarea>
               </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save Plan</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
           </form>
         </div>
       </div>
@@ -138,7 +138,6 @@ function removeSession(button) {
 
 function savePlan() {
   const data = {
-    athlete_id: document.getElementById("athleteSelect").value,
     title: document.getElementById("planTitle").value,
     description: document.getElementById("planDescription").value,
     start_date: document.getElementById("startDate").value,
@@ -154,7 +153,7 @@ function savePlan() {
     }
   };
 
-  fetch("/coach/create_plan", {
+  fetch(`/coach/plans/${document.getElementById("planId").value}/edit`, {
     method: "POST",
     headers: { 
       "Authorization": "Bearer " + localStorage.getItem("access_token"),

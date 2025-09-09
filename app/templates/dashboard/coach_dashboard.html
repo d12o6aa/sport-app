@@ -20,16 +20,24 @@
         <div class="card-body">
           <h5 class="card-title">Filters</h5>
           <form id="filtersForm" class="row g-3 align-items-center">
-            <div class="col-md-5">
+            <div class="col-md-4">
               <label for="athleteSelect" class="form-label">Select Athlete</label>
               <select id="athleteSelect" class="form-select"></select>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-3">
               <label for="dateRange" class="form-label">Time Range</label>
               <select id="dateRange" class="form-select">
                 <option value="week">Last Week</option>
                 <option value="month" selected>Last Month</option>
                 <option value="3months">Last 3 Months</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="progressType" class="form-label">Progress Type</label>
+              <select id="progressType" class="form-select">
+                <option value="performance">Performance</option>
+                <option value="weight">Weight</option>
+                <option value="nutrition">Nutrition</option>
               </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -48,14 +56,14 @@
         <div class="col-xxl-3 col-md-6">
           <div class="card info-card">
             <div class="card-body">
-              <h5 class="card-title">Workouts <span>| Selected Period</span></h5>
+              <h5 class="card-title">Total Sessions <span>| Selected Period</span></h5>
               <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                   <i class="bi bi-activity"></i>
                 </div>
                 <div class="ps-3">
                   <h6 id="workoutsCount">-</h6>
-                  <span class="text-muted small pt-1">Total Sessions</span>
+                  <span class="text-muted small pt-1">Completed Workouts</span>
                 </div>
               </div>
             </div>
@@ -65,7 +73,7 @@
         <div class="col-xxl-3 col-md-6">
           <div class="card info-card">
             <div class="card-body">
-              <h5 class="card-title">Compliance <span>| %</span></h5>
+              <h5 class="card-title">Compliance Rate <span>| %</span></h5>
               <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                   <i class="bi bi-check2-circle"></i>
@@ -82,24 +90,24 @@
         <div class="col-xxl-3 col-md-6">
           <div class="card info-card">
             <div class="card-body">
-              <h5 class="card-title">Readiness <span>| Avg</span></h5>
+              <h5 class="card-title">Avg Readiness <span>| Score</span></h5>
               <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                   <i class="bi bi-heart-pulse"></i>
                 </div>
                 <div class="ps-3">
                   <h6 id="avgReadiness">-</h6>
-                  <span class="text-muted small pt-1">Avg. Score</span>
+                  <span class="text-muted small pt-1">Out of 10</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="col-xxl-3 col-md-6">
           <div class="card info-card">
             <div class="card-body">
-              <h5 class="card-title">Injury Risk</h5>
+              <h5 class="card-title">Injury Alerts</h5>
               <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-danger">
                   <i class="bi bi-exclamation-triangle text-white"></i>
@@ -118,33 +126,33 @@
         <div class="col-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Performance & Readiness Analytics</h5>
-              <canvas id="performanceChart" style="max-height: 400px;"></canvas>
+              <h5 class="card-title">Progress Analytics</h5>
+              <canvas id="progressChart" style="max-height: 400px;"></canvas>
             </div>
           </div>
         </div>
 
-        <!-- History Table (Workout Logs) -->
+        <!-- Workout Logs Table -->
         <div class="col-12">
           <div class="card recent-sales overflow-auto">
             <div class="card-body">
-              <h5 class="card-title">Workout Logs</h5>
+              <h5 class="card-title">Workout & Nutrition Logs</h5>
               <table id="logsTable" class="table table-borderless datatable">
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Session Type</th>
-                    <th>Duration</th>
-                    <th>Key Metric</th>
+                    <th>Type</th>
+                    <th>Details</th>
+                    <th>Metric</th>
                     <th>Status</th>
-                    <th>Feedback</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
               </table>
             </div>
           </div>
-        </div><!-- End History Table -->
+        </div><!-- End Workout Logs Table -->
 
       </div>
     </div><!-- End Left side columns -->
@@ -152,27 +160,31 @@
     <!-- Right side columns -->
     <div class="col-lg-4">
 
-      <!-- Workout Plans Section (Calendar View) -->
+      <!-- Workout Plans Section -->
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Workout Plans & Calendar</h5>
-          <div id="calendar-placeholder" class="text-center">
-            <p class="text-muted"><i>[Interactive Calendar View]</i></p>
+          <h5 class="card-title">Training Plans</h5>
+          <div id="plansList" class="list-group">
+            <!-- Plans will be loaded here -->
           </div>
           <div class="d-grid gap-2 mt-3">
             <button onclick="createPlan()" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Create New Plan</button>
             <button onclick="duplicatePlan()" class="btn btn-secondary"><i class="bi bi-files"></i> Duplicate Plan</button>
           </div>
         </div>
-      </div><!-- End Calendar Card -->
+      </div><!-- End Plans Card -->
 
-      <!-- Interaction / Feedback Section -->
+      <!-- Communication & Feedback Section -->
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Recent Activity & Feedback</h5>
+          <h5 class="card-title">Messages & Feedback</h5>
           <div id="activityFeed" class="activity"></div>
+          <div class="d-grid gap-2 mt-3">
+            <button onclick="sendMessage()" class="btn btn-primary"><i class="bi bi-chat-dots"></i> Send Message</button>
+            <button onclick="giveFeedback()" class="btn btn-secondary"><i class="bi bi-pencil-square"></i> Add Feedback</button>
+          </div>
         </div>
-      </div><!-- End Feedback Section -->
+      </div><!-- End Communication Section -->
 
     </div><!-- End Right side columns -->
 
@@ -187,6 +199,7 @@ let chart;
 
 document.addEventListener("DOMContentLoaded", () => {
   loadAthletes();
+  loadPlans();
 
   document.getElementById("filtersForm").addEventListener("submit", e => {
     e.preventDefault();
@@ -199,9 +212,29 @@ function loadAthletes() {
     .then(r => r.json())
     .then(data => {
       const select = document.getElementById("athleteSelect");
-      select.innerHTML = "";
+      select.innerHTML = "<option value='' disabled selected>Select an athlete</option>";
       data.forEach(a => {
         select.innerHTML += `<option value="${a.id}">${a.name}</option>`;
+      });
+    });
+}
+
+function loadPlans() {
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) return;
+  fetch(`/coach/athlete/${athleteId}/plans`, { headers: authHeader() })
+    .then(r => r.json())
+    .then(data => {
+      const plansList = document.getElementById("plansList");
+      plansList.innerHTML = "";
+      data.forEach(plan => {
+        plansList.innerHTML += `
+          <div class="list-group-item">
+            <h6>${plan.title}</h6>
+            <p class="text-muted small">From ${plan.start} to ${plan.end} | ${plan.status}</p>
+            <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id})">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">Delete</button>
+          </div>`;
       });
     });
 }
@@ -209,36 +242,45 @@ function loadAthletes() {
 function loadDashboardData() {
   const athleteId = document.getElementById("athleteSelect").value;
   const range = document.getElementById("dateRange").value;
+  const progressType = document.getElementById("progressType").value;
 
-  fetch(`/coach/athlete/${athleteId}/progress?range=${range}`, { headers: authHeader() })
+  if (!athleteId) {
+    alert("Please select an athlete.");
+    return;
+  }
+
+  fetch(`/coach/athlete/${athleteId}/progress?range=${range}&type=${progressType}`, { headers: authHeader() })
     .then(r => r.json())
     .then(data => {
-      // Stats
+      // Update Stats
       document.getElementById("workoutsCount").textContent = data.total_sessions;
       document.getElementById("complianceRate").textContent = data.compliance + "%";
       document.getElementById("complianceLabel").textContent = data.compliance_label;
       document.getElementById("avgReadiness").textContent = data.avg_readiness + "/10";
       document.getElementById("injuryAlerts").textContent = data.injury_alerts;
 
-      // Chart
-      updateChart(data.performance_labels, data.performance_values, data.readiness_values);
+      // Update Chart
+      updateChart(data.labels, data.values, data.secondary_values, progressType);
 
-      // Logs
+      // Update Logs
       const tbody = document.querySelector("#logsTable tbody");
       tbody.innerHTML = "";
       data.logs.forEach(log => {
         tbody.innerHTML += `
           <tr>
             <td>${log.date}</td>
-            <td>${log.session_type}</td>
-            <td>${log.duration}</td>
+            <td>${log.type}</td>
+            <td>${log.details}</td>
             <td>${log.metric}</td>
             <td><span class="badge bg-${log.status_color}">${log.status}</span></td>
-            <td><a href="#">${log.feedback_action}</a></td>
+            <td>
+              <a href="#" onclick="viewLog(${log.id})">View</a> |
+              <a href="#" onclick="addFeedback(${log.id})">Feedback</a>
+            </td>
           </tr>`;
       });
 
-      // Activity
+      // Update Activity Feed
       const feed = document.getElementById("activityFeed");
       feed.innerHTML = "";
       data.activities.forEach(act => {
@@ -252,17 +294,18 @@ function loadDashboardData() {
     });
 }
 
-function updateChart(labels, perf, readiness) {
+function updateChart(labels, values, secondary_values, type) {
   if (chart) chart.destroy();
-  chart = new Chart(document.querySelector('#performanceChart'), {
+  const datasets = [
+    { label: type.charAt(0).toUpperCase() + type.slice(1), data: values, borderColor: 'rgb(75, 192, 192)', fill: true }
+  ];
+  if (secondary_values) {
+    datasets.push({ label: 'Readiness Score', data: secondary_values, borderColor: 'rgb(255, 99, 132)', fill: true });
+  }
+  chart = new Chart(document.querySelector('#progressChart'), {
     type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Performance', data: perf, borderColor: 'rgb(75, 192, 192)', fill: true },
-        { label: 'Readiness Score', data: readiness, borderColor: 'rgb(255, 99, 132)', fill: true }
-      ]
-    }
+    data: { labels, datasets },
+    options: { responsive: true, maintainAspectRatio: false }
   });
 }
 
@@ -271,10 +314,71 @@ function authHeader() {
 }
 
 function createPlan() {
-  alert("TODO: Call POST /coach/athlete/:id/plans");
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) {
+    alert("Please select an athlete.");
+    return;
+  }
+  window.location.href = `/coach/create_plan?athlete_id=${athleteId}`;
 }
+
+function editPlan(planId) {
+  window.location.href = `/coach/plans/${planId}/edit`;
+}
+
+function deletePlan(planId) {
+  if (confirm("Are you sure you want to delete this plan?")) {
+    fetch(`/coach/plans/${planId}`, { method: 'DELETE', headers: authHeader() })
+      .then(r => r.json())
+      .then(data => {
+        alert(data.msg);
+        loadPlans();
+      });
+  }
+}
+
 function duplicatePlan() {
-  alert("TODO: Call Duplicate Plan API");
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) {
+    alert("Please select an athlete.");
+    return;
+  }
+  const planId = prompt("Enter the Plan ID to duplicate:");
+  if (planId) {
+    fetch(`/coach/plans/${planId}/duplicate`, { method: 'POST', headers: authHeader() })
+      .then(r => r.json())
+      .then(data => {
+        alert(data.msg);
+        loadPlans();
+      });
+  }
+}
+
+function sendMessage() {
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) {
+    alert("Please select an athlete.");
+    return;
+  }
+  window.location.href = `/coach/athlete/${athleteId}/send_message`;
+}
+
+function giveFeedback() {
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) {
+    alert("Please select an athlete.");
+    return;
+  }
+  window.location.href = `/coach/athlete/${athleteId}/give_feedback`;
+}
+
+function viewLog(logId) {
+  window.location.href = `/coach/logs/${logId}`;
+}
+
+function addFeedback(logId) {
+  const athleteId = document.getElementById("athleteSelect").value;
+  window.location.href = `/coach/athlete/${athleteId}/give_feedback?log_id=${logId}`;
 }
 </script>
 {% endblock %}
