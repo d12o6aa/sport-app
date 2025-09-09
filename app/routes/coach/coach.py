@@ -5,7 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func, and_
 from datetime import datetime, timedelta
 from app import db
-from app.models import User, CoachAthlete, TrainingPlan, WorkoutLog, Feedback, Message, ActivityLog, AthleteProgress, HealthRecord, ReadinessScore, InjuryRecord, AthletePlan, AthleteProfile, WorkoutSession
+from app.models import User, CoachAthlete, TrainingPlan, WorkoutLog, Feedback, Message, ActivityLog, AthleteProgress, HealthRecord, ReadinessScore, InjuryRecord, AthletePlan, AthleteProfile, WorkoutSession, NutritionPlan
 from werkzeug.security import generate_password_hash
 
 from . import coach_bp
@@ -219,13 +219,15 @@ def create_plan():
             # Add nutrition plan
             if data.get("nutrition"):
                 nutrition = data["nutrition"]
-                health_record = HealthRecord(
+                nutrition_plan = NutritionPlan(
                     athlete_id=athlete_id,
-                    recorded_at=datetime.utcnow(),
+                    plan_id=plan.id,
                     calories_intake=nutrition.get("calories_intake"),
-                    notes=nutrition.get("notes")
+                    notes=nutrition.get("notes"),
+                    created_at=datetime.utcnow()
                 )
-                db.session.add(health_record)
+                db.session.add(nutrition_plan)
+
 
             db.session.commit()
             return jsonify({"msg": "Plan created successfully"}), 201

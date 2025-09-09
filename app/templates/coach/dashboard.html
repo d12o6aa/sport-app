@@ -1,0 +1,87 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Coach Dashboard</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item active">Coach Dashboard</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section dashboard">
+  <div class="row">
+    <!-- Active Athletes -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Active Athletes</h5>
+          <div class="activity">
+            {% for athlete, workout_count in athletes %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ athlete.name }}</div>
+                <i class="bi bi-circle-fill activity-badge text-primary align-self-start"></i>
+                <div class="activity-content">
+                  {{ workout_count }} sessions completed
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Today's Schedule -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Today's Schedule</h5>
+          <div class="activity">
+            {% for session in sessions %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ session.scheduled_at.strftime('%H:%M') }}</div>
+                <i class="bi bi-circle-fill activity-badge text-{{ session.type == 'virtual' ? 'success' : 'warning' }} align-self-start"></i>
+                <div class="activity-content">
+                  {{ session.title }} ({{ session.type }}) with {{ session.athlete.name }}
+                  {% if session.type == 'virtual' and session.meeting_link %}
+                    <a href="{{ session.meeting_link }}" target="_blank">Join</a>
+                  {% elif session.type == 'in_person' and session.location %}
+                    <br>Location: {{ session.location }}
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Recent Notifications -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Recent Notifications</h5>
+          <div class="activity">
+            {% for notification in notifications %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ notification.sent_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                <i class="bi bi-circle-fill activity-badge text-{{ notification.type == 'message' ? 'primary' : notification.type == 'video' ? 'info' : 'danger' }} align-self-start"></i>
+                <div class="activity-content">
+                  {{ notification.content | truncate(50) }}
+                  {% if notification.type == 'video' and notification.file_path %}
+                    <a href="{{ notification.file_path }}" target="_blank">View Video</a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

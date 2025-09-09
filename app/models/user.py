@@ -73,6 +73,41 @@ class User(db.Model):
         lazy="dynamic",
         cascade="all, delete-orphan"
     )
+    nutrition_plans = db.relationship("NutritionPlan", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+
+    # Notifications
+    sent_notifications = db.relationship(
+        "Notification",
+        foreign_keys="[Notification.coach_id]",
+        back_populates="coach",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+
+    received_notifications = db.relationship(
+        "Notification",
+        foreign_keys="[Notification.athlete_id]",
+        back_populates="athlete",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+
+    # Session schedules
+    scheduled_sessions_as_coach = db.relationship(
+        "SessionSchedule",
+        foreign_keys="[SessionSchedule.coach_id]",
+        back_populates="coach",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+
+    scheduled_sessions_as_athlete = db.relationship(
+        "SessionSchedule",
+        foreign_keys="[SessionSchedule.athlete_id]",
+        back_populates="athlete",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
 
 
     # Helpers

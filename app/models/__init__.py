@@ -27,6 +27,9 @@ from .injury_records import InjuryRecord
 from .health_record import HealthRecord
 from .settings import UserSettings
 from .workout_session import WorkoutSession
+from .nutrition_plans import NutritionPlan
+from .notifications import Notification
+from .session_schedules import SessionSchedule
 
 __all__ = [
     "User",
@@ -36,5 +39,5 @@ __all__ = [
     "Subscription", "ActivityLog", "WorkoutFile", "WorkoutLog","ReadinessScore" , "MLInsight",
     "Message",
     "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores", "InjuryRecord","HealthRecord"
-    ,"UserSettings", "WorkoutSession"
+    ,"UserSettings", "WorkoutSession", "NutritionPlan", "Notification", "SessionSchedule"
 ]

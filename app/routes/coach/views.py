@@ -15,6 +15,12 @@ from app.models import User, CoachAthlete, TrainingPlan, Feedback, WorkoutLog, T
 from . import coach_bp
 
 
+###### Views #####
+coach_bp.route("/view_plan/<int:plan_id>")
+@jwt_required()
+def view_plans():
+    return render_template("coach/plans.html")
+
 
 ######### Coach Management Routes #########
 @coach_bp.route("/manage_coachs")

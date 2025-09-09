@@ -25,6 +25,7 @@ class TrainingPlan(db.Model):
     coach = db.relationship("User", foreign_keys=[coach_id], back_populates="training_plans")
     athlete = db.relationship("User", foreign_keys=[athlete_id])
     assignments = db.relationship("WorkoutSession", back_populates="plan", cascade="all, delete-orphan")
+    nutrition = db.relationship("NutritionPlan", back_populates="plan", cascade="all, delete-orphan")
 
     # 🆕 العلاقة مع AthletePlan
     athlete_assignments = db.relationship(

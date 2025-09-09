@@ -1,0 +1,167 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Communication</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Communication</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Send Notification</h5>
+          <form id="notificationForm" onsubmit="event.preventDefault(); sendNotification();">
+            <div class="mb-3">
+              <label for="athleteSelect" class="form-label">Select Athlete</label>
+              <select class="form-select" id="athleteSelect" required>
+                <option value="">Select an athlete</option>
+                {% for athlete in athletes %}
+                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="notificationType" class="form-label">Notification Type</label>
+              <select class="form-select" id="notificationType" required>
+                <option value="message">Message</option>
+                <option value="video">Video</option>
+                <option value="alert">Alert</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="content" class="form-label">Content</label>
+              <textarea class="form-control" id="content" rows="4" required></textarea>
+            </div>
+            <div class="mb-3" id="fileInput" style="display: none;">
+              <label for="filePath" class="form-label">Video URL</label>
+              <input type="url" class="form-control" id="filePath">
+            </div>
+            <button type="submit" class="btn btn-primary">Send Notification</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Schedule Session</h5>
+          <form id="sessionForm" onsubmit="event.preventDefault(); scheduleSession();">
+            <div class="mb-3">
+              <label for="sessionAthleteSelect" class="form-label">Select Athlete</label>
+              <select class="form-select" id="sessionAthleteSelect" required>
+                <option value="">Select an athlete</option>
+                {% for athlete in athletes %}
+                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="sessionTitle" class="form-label">Session Title</label>
+              <input type="text" class="form-control" id="sessionTitle" required>
+            </div>
+            <div class="mb-3">
+              <label for="sessionType" class="form-label">Session Type</label>
+              <select class="form-select" id="sessionType" required onchange="toggleSessionFields()">
+                <option value="virtual">Virtual</option>
+                <option value="in_person">In-Person</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="scheduledAt" class="form-label">Scheduled At</label>
+              <input type="datetime-local" class="form-control" id="scheduledAt" required>
+            </div>
+            <div class="mb-3">
+              <label for="duration" class="form-label">Duration (minutes)</label>
+              <input type="number" class="form-control" id="duration">
+            </div>
+            <div class="mb-3" id="locationField" style="display: none;">
+              <label for="location" class="form-label">Location</label>
+              <input type="text" class="form-control" id="location">
+            </div>
+            <div class="mb-3" id="meetingLinkField">
+              <label for="meetingLink" class="form-label">Meeting Link</label>
+              <input type="url" class="form-control" id="meetingLink">
+            </div>
+            <button type="submit" class="btn btn-primary">Schedule Session</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function toggleSessionFields() {
+  const sessionType = document.getElementById("sessionType").value;
+  document.getElementById("locationField").style.display = sessionType === "in_person" ? "block" : "none";
+  document.getElementById("meetingLinkField").style.display = sessionType === "virtual" ? "block" : "none";
+}
+
+document.getElementById("notificationType").addEventListener("change", function() {
+  document.getElementById("fileInput").style.display = this.value === "video" ? "block" : "none";
+});
+
+function sendNotification() {
+  const data = {
+    athlete_id: document.getElementById("athleteSelect").value,
+    type: document.getElementById("notificationType").value,
+    content: document.getElementById("content").value,
+    file_path: document.getElementById("filePath").value || null
+  };
+
+  fetch("/coach/athlete/" + data.athlete_id + "/send_notification", {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+
+function scheduleSession() {
+  const data = {
+    athlete_id: document.getElementById("sessionAthleteSelect").value,
+    title: document.getElementById("sessionTitle").value,
+    type: document.getElementById("sessionType").value,
+    scheduled_at: document.getElementById("scheduledAt").value,
+    duration: document.getElementById("duration").value || null,
+    location: document.getElementById("location").value || null,
+    meeting_link: document.getElementById("meetingLink").value || null
+  };
+
+  fetch("/coach/athlete/" + data.athlete_id + "/schedule_session", {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+</script>
+{% endblock %}

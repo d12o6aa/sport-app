@@ -1,0 +1,185 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Assessments & Reports</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Assessments & Reports</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Generate Report</h5>
+          <div class="mb-3">
+            <label for="athleteSelect" class="form-label">Select Athlete</label>
+            <select class="form-select" id="athleteSelect" onchange="loadReport()">
+              <option value="">Select an athlete</option>
+              {% for athlete in athletes %}
+                <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="rangeSelect" class="form-label">Time Range</label>
+            <select class="form-select" id="rangeSelect" onchange="loadReport()">
+              <option value="week">Last Week</option>
+              <option value="month" selected>Last Month</option>
+              <option value="3months">Last 3 Months</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Total Sessions</h5>
+                  <h3 id="totalSessions">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Compliance</h5>
+                  <h3 id="compliance">0%</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Avg Performance</h5>
+                  <h3 id="avgPerformance">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Weight Change</h5>
+                  <h3 id="weightChange">0 kg</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Goals</h5>
+              <table id="goalsTable" class="table table-borderless datatable">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Target</th>
+                    <th>Current</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Set New Goal</h5>
+          <form id="goalForm" onsubmit="event.preventDefault(); setGoal();">
+            <div class="mb-3">
+              <label for="goalAthleteSelect" class="form-label">Select Athlete</label>
+              <select class="form-select" id="goalAthleteSelect" required>
+                <option value="">Select an athlete</option>
+                {% for athlete in athletes %}
+                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Goal Description</label>
+              <input type="text" class="form-control" id="description" required>
+            </div>
+            <div class="mb-3">
+              <label for="targetValue" class="form-label">Target Value</label>
+              <input type="number" class="form-control" id="targetValue" step="0.1" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Set Goal</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function loadReport() {
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) return;
+
+  const range = document.getElementById("rangeSelect").value;
+
+  fetch(`/coach/athlete/${athleteId}/generate_report?range=${range}`, {
+    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+  })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("totalSessions").textContent = data.total_sessions;
+      document.getElementById("compliance").textContent = `${data.compliance}%`;
+      document.getElementById("avgPerformance").textContent = data.avg_performance;
+      document.getElementById("weightChange").textContent = `${data.weight_change} kg`;
+
+      const tbody = document.querySelector("#goalsTable tbody");
+      tbody.innerHTML = "";
+      data.goals.forEach(goal => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${goal.description}</td>
+            <td>${goal.target_value}</td>
+            <td>${goal.current_value}</td>
+            <td><span class="badge bg-${goal.status === 'active' ? 'primary' : goal.status === 'completed' ? 'success' : 'secondary'}">${goal.status}</span></td>
+          </tr>`;
+      });
+      if ($.fn.DataTable.isDataTable('#goalsTable')) {
+        $('#goalsTable').DataTable().destroy();
+      }
+      $('#goalsTable').DataTable({
+        responsive: true,
+        order: [[0, 'asc']]
+      });
+    });
+}
+
+function setGoal() {
+  const data = {
+    athlete_id: document.getElementById("goalAthleteSelect").value,
+    description: document.getElementById("description").value,
+    target_value: document.getElementById("targetValue").value
+  };
+
+  fetch(`/coach/athlete/${data.athlete_id}/set_goal`, {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+</script>
+{% endblock %}
