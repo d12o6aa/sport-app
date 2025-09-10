@@ -4,7 +4,7 @@ from datetime import datetime
 from app import db
 from app.models import User, CoachAthlete, Notification, SessionSchedule
 
-communication_bp = Blueprint('communication', __name__, url_prefix='/coach')
+from . import coach_bp
 
 # Helper function to check if user is a coach
 def is_coach(user_id):
@@ -12,7 +12,7 @@ def is_coach(user_id):
     return user and user.role == "coach"
 
 # Communication dashboard
-@communication_bp.route("/communication", methods=["GET"])
+@coach_bp.route("/communication", methods=["GET"])
 @jwt_required()
 def communication():
     identity = get_jwt_identity()
@@ -28,7 +28,7 @@ def communication():
     return render_template("coach/communication.html", athletes=athletes)
 
 # Send notification or video
-@communication_bp.route("/athlete/<int:athlete_id>/send_notification", methods=["POST"])
+@coach_bp.route("/athlete/<int:athlete_id>/send_notification", methods=["POST"])
 @jwt_required()
 def send_notification(athlete_id):
     identity = get_jwt_identity()
@@ -60,13 +60,13 @@ def send_notification(athlete_id):
         db.session.add(notification)
         db.session.commit()
         flash("Notification sent successfully!", "success")
-        return redirect(url_for("communication.communication"))
+        return redirect(url_for("coach.communication"))
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": f"Error: {str(e)}"}), 500
 
 # Schedule session
-@communication_bp.route("/athlete/<int:athlete_id>/schedule_session", methods=["POST"])
+@coach_bp.route("/athlete/<int:athlete_id>/schedule_session", methods=["POST"])
 @jwt_required()
 def schedule_session(athlete_id):
     identity = get_jwt_identity()
@@ -103,7 +103,20 @@ def schedule_session(athlete_id):
         db.session.add(session)
         db.session.commit()
         flash("Session scheduled successfully!", "success")
-        return redirect(url_for("communication.communication"))
+        return redirect(url_for("coach.communication"))
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": f"Error: {str(e)}"}), 500
+    
+# View notifications
+@coach_bp.route("/notifications", methods=["GET"])
+@jwt_required()
+def view_notifications():
+    identity = get_jwt_identity()
+    if not is_coach(identity):
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    notifications = Notification.query.filter_by(coach_id=identity).order_by(Notification.sent_at.desc()).all()
+    return render_template("coach/notifications.html", notifications=notifications)
+
+

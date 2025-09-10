@@ -1,0 +1,89 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Create Workout</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Create Workout</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Create New Workout</h5>
+          <form id="workoutForm" onsubmit="event.preventDefault(); createWorkout();">
+            <div class="mb-3">
+              <label for="athleteSelect" class="form-label">Select Athlete</label>
+              <select class="form-select" id="athleteSelect" required>
+                <option value="">Select an athlete</option>
+                {% for athlete in athletes %}
+                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="name" class="form-label">Workout Name</label>
+              <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="type" class="form-label">Workout Type</label>
+              <select class="form-select" id="type" required>
+                <option value="strength">Strength</option>
+                <option value="cardio">Cardio</option>
+                <option value="flexibility">Flexibility</option>
+                <option value="endurance">Endurance</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="duration" class="form-label">Duration (minutes)</label>
+              <input type="number" class="form-control" id="duration">
+            </div>
+            <div class="mb-3">
+              <label for="performedAt" class="form-label">Performed At</label>
+              <input type="date" class="form-control" id="performedAt" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Workout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function createWorkout() {
+  const data = {
+    athlete_id: document.getElementById("athleteSelect").value,
+    name: document.getElementById("name").value,
+    type: document.getElementById("type").value,
+    duration: document.getElementById("duration").value,
+    performed_at: document.getElementById("performedAt").value
+  };
+
+  fetch("/coach/create_workout", {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+</script>
+{% endblock %}

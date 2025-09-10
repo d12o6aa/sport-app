@@ -1,11 +1,11 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app import db
 from app.models import User, CoachAthlete, WorkoutLog, HealthRecord, AthleteGoal
 
-assessments_reports_bp = Blueprint('assessments_reports', __name__, url_prefix='/coach')
+from . import coach_bp
 
 # Helper function to check if user is a coach
 def is_coach(user_id):
@@ -13,7 +13,7 @@ def is_coach(user_id):
     return user and user.role == "coach"
 
 # Assessments and reports dashboard
-@assessments_reports_bp.route("/assessments_reports", methods=["GET"])
+@coach_bp.route("/assessments_reports", methods=["GET"])
 @jwt_required()
 def assessments_reports():
     identity = get_jwt_identity()
@@ -29,7 +29,7 @@ def assessments_reports():
     return render_template("coach/assessments_reports.html", athletes=athletes)
 
 # Generate report
-@assessments_reports_bp.route("/athlete/<int:athlete_id>/generate_report", methods=["GET"])
+@coach_bp.route("/athlete/<int:athlete_id>/generate_report", methods=["GET"])
 @jwt_required()
 def generate_report(athlete_id):
     identity = get_jwt_identity()
@@ -105,7 +105,7 @@ def generate_report(athlete_id):
     return jsonify(data)
 
 # Set new goal
-@assessments_reports_bp.route("/athlete/<int:athlete_id>/set_goal", methods=["POST"])
+@coach_bp.route("/athlete/<int:athlete_id>/set_goal", methods=["POST"])
 @jwt_required()
 def set_goal(athlete_id):
     identity = get_jwt_identity()

@@ -16,10 +16,118 @@ from . import coach_bp
 
 
 ###### Views #####
-coach_bp.route("/view_plan/<int:plan_id>")
+@coach_bp.route("/plans/<int:plan_id>", methods=["GET"])
 @jwt_required()
-def view_plans():
-    return render_template("coach/plans.html")
+def view_plan(plan_id):
+    plan = TrainingPlan.query.get_or_404(plan_id)
+    return render_template("coach/manage_plans.html", plan=plan)
+
+
+
+# ================== Dashboard ==================
+@coach_bp.route("/dashboard")
+@jwt_required()
+def dashboard_view():
+    return render_template("coach/dashboard.html")
+
+# ================== Athletes ==================
+@coach_bp.route("/manage_athletes")
+@jwt_required()
+def manage_athletes_view():
+    return render_template("coach/manage_athletes.html")
+
+@coach_bp.route("/my_athletes")
+@jwt_required()
+def my_athletes_view():
+    return render_template("coach/my_athletes.html")
+
+@coach_bp.route("/athlete_compliance")
+@jwt_required()
+def athlete_compliance_view():
+    return render_template("coach/athlete_compliance.html")
+
+@coach_bp.route("/athlete_details")
+@jwt_required()
+def athlete_details_view():
+    return render_template("coach/athlete_details.html")
+
+# ================== Training Plans ==================
+@coach_bp.route("/create_plan")
+@jwt_required()
+def create_plan_view():
+    return render_template("coach/create_plan.html")
+
+@coach_bp.route("/manage_plans")
+@jwt_required()
+def manage_plans_view():
+    return render_template("coach/manage_plans.html")
+
+@coach_bp.route("/edit_plan")
+@jwt_required()
+def edit_plan_view():
+    return render_template("coach/edit_plan.html")
+
+@coach_bp.route("/coach_plans")
+@jwt_required()
+def coach_plans_view():
+    return render_template("coach/coach_plans.html")
+
+@coach_bp.route("/calendar")
+@jwt_required()
+def calendar_view():
+    return render_template("coach/calendar.html")
+
+# ================== Workouts ==================
+@coach_bp.route("/create_workout")
+@jwt_required()
+def create_workout_view():
+    return render_template("coach/create_workout.html")
+
+@coach_bp.route("/workout_list")
+@jwt_required()
+def workout_list_view():
+    return render_template("coach/workout_list.html")
+
+@coach_bp.route("/track_progress")
+@jwt_required()
+def track_progress_view():
+    return render_template("coach/track_progress.html")
+
+@coach_bp.route("/progress_tracking")
+@jwt_required()
+def progress_tracking_view():
+    return render_template("coach/progress_tracking.html")
+
+# ================== Feedback ==================
+@coach_bp.route("/give_feedback")
+@jwt_required()
+def give_feedback_view():
+    return render_template("coach/give_feedback.html")
+
+@coach_bp.route("/view_feedback")
+@jwt_required()
+def view_feedback_view():
+    return render_template("coach/view_feedback.html")
+
+@coach_bp.route("/select_feedback")
+@jwt_required()
+def select_feedback_view():
+    return render_template("coach/select_feedback.html")
+
+# ================== Reports ==================
+@coach_bp.route("/assessments_reports")
+@jwt_required()
+def assessments_reports_view():
+    return render_template("coach/assessments_reports.html")
+
+# ================== Communication ==================
+@coach_bp.route("/communication")
+@jwt_required()
+def communication_view():
+    return render_template("coach/communication.html")
+
+
+
 
 
 ######### Coach Management Routes #########
@@ -342,11 +450,6 @@ def get_activity_feed(athlete_id):
 
 # Athletes
 
-@coach_bp.route("/progress_tracking")
-@jwt_required()
-def progress_tracking():
-    return render_template("coach/progress_tracking.html")
-
 @coach_bp.route("/athlete_compliance")
 @jwt_required()
 def athlete_compliance():
@@ -356,10 +459,6 @@ def athlete_compliance():
 
 
 
-@coach_bp.route("/calendar")
-@jwt_required()
-def calendar():
-    return render_template("coach/calendar.html")
 
 @coach_bp.route("/feedback/select")
 @jwt_required()
@@ -370,6 +469,7 @@ def select_athlete_for_feedback():
 
     athletes = [link.athlete for link in coach.athlete_links]  # حسب علاقتك
     return render_template("coach/select_feedback.html", athletes=athletes)
+
 
 @coach_bp.route("/athlete/<int:athlete_id>/profile")
 def athlete_profile(athlete_id):

@@ -1,25 +1,109 @@
 {% extends "shared/base.html" %}
+
 {% block content %}
-<div class="container">
-  <h3>Progress & Trends</h3>
-  <canvas id="performanceChart" height="100"></canvas>
-  <canvas id="workloadChart" height="100"></canvas>
+<div class="pagetitle">
+  <h1>Progress Tracking</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Progress Tracking</li>
+    </ol>
+  </nav>
 </div>
 
-{% block scripts %}
-<script>
-const ctx = document.getElementById('performanceChart').getContext('2d');
-new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: {{ dates | tojson }},
-    datasets: [{
-      label: 'Performance Score',
-      data: {{ scores | tojson }},
-      borderColor: 'blue'
-    }]
-  }
-});
-</script>
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Track Athlete Progress</h5>
+          <div class="mb-3">
+            <label for="athleteSelect" class="form-label">Select Athlete</label>
+            <select class="form-select" id="athleteSelect" onchange="loadTrackingData()">
+              <option value="">Select an athlete</option>
+              {% for athlete in athletes %}
+                <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Total Sessions</h5>
+                  <h3 id="totalSessions">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Weight Progress</h5>
+              <canvas id="weightChart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Calories Intake</h5>
+              <canvas id="caloriesChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let weightChart, caloriesChart;
+
+function loadTrackingData() {
+  const athleteId = document.getElementById("athleteSelect").value;
+  if (!athleteId) return;
+
+  fetch(`/coach/progress_tracking_data/${athleteId}`, {
+    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+  })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("totalSessions").textContent = data.sessions;
+
+      if (weightChart) weightChart.destroy();
+      const weightCtx = document.getElementById("weightChart").getContext("2d");
+      weightChart = new Chart(weightCtx, {
+        type: "line",
+        data: {
+          labels: data.weight_data.map(d => d.date),
+          datasets: [{
+            label: "Weight (kg)",
+            data: data.weight_data.map(d => d.value),
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1
+          }]
+        },
+        options: { scales: { y: { beginAtZero: false } } }
+      });
+
+      if (caloriesChart) caloriesChart.destroy();
+      const caloriesCtx = document.getElementById("caloriesChart").getContext("2d");
+      caloriesChart = new Chart(caloriesCtx, {
+        type: "line",
+        data: {
+          labels: data.calories_data.map(d => d.date),
+          datasets: [{
+            label: "Calories Intake",
+            data: data.calories_data.map(d => d.value),
+            borderColor: "rgb(255, 99, 132)",
+            tension: 0.1
+          }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    });
+}
+</script>
 {% endblock %}

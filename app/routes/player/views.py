@@ -6,6 +6,8 @@ from app.models.coach_athlete import CoachAthlete
 
 from . import athlete_bp
 
+
+
 # ---------------- Manage Athletes ----------------
 @athlete_bp.route("/manage_athletes", endpoint="manage_athletes")
 @jwt_required()

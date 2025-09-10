@@ -1,20 +1,54 @@
 {% extends "shared/base.html" %}
+
 {% block content %}
-<div class="container">
-  <h3>Feedback for {{ athlete.name }}</h3>
-  
-  {% if feedbacks %}
-    <ul class="list-group">
-      {% for fb in feedbacks %}
-      <li class="list-group-item">
-        <strong>{{ fb.coach.name if fb.coach else "Unknown Coach" }}</strong> 
-        <small class="text-muted">({{ fb.created_at.strftime('%Y-%m-%d %H:%M') }})</small>
-        <p>{{ fb.feedback }}</p>
-      </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No feedback yet for this athlete.</p>
-  {% endif %}
+<div class="pagetitle">
+  <h1>View Feedback</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">View Feedback</li>
+    </ol>
+  </nav>
 </div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Sent Feedback</h5>
+          <table id="feedbackTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Athlete</th>
+                <th>Type</th>
+                <th>Content</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for feedback in feedback_list %}
+                <tr>
+                  <td>{{ feedback.athlete.name }}</td>
+                  <td>{{ feedback.type }}</td>
+                  <td>{{ feedback.content | truncate(50) }}</td>
+                  <td>{{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+  $('#feedbackTable').DataTable({ responsive: true, order: [[3, 'desc']] });
+});
+</script>
 {% endblock %}

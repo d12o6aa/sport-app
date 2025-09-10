@@ -1,37 +1,117 @@
 {% extends "shared/base.html" %}
+
 {% block content %}
-<div class="container">
-  <h3>Manage Training Plans</h3>
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>Plan Title</th>
-        <th>Athlete</th>
-        <th>Period</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for plan in plans %}
-      <tr>
-        <td>{{ plan.title }}</td>
-        <td>{{ plan.athlete.name if plan.athlete else "Unassigned" }}</td>
-        <td>
-          {{ plan.start_date.strftime('%Y-%m-%d') if plan.start_date }} → 
-          {{ plan.end_date.strftime('%Y-%m-%d') if plan.end_date }}
-        </td>
-        <td><span class="badge bg-info">{{ plan.status }}</span></td>
-        <td>
-          <a href="{{ url_for('coach.view_plan', plan_id=plan.id) }}" class="btn btn-sm btn-primary">View</a>
-          <a href="{{ url_for('coach.edit_plan', plan_id=plan.id) }}" class="btn btn-sm btn-warning">Edit</a>
-          <form action="{{ url_for('coach.delete_plan', plan_id=plan.id) }}" method="POST" style="display:inline;">
-            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this plan?')">Delete</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="pagetitle">
+  <h1>Manage Plans</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Manage Plans</li>
+    </ol>
+  </nav>
 </div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Create New Plan</h5>
+          <form id="planForm" onsubmit="event.preventDefault(); createPlan();">
+            <div class="mb-3">
+              <label for="athleteSelect" class="form-label">Select Athlete</label>
+              <select class="form-select" id="athleteSelect" required>
+                <option value="">Select an athlete</option>
+                {% for athlete in athletes %}
+                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="title" class="form-label">Plan Title</label>
+              <input type="text" class="form-control" id="title" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control" id="description" rows="4"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="startDate" required>
+            </div>
+            <div class="mb-3">
+              <label for="endDate" class="form-label">End Date</label>
+              <input type="date" class="form-control" id="endDate">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Plan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Existing Plans</h5>
+          <table id="plansTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Athlete</th>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for plan in plans %}
+                <tr>
+                  <td>{{ plan.athlete.name }}</td>
+                  <td>{{ plan.title }}</td>
+                  <td>{{ plan.start_date.strftime('%Y-%m-%d') }}</td>
+                  <td>{{ plan.end_date.strftime('%Y-%m-%d') if plan.end_date else 'N/A' }}</td>
+                  <td><span class="badge bg-{{ plan.status == 'active' ? 'primary' : 'secondary' }}">{{ plan.status }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function createPlan() {
+  const data = {
+    athlete_id: document.getElementById("athleteSelect").value,
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value,
+    start_date: document.getElementById("startDate").value,
+    end_date: document.getElementById("endDate").value
+  };
+
+  fetch("/coach/manage_plans", {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+
+$(document).ready(function() {
+  $('#plansTable').DataTable({ responsive: true, order: [[2, 'desc']] });
+});
+</script>
 {% endblock %}

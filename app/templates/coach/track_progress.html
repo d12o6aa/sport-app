@@ -2,23 +2,24 @@
 
 {% block content %}
 <div class="pagetitle">
-  <h1>Track Athlete Progress</h1>
+  <h1>Track Progress</h1>
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
       <li class="breadcrumb-item active">Track Progress</li>
     </ol>
   </nav>
-</div><!-- End Page Title -->
+</div>
 
 <section class="section">
   <div class="row">
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Select Athlete</h5>
+          <h5 class="card-title">Track Athlete Progress</h5>
           <div class="mb-3">
+            <label for="athleteSelect" class="form-label">Select Athlete</label>
             <select class="form-select" id="athleteSelect" onchange="loadProgress()">
               <option value="">Select an athlete</option>
               {% for athlete in athletes %}
@@ -42,69 +43,46 @@
               <option value="nutrition">Nutrition</option>
             </select>
           </div>
-        </div>
-      </div>
-    </div>
-    <!-- Summary Cards -->
-    <div class="col-lg-3">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Total Sessions</h5>
-          <h3 id="totalSessions">0</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Compliance</h5>
-          <h3 id="compliance">0%</h3>
-          <span id="complianceLabel" class="badge"></span>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Avg Readiness</h5>
-          <h3 id="avgReadiness">0</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Injury Alerts</h5>
-          <h3 id="injuryAlerts">0</h3>
-        </div>
-      </div>
-    </div>
-    <!-- Progress Chart -->
-    <div class="col-lg-12">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Progress Chart</h5>
-          <canvas id="progressChart"></canvas>
-        </div>
-      </div>
-    </div>
-    <!-- Workout Logs -->
-    <div class="col-lg-12">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Workout Logs</h5>
-          <table id="logsTable" class="table table-borderless datatable">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Details</th>
-                <th>Metric</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Total Sessions</h5>
+                  <h3 id="totalSessions">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Compliance</h5>
+                  <h3 id="compliance">0%</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Progress Chart</h5>
+              <canvas id="progressChart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Goals</h5>
+              <table id="goalsTable" class="table table-borderless datatable">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Target</th>
+                    <th>Current</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -124,69 +102,45 @@ function loadProgress() {
   const range = document.getElementById("rangeSelect").value;
   const type = document.getElementById("typeSelect").value;
 
-  fetch(`/coach/athlete/${athleteId}/progress?range=${range}&type=${type}`, {
+  fetch(`/coach/progress_data/${athleteId}?range=${range}&type=${type}`, {
     headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
   })
     .then(r => r.json())
     .then(data => {
-      // Update summary cards
       document.getElementById("totalSessions").textContent = data.total_sessions;
       document.getElementById("compliance").textContent = `${data.compliance}%`;
-      document.getElementById("complianceLabel").textContent = data.compliance_label;
-      document.getElementById("complianceLabel").className = `badge bg-${data.compliance >= 90 ? 'success' : data.compliance >= 70 ? 'primary' : 'warning'}`;
-      document.getElementById("avgReadiness").textContent = data.avg_readiness;
-      document.getElementById("injuryAlerts").textContent = data.injury_alerts;
 
-      // Update chart
       if (progressChart) progressChart.destroy();
       const ctx = document.getElementById("progressChart").getContext("2d");
       progressChart = new Chart(ctx, {
         type: "line",
         data: {
           labels: data.labels,
-          datasets: [
-            {
-              label: type === "weight" ? "Weight (kg)" : type === "nutrition" ? "Calories Intake" : "Performance Score",
-              data: data.values,
-              borderColor: "rgb(75, 192, 192)",
-              tension: 0.1
-            },
-            {
-              label: "Readiness Score",
-              data: data.secondary_values,
-              borderColor: "rgb(255, 99, 132)",
-              tension: 0.1,
-              hidden: type === "performance"
-            }
-          ]
+          datasets: [{
+            label: type === "weight" ? "Weight (kg)" : type === "nutrition" ? "Calories Intake" : "Performance Score",
+            data: data.values,
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1
+          }]
         },
-        options: {
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+        options: { scales: { y: { beginAtZero: true } } }
       });
 
-      // Update logs table
-      const tbody = document.querySelector("#logsTable tbody");
+      const tbody = document.querySelector("#goalsTable tbody");
       tbody.innerHTML = "";
-      data.logs.forEach(log => {
+      data.goals.forEach(goal => {
         tbody.innerHTML += `
           <tr>
-            <td>${log.date}</td>
-            <td>${log.type}</td>
-            <td>${log.details}</td>
-            <td>${log.metric}</td>
-            <td><span class="badge bg-${log.status_color}">${log.status}</span></td>
+            <td>${goal.description}</td>
+            <td>${goal.target_value}</td>
+            <td>${goal.current_value}</td>
+            <td><span class="badge bg-${goal.status === 'active' ? 'primary' : goal.status === 'completed' ? 'success' : 'secondary'}">${goal.status}</span></td>
           </tr>`;
       });
-      if ($.fn.DataTable.isDataTable('#logsTable')) {
-        $('#logsTable').DataTable().destroy();
+      if ($.fn.DataTable.isDataTable('#goalsTable')) {
+        $('#goalsTable').DataTable().destroy();
       }
-      $('#logsTable').DataTable({
-        responsive: true,
-        order: [[0, 'desc']]
-      });
+      $('#goalsTable').DataTable({ responsive: true, order: [[0, 'asc']] });
     });
 }
 </script>

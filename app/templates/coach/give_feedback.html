@@ -1,13 +1,80 @@
 {% extends "shared/base.html" %}
+
 {% block content %}
-<div class="container">
-  <h3>Give Feedback to {{ athlete.name }}</h3>
-  <form method="POST">
-    <div class="mb-3">
-      <label for="feedback" class="form-label">Your Feedback</label>
-      <textarea class="form-control" id="feedback" name="feedback" rows="5" required></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary">Submit Feedback</button>
-  </form>
+<div class="pagetitle">
+  <h1>Give Feedback</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Give Feedback</li>
+    </ol>
+  </nav>
 </div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Send Feedback to Athlete</h5>
+          <form id="feedbackForm" onsubmit="event.preventDefault(); sendFeedback();">
+            <div class="mb-3">
+              <label for="athleteSelect" class="form-label">Select Athlete</label>
+              <select class="form-select" id="athleteSelect" required>
+                <option value="">Select an athlete</option>
+                {% for athlete in athletes %}
+                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="type" class="form-label">Feedback Type</label>
+              <select class="form-select" id="type">
+                <option value="general">General</option>
+                <option value="performance">Performance</option>
+                <option value="nutrition">Nutrition</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="content" class="form-label">Feedback</label>
+              <textarea class="form-control" id="content" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send Feedback</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function sendFeedback() {
+  const data = {
+    athlete_id: document.getElementById("athleteSelect").value,
+    type: document.getElementById("type").value,
+    content: document.getElementById("content").value
+  };
+
+  fetch("/coach/give_feedback", {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+
+
+</script>
 {% endblock %}

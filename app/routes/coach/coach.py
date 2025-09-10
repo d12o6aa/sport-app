@@ -280,18 +280,23 @@ def edit_plan(plan_id):
             # Update nutrition plan
             if data.get("nutrition"):
                 nutrition = data["nutrition"]
-                health_record = HealthRecord.query.filter_by(athlete_id=plan.athlete_id).order_by(HealthRecord.recorded_at.desc()).first()
-                if health_record:
-                    health_record.calories_intake = nutrition.get("calories_intake", health_record.calories_intake)
-                    health_record.notes = nutrition.get("notes", health_record.notes)
+
+                # نجيب الـ nutrition plan المرتبط بالـ plan ده
+                nutrition_plan = NutritionPlan.query.filter_by(plan_id=plan.id, athlete_id=plan.athlete_id).first()
+
+                if nutrition_plan:
+                    nutrition_plan.calories_intake = nutrition.get("calories_intake", nutrition_plan.calories_intake)
+                    nutrition_plan.notes = nutrition.get("notes", nutrition_plan.notes)
                 else:
-                    health_record = HealthRecord(
+                    nutrition_plan = NutritionPlan(
                         athlete_id=plan.athlete_id,
-                        recorded_at=datetime.utcnow(),
+                        plan_id=plan.id,
                         calories_intake=nutrition.get("calories_intake"),
-                        notes=nutrition.get("notes")
+                        notes=nutrition.get("notes"),
+                        created_at=datetime.utcnow()
                     )
-                    db.session.add(health_record)
+                    db.session.add(nutrition_plan)
+
 
             db.session.commit()
             return jsonify({"msg": "Plan updated successfully"}), 200
@@ -302,6 +307,17 @@ def edit_plan(plan_id):
     sessions = WorkoutSession.query.filter_by(plan_id=plan_id).all()
     health_record = HealthRecord.query.filter_by(athlete_id=plan.athlete_id).order_by(HealthRecord.recorded_at.desc()).first()
     return render_template("coach/edit_plan.html", plan=plan, sessions=sessions, nutrition=health_record)
+
+
+@coach_bp.route("/plans/edit", methods=["GET"])
+@jwt_required()
+def edit_plans_list():
+    identity = get_jwt_identity()
+    if not is_coach(identity):
+        return redirect(url_for("auth.login"))
+
+    plans = TrainingPlan.query.filter_by(coach_id=identity).all()
+    return render_template("coach/manage_plans.html", plans=plans)
 
 # Delete a training plan
 @coach_bp.route("/plans/<int:plan_id>", methods=["DELETE"])
@@ -412,52 +428,6 @@ def view_messages(athlete_id):
     athlete = User.query.get_or_404(athlete_id)
     return render_template("coach/view_messages.html", athlete=athlete, messages=messages)
 
-# Give feedback to athlete
-@coach_bp.route("/athlete/<int:athlete_id>/give_feedback", methods=["GET", "POST"])
-@jwt_required()
-def give_feedback(athlete_id):
-    identity = get_jwt_identity()
-    if not is_coach(identity):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    link = CoachAthlete.query.filter_by(coach_id=identity, athlete_id=athlete_id, is_active=True).first()
-    if not link:
-        return jsonify({"msg": "Not your athlete"}), 403
-
-    athlete = User.query.get_or_404(athlete_id)
-    log_id = request.args.get("log_id", type=int)
-
-    if request.method == "POST":
-        data = request.form
-        feedback = Feedback(
-            coach_id=identity,
-            athlete_id=athlete_id,
-            session_id=log_id,
-            text=data.get("text"),
-            created_at=datetime.utcnow()
-        )
-        db.session.add(feedback)
-        db.session.commit()
-        flash("Feedback submitted successfully!", "success")
-        return redirect(url_for("coach.view_feedback", athlete_id=athlete_id))
-
-    return render_template("coach/give_feedback.html", athlete=athlete, log_id=log_id)
-
-# View feedback for athlete
-@coach_bp.route("/athlete/<int:athlete_id>/feedback", methods=["GET"])
-@jwt_required()
-def view_feedback(athlete_id):
-    identity = get_jwt_identity()
-    if not is_coach(identity):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    link = CoachAthlete.query.filter_by(coach_id=identity, athlete_id=athlete_id, is_active=True).first()
-    if not link:
-        return jsonify({"msg": "Not your athlete"}), 403
-
-    feedbacks = Feedback.query.filter_by(athlete_id=athlete_id, coach_id=identity).order_by(Feedback.created_at.desc()).all()
-    athlete = User.query.get_or_404(athlete_id)
-    return render_template("coach/view_feedback.html", athlete=athlete, feedbacks=feedbacks)
 
 # View workout log details
 @coach_bp.route("/logs/<int:log_id>", methods=["GET"])
@@ -474,29 +444,3 @@ def view_log(log_id):
 
     return render_template("coach/view_log.html", log=log)
 
-# Manage training plans
-@coach_bp.route("/plans", methods=["GET"])
-@jwt_required()
-def manage_plans():
-    identity = get_jwt_identity()
-    if not is_coach(identity):
-        return redirect(url_for("auth.login"))
-
-    plans = TrainingPlan.query.filter_by(coach_id=identity).all()
-    return render_template("coach/manage_plans.html", plans=plans)
-
-# Track athlete progress
-@coach_bp.route("/track_progress", methods=["GET"])
-@jwt_required()
-def track_progress():
-    identity = get_jwt_identity()
-    if not is_coach(identity):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    athletes = (
-        db.session.query(User)
-        .join(CoachAthlete, CoachAthlete.athlete_id == User.id)
-        .filter(CoachAthlete.coach_id == identity, CoachAthlete.is_active == True)
-        .all()
-    )
-    return render_template("coach/track_progress.html", athletes=athletes)

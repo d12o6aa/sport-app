@@ -1,0 +1,54 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>My Athletes</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">My Athletes</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">My Athletes</h5>
+          <table id="athletesTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for athlete in athletes %}
+                <tr>
+                  <td>{{ athlete.name }}</td>
+                  <td>{{ athlete.email }}</td>
+                  <td>
+                    <a href="{{ url_for('coach.athlete_details', athlete_id=athlete.id) }}" class="btn btn-sm btn-primary">View Details</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+  $('#athletesTable').DataTable({ responsive: true, order: [[0, 'asc']] });
+});
+</script>
+{% endblock %}

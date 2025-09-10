@@ -1,22 +1,45 @@
 {% extends "shared/base.html" %}
-{% block content %}
-<div class="container">
-  <h3>Training Calendar</h3>
-  <div id="calendar"></div>
-</div>
-{% endblock %}
 
+{% block content %}
+<div class="pagetitle">
+  <h1>Calendar</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
+      <li class="breadcrumb-item active">Calendar</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Schedule Calendar</h5>
+          <div id="calendar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
 {% block scripts %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.js"></script>
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
-      events: {{ calendar_events | tojson }},
-    });
-    calendar.render();
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('calendar');
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    events: '/coach/calendar_events',
+    eventClick: function(info) {
+      alert('Event: ' + info.event.title);
+    }
   });
+  calendar.render();
+});
 </script>
 {% endblock %}

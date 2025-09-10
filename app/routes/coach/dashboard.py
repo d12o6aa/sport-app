@@ -1,11 +1,11 @@
 from flask import Blueprint, jsonify, render_template
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from app import db
 from app.models import User, CoachAthlete, Notification, SessionSchedule, WorkoutLog
 
-dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/coach')
+from . import coach_bp
 
 # Helper function to check if user is a coach
 def is_coach(user_id):
@@ -13,7 +13,7 @@ def is_coach(user_id):
     return user and user.role == "coach"
 
 # Coach dashboard
-@dashboard_bp.route("/dashboard", methods=["GET"])
+@coach_bp.route("/dashboard", methods=["GET"])
 @jwt_required()
 def coach_dashboard():
     identity = get_jwt_identity()
@@ -38,3 +38,5 @@ def coach_dashboard():
     ).order_by(SessionSchedule.scheduled_at).all()
 
     return render_template("coach/dashboard.html", athletes=athletes, notifications=notifications, sessions=sessions)
+
+
