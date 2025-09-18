@@ -46,6 +46,9 @@ class User(db.Model):
     injuries = db.relationship("InjuryRecord", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     health_records = db.relationship("HealthRecord", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     settings = db.relationship("UserSettings", back_populates="user", uselist=False)
+    points_logs = db.relationship("PointsLog", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    health_integrations = db.relationship("HealthIntegration", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    
 
     # Groups
     training_groups = db.relationship("TrainingGroup", back_populates="trainer", lazy="dynamic")  # as trainer/owner

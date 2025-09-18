@@ -12,6 +12,7 @@ class WorkoutSession(db.Model):
     duration = db.Column(db.Integer)  # minutes
     calories = db.Column(db.Integer)
     performed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    image_url = db.Column(db.String(255), nullable=True)
 
     athlete = db.relationship("User", back_populates="workout_sessions")
     plan = db.relationship("TrainingPlan", back_populates="assignments")

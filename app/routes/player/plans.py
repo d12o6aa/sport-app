@@ -4,6 +4,12 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.training_plan import TrainingPlan
 from . import athlete_bp
+import os
+from werkzeug.utils import secure_filename
+from flask import current_app
+
+
+UPLOAD_FOLDER = "static/uploads"
 
 @athlete_bp.route("/api/plans", methods=["GET"])
 @jwt_required()
@@ -15,41 +21,65 @@ def get_plans():
         "title": p.title,
         "description": p.description,
         "duration_weeks": p.duration_weeks,
-        "status": p.status
+        "status": p.status,
+        "image_url": p.image_url
     } for p in plans])
 
 @athlete_bp.route("/api/plans", methods=["POST"])
 @jwt_required()
 def create_plan():
     athlete_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.form
+
+    # معالجة الصورة
+    image_file = request.files.get("image")
+    image_url = None
+    if image_file:
+        filename = secure_filename(image_file.filename)
+        save_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        image_file.save(save_path)
+        image_url = f"/{UPLOAD_FOLDER}/{filename}"
+
     plan = TrainingPlan(
         athlete_id=athlete_id,
-        coach_id=data.get("coach_id", athlete_id),  # مؤقت
+        coach_id=data.get("coach_id", athlete_id),
         title=data.get("title"),
         description=data.get("description"),
-        duration_weeks=data.get("duration_weeks", 4),
+        duration_weeks=int(data.get("duration_weeks", 4)),
         status=data.get("status", "active"),
         start_date=date.today(),
-        end_date=date.today() + timedelta(weeks=data.get("duration_weeks", 4))
+        end_date=date.today() + timedelta(weeks=int(data.get("duration_weeks", 4))),
+        image_url=image_url
     )
     db.session.add(plan)
     db.session.commit()
-    return jsonify({"msg": "Plan created", "id": plan.id}), 201
+    return jsonify({"msg": "Plan created", "id": plan.id, "image_url": image_url}), 201
 
 @athlete_bp.route("/api/plans/<int:plan_id>", methods=["PUT"])
 @jwt_required()
 def update_plan(plan_id):
     athlete_id = get_jwt_identity()
     plan = TrainingPlan.query.filter_by(id=plan_id, athlete_id=athlete_id).first_or_404()
-    data = request.get_json()
+    data = request.form
+
     plan.title = data.get("title", plan.title)
     plan.description = data.get("description", plan.description)
-    plan.duration_weeks = data.get("duration_weeks", plan.duration_weeks)
+    plan.duration_weeks = int(data.get("duration_weeks", plan.duration_weeks))
     plan.status = data.get("status", plan.status)
     plan.end_date = plan.start_date + timedelta(weeks=plan.duration_weeks)
+
+    image_file = request.files.get("image")
+    if image_file:
+        filename = secure_filename(image_file.filename)
+        save_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        image_file.save(save_path)
+        plan.image_url = f"/{UPLOAD_FOLDER}/{filename}"
+
     db.session.commit()
-    return jsonify({"msg": "Plan updated"})
+    return jsonify({"msg": "Plan updated", "image_url": plan.image_url})
+
 
 @athlete_bp.route("/api/plans/<int:plan_id>", methods=["DELETE"])
 @jwt_required()

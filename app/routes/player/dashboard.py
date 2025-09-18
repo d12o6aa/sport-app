@@ -1,11 +1,11 @@
 # app/routes/player/dashboard.py
-from flask import jsonify, request
+from flask import jsonify, request, render_template
 import requests
 
 from datetime import date
 from app import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import User, WorkoutLog, HealthRecord, AthleteGoal, TrainingPlan, ReadinessScore, MLInsight
+from app.models import User, WorkoutLog, HealthRecord, AthleteGoal, TrainingPlan, ReadinessScore, MLInsight, Notification, WorkoutSession, SessionSchedule, PointsLog,AthletePlan
 from app.routes.prediction.service import predict_all 
 
 from . import athlete_bp
@@ -26,6 +26,67 @@ def dashboard_data():
     })
 
 
+
+@athlete_bp.route("/api/dashboard_data", methods=["GET"])
+@jwt_required()
+def get_dashboard_data():
+    athlete_id = get_jwt_identity()
+    
+    # 1. Summary Cards Data
+    active_goals_count = AthleteGoal.query.filter_by(athlete_id=athlete_id).filter(AthleteGoal.current_value < AthleteGoal.target_value).count()
+    
+    assigned_plans_count = AthletePlan.query.filter_by(athlete_id=athlete_id).count()
+
+    start_of_week = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
+    this_week_workouts_count = WorkoutLog.query.filter(
+        WorkoutLog.athlete_id == athlete_id,
+        WorkoutLog.date >= start_of_week.date()
+    ).count()
+
+    readiness_score = ReadinessScore.query.filter_by(athlete_id=athlete_id).order_by(ReadinessScore.date.desc()).first()
+    readiness_value = readiness_score.score if readiness_score else "--"
+    
+    # 2. Recent Workouts Data
+    recent_workouts = WorkoutLog.query.filter_by(athlete_id=athlete_id).order_by(WorkoutLog.date.desc()).limit(5).all()
+    
+    workouts_data = []
+    for w in recent_workouts:
+        # Determine intensity based on workout type for a more meaningful value
+        intensity = "low"
+        if w.session_type and 'cardio' in w.session_type.lower():
+            intensity = "high"
+        elif w.session_type and 'strength' in w.session_type.lower():
+            intensity = "medium"
+
+        workouts_data.append({
+            "id": w.id,
+            "title": w.session_type,
+            "type": w.session_type,
+            "date": w.date.isoformat(),
+            "intensity": intensity,
+            "duration": w.duration
+        })
+    
+    # 3. Active Goals Data
+    active_goals = AthleteGoal.query.filter_by(athlete_id=athlete_id).filter(AthleteGoal.current_value < AthleteGoal.target_value).order_by(AthleteGoal.deadline).limit(5).all()
+    goals_data = [{
+        "id": g.id,
+        "title": g.title,
+        "due_date": g.deadline.isoformat() if g.deadline else None,
+        "progress": round((g.current_value / g.target_value * 100), 1) if g.target_value > 0 else 0
+    } for g in active_goals]
+
+    return jsonify({
+        "summary": {
+            "active_goals": active_goals_count,
+            "assigned_plans": assigned_plans_count,
+            "week_workouts": this_week_workouts_count,
+            "readiness": readiness_value
+        },
+        "workouts": workouts_data,
+        "goals": goals_data
+    })
+
 # -------- Dashboard Summary --------
 @athlete_bp.route("/summary", methods=["GET"])
 @jwt_required()
@@ -34,7 +95,13 @@ def athlete_summary():
     athlete = User.query.get(user_id)
 
     # Goals
-    active_goals = athlete.goals.filter_by(status="in progress").count()
+    goals = AthleteGoal.query.filter_by(athlete_id=user_id).all()
+    active_goals = 0
+    for g in goals:
+
+        if g.current_value > 0:
+            active_goals += 1
+        
 
     # Plans
     plans = TrainingPlan.query.filter_by(athlete_id=user_id, status="active").count()
@@ -157,3 +224,30 @@ def athlete_readiness():
         result = {"error": str(e)}
 
     return jsonify(result)
+
+
+def is_athlete(user_id):
+    user = User.query.get(user_id)
+    return user and user.role == "athlete"
+
+@athlete_bp.route("/dashboard", methods=["GET"])
+@jwt_required()
+def dashboard():
+    identity = get_jwt_identity()
+    if not is_athlete(identity):
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    today = date.today()
+    tasks = WorkoutSession.query.filter(
+        WorkoutSession.athlete_id == identity,
+        WorkoutSession.performed_at >= datetime.combine(today, datetime.min.time()),
+        WorkoutSession.performed_at < datetime.combine(today + timedelta(days=1), datetime.min.time())
+    ).all()
+    notifications = Notification.query.filter_by(athlete_id=identity, is_read=False).order_by(Notification.sent_at.desc()).limit(5).all()
+    sessions = SessionSchedule.query.filter(
+        SessionSchedule.athlete_id == identity,
+        SessionSchedule.scheduled_at >= datetime.combine(today, datetime.min.time()),
+        SessionSchedule.scheduled_at < datetime.combine(today + timedelta(days=1), datetime.min.time())
+    ).order_by(SessionSchedule.scheduled_at).all()
+    points = PointsLog.query.filter_by(athlete_id=identity).order_by(PointsLog.awarded_at.desc()).limit(5).all()
+    return render_template("athlete/dashboard.html", tasks=tasks, notifications=notifications, sessions=sessions, points=points)

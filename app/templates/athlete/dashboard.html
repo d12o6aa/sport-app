@@ -1,0 +1,97 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>My Dashboard</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section dashboard">
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Today's Tasks</h5>
+          <div class="activity">
+            {% for task in tasks %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ task.name }}</div>
+                <i class="bi bi-circle-fill activity-badge text-primary align-self-start"></i>
+                <div class="activity-content">{{ task.type }} ({{ task.duration or 'N/A' }} min)</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Today's Sessions</h5>
+          <div class="activity">
+            {% for session in sessions %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ session.scheduled_at.strftime('%H:%M') }}</div>
+                <i class="bi bi-circle-fill activity-badge text-{% if session.type == 'virtual' %}success{% else %}warning{% endif %} align-self-start"></i>
+                <div class="activity-content">
+                  {{ session.title }} with {{ session.coach.name }}
+                  {% if session.type == 'virtual' and session.meeting_link %}
+                    <a href="{{ session.meeting_link }}" target="_blank">Join</a>
+                  {% elif session.type == 'in_person' and session.location %}
+                    <br>Location: {{ session.location }}
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Recent Points</h5>
+          <div class="activity">
+            {% for point in points %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ point.awarded_at.strftime('%Y-%m-%d') }}</div>
+                <i class="bi bi-circle-fill activity-badge text-success align-self-start"></i>
+                <div class="activity-content">{{ point.points }} points for {{ point.reason }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Recent Notifications</h5>
+          <div class="activity">
+            {% for notification in notifications %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ notification.sent_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                <i class="bi bi-circle-fill activity-badge text-{% if notification.type == 'message' %}primary{% elif notification.type == 'video' %}info{% else %}danger{% endif %} align-self-start"></i>
+                <div class="activity-content">
+                  {{ notification.content | truncate(50) }}
+                  {% if notification.type == 'video' and notification.file_path %}
+                    <a href="{{ notification.file_path }}" target="_blank">View Video</a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+{% endblock %}

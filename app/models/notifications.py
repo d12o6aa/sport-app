@@ -20,4 +20,3 @@ class Notification(db.Model):
     __table_args__ = (
         db.Index("idx_notifications_coach_athlete", "coach_id", "athlete_id"),
     )
-   

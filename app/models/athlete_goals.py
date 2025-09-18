@@ -9,17 +9,20 @@ class AthleteGoal(db.Model):
     profile_id = db.Column(db.Integer, db.ForeignKey("athlete_profiles.user_id"), nullable=True)
 
     title = db.Column(db.String(150), nullable=False)
-    target_value = db.Column(db.String(150), nullable=False)
+    target_value = db.Column(db.Float, nullable=False)
     current_value = db.Column(db.Float, default=0.0)
     unit = db.Column(db.String(20), default="")   # kg, km, reps
     deadline = db.Column(db.Date, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     tags = db.Column(db.String(200))  # comma separated
-    progress = db.Column(db.Integer, default=0)  # %
-    status = db.Column(db.String(20), db.CheckConstraint("status IN ('not started','in progress','completed')"), default="not started")
+    
+    
+    description = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(255), nullable=True)
     
     athlete = db.relationship("User", back_populates="goals")
     athlete_profile = db.relationship("AthleteProfile", back_populates="goals")
+    progress_logs = db.relationship("GoalProgressLog", back_populates="goal", lazy="dynamic", cascade="all, delete-orphan")
     
     __table_args__ = (
         db.Index("idx_goals_athlete_id", "athlete_id"),

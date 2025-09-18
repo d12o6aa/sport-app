@@ -2,22 +2,25 @@
 
 {% block content %}
 <section class="section dashboard">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="m-0">Training Plans</h5>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#planModal">
-      <i class="bi bi-plus-lg me-1"></i> Add Plan
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="m-0 fw-bold text-primary">Training Plans</h5>
+    <button class="btn btn-primary rounded-pill animate-pulse" data-bs-toggle="modal" data-bs-target="#planModal">
+      <i class="bi bi-plus-lg me-2"></i> Add New Plan
     </button>
   </div>
 
   <!-- Filters -->
-  <div class="row g-2 align-items-end mb-3">
+  <div class="row g-3 align-items-end mb-4">
     <div class="col-md-4">
-      <label class="form-label small text-muted">Search</label>
-      <input id="planSearch" type="text" class="form-control" placeholder="Search by title">
+      <label class="form-label small text-muted">Search Plans</label>
+      <div class="input-group">
+        <input id="planSearch" type="text" class="form-control rounded-pill" placeholder="Search by title">
+        <span class="input-group-text bg-transparent border-0"><i class="bi bi-search"></i></span>
+      </div>
     </div>
     <div class="col-md-3">
       <label class="form-label small text-muted">Duration</label>
-      <select id="planDuration" class="form-select">
+      <select id="planDuration" class="form-select rounded-pill">
         <option value="">All</option>
         <option value="<=4">≤ 4 weeks</option>
         <option value="5-8">5–8 weeks</option>
@@ -26,7 +29,7 @@
     </div>
     <div class="col-md-3">
       <label class="form-label small text-muted">Sort by</label>
-      <select id="planSort" class="form-select">
+      <select id="planSort" class="form-select rounded-pill">
         <option value="created_desc">Latest</option>
         <option value="created_asc">Oldest</option>
         <option value="duration_asc">Duration ↑</option>
@@ -35,42 +38,47 @@
     </div>
   </div>
 
-  <!-- List -->
-  <div id="plansList" class="row g-3"></div>
+  <!-- Plans Grid -->
+  <div id="plansList" class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3"></div>
 
-  <!-- Empty -->
+  <!-- Empty State -->
   <div id="plansEmpty" class="text-center py-5 d-none">
-    <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
-    <p class="mt-2 text-muted">No training plans yet. Add one to get started.</p>
+    <img src="/static/images/empty-state.png" alt="No plans" class="img-fluid mb-3" style="max-width: 150px;">
+    <p class="mt-2 text-muted fs-5">No training plans yet. Start by adding one!</p>
+    <button class="btn btn-outline-primary rounded-pill mt-3 animate-hover" data-bs-toggle="modal" data-bs-target="#planModal">Add Plan</button>
   </div>
 </section>
 
 <!-- Add/Edit Modal -->
 <div class="modal fade" id="planModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="planForm" class="modal-content">
-      <div class="modal-header">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="planForm" class="modal-content shadow-lg">
+      <div class="modal-header bg-light">
         <h5 class="modal-title" id="planModalTitle">Add Training Plan</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="planId">
         <div class="mb-3">
-          <label class="form-label">Title</label>
-          <input id="planTitle" type="text" class="form-control" required maxlength="120">
+          <label class="form-label">Plan Title</label>
+          <input id="planTitle" type="text" class="form-control rounded" required maxlength="120" placeholder="e.g., Strength Boost">
         </div>
         <div class="mb-3">
           <label class="form-label">Duration (weeks)</label>
-          <input id="planDurationInput" type="number" min="1" class="form-control" required>
+          <input id="planDurationInput" type="number" min="1" class="form-control rounded" required>
         </div>
-        <div class="mb-0">
+        <div class="mb-3">
           <label class="form-label">Description</label>
-          <textarea id="planDesc" rows="3" class="form-control" maxlength="2000"></textarea>
+          <textarea id="planDesc" rows="3" class="form-control rounded" maxlength="2000" placeholder="Add details about the plan..."></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Plan Image</label>
+          <input type="file" name="image" id="planImageInput" class="form-control" />
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" type="submit">Save</button>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary rounded-pill animate-hover" type="submit">Save Plan</button>
       </div>
     </form>
   </div>
@@ -81,16 +89,16 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
-function alertShow(message, type="info") {
+function alertShow(message, type = "info") {
   const container = document.getElementById("alert-container") || document.body;
   const wrap = document.createElement("div");
   wrap.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm rounded" role="alert" style="z-index:1055;">
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`;
   container.appendChild(wrap);
-  setTimeout(()=>wrap.remove(), 4000);
+  setTimeout(() => wrap.remove(), 4000);
 }
 
 let PLANS = [];
@@ -99,19 +107,20 @@ let editingPlanId = null;
 const $list = document.getElementById('plansList');
 const $empty = document.getElementById('plansEmpty');
 
-function planCardTpl(p){
+function planCardTpl(p) {
   return `
-  <div class="col-md-6 col-xl-4">
-    <div class="card h-100">
+  <div class="col">
+    <div class="card h-100 shadow-lg border-0 rounded-4 hover-card" style="transition: transform 0.2s;">
+      <img src="${p.image_url || '/static/images/default-plan.jpg'}" alt="${p.title}" class="card-img-top rounded-top-4" style="height: 180px; object-fit: cover;">
       <div class="card-body d-flex flex-column">
-        <h6 class="mb-1">${p.title}</h6>
-        <div class="small text-muted mb-2">Duration: ${p.duration_weeks} weeks</div>
-        <p class="flex-grow-1">${(p.description||'').slice(0,160)}</p>
-        <div class="d-flex justify-content-between align-items-center">
-          <div class="small text-muted"><i class="bi bi-calendar-week me-1"></i>${new Date(p.created_at||Date.now()).toLocaleDateString()}</div>
+        <h6 class="card-title mb-2 text-primary">${p.title}</h6>
+        <p class="small text-muted mb-2">Duration: ${p.duration_weeks} weeks</p>
+        <p class="card-text flex-grow-1">${(p.description || '').slice(0, 120)}${(p.description || '').length > 120 ? '...' : ''}</p>
+        <div class="d-flex justify-content-between align-items-center mt-auto">
+          <small class="text-muted"><i class="bi bi-calendar-week me-1"></i>${new Date(p.created_at || Date.now()).toLocaleDateString()}</small>
           <div>
-            <button class="btn btn-sm btn-light me-1" onclick="openEditPlan(${p.id})"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-sm btn-light text-danger" onclick="removePlan(${p.id})"><i class="bi bi-trash"></i></button>
+            <button class="btn btn-sm btn-outline-primary rounded-pill me-2" onclick="openEditPlan(${p.id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="removePlan(${p.id})"><i class="bi bi-trash"></i></button>
           </div>
         </div>
       </div>
@@ -119,8 +128,7 @@ function planCardTpl(p){
   </div>`;
 }
 
-function renderPlans(){
-  // filters
+function renderPlans() {
   const q = document.getElementById('planSearch').value.trim().toLowerCase();
   const dur = document.getElementById('planDuration').value;
   const sort = document.getElementById('planSort').value;
@@ -128,100 +136,112 @@ function renderPlans(){
   let list = [...PLANS];
 
   if (q) list = list.filter(p => p.title.toLowerCase().includes(q));
-
-  if (dur){
-    list = list.filter(p=>{
-      const w = Number(p.duration_weeks||0);
-      if (dur==='<=4') return w<=4;
-      if (dur==='5-8') return w>=5 && w<=8;
-      if (dur==='>8') return w>8;
+  if (dur) {
+    list = list.filter(p => {
+      const w = Number(p.duration_weeks || 0);
+      if (dur === '<=4') return w <= 4;
+      if (dur === '5-8') return w >= 5 && w <= 8;
+      if (dur === '>8') return w > 8;
       return true;
     });
   }
 
-  list.sort((a,b)=>{
-    if (sort==='created_desc') return new Date(b.created_at)-new Date(a.created_at);
-    if (sort==='created_asc')  return new Date(a.created_at)-new Date(b.created_at);
-    if (sort==='duration_asc') return (a.duration_weeks||0)-(b.duration_weeks||0);
-    if (sort==='duration_desc')return (b.duration_weeks||0)-(a.duration_weeks||0);
+  list.sort((a, b) => {
+    if (sort === 'created_desc') return new Date(b.created_at) - new Date(a.created_at);
+    if (sort === 'created_asc') return new Date(a.created_at) - new Date(b.created_at);
+    if (sort === 'duration_asc') return (a.duration_weeks || 0) - (b.duration_weeks || 0);
+    if (sort === 'duration_desc') return (b.duration_weeks || 0) - (a.duration_weeks || 0);
     return 0;
   });
 
   $list.innerHTML = list.map(planCardTpl).join('');
-  $empty.classList.toggle('d-none', list.length>0);
+  $empty.classList.toggle('d-none', list.length > 0);
+  $list.querySelectorAll('.hover-card').forEach(card => {
+    card.addEventListener('mouseenter', () => card.style.transform = 'scale(1.03)');
+    card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
+  });
 }
 
-async function fetchPlans(){
-  try{
-    const res = await fetch('/athlete/api/plans', { headers:{ Authorization: `Bearer ${localStorage.getItem('access_token')}` }});
+async function fetchPlans() {
+  try {
+    const res = await fetch('/athlete/api/plans', { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     PLANS = Array.isArray(data) ? data : [];
-  }catch(e){
+  } catch (e) {
     console.error(e);
     PLANS = [];
-    alertShow('Failed to load plans','danger');
-  }finally{
+    alertShow('Failed to load plans', 'danger');
+  } finally {
     renderPlans();
   }
 }
 
-function openEditPlan(id){
-  const p = PLANS.find(x=>x.id===id);
+function openEditPlan(id) {
+  const p = PLANS.find(x => x.id === id);
   if (!p) return;
   editingPlanId = id;
   document.getElementById('planModalTitle').textContent = 'Edit Training Plan';
   document.getElementById('planId').value = p.id;
-  document.getElementById('planTitle').value = p.title||'';
-  document.getElementById('planDurationInput').value = p.duration_weeks||1;
-  document.getElementById('planDesc').value = p.description||'';
+  document.getElementById('planTitle').value = p.title || '';
+  document.getElementById('planDurationInput').value = p.duration_weeks || 1;
+  document.getElementById('planDesc').value = p.description || '';
+  document.getElementById('planImage').value = p.image_url || '';
   new bootstrap.Modal(document.getElementById('planModal')).show();
 }
 
-document.getElementById('planForm').addEventListener('submit', async e=>{
+document.getElementById('planForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const payload = {
-    title: document.getElementById('planTitle').value.trim(),
-    duration_weeks: Number(document.getElementById('planDurationInput').value),
-    description: document.getElementById('planDesc').value.trim()
-  };
-  if (!payload.title || !payload.duration_weeks) {
-    alertShow('Please fill required fields','warning'); return;
+
+  const formData = new FormData();
+  formData.append("title", document.getElementById('planTitle').value.trim());
+  formData.append("duration_weeks", document.getElementById('planDurationInput').value);
+  formData.append("description", document.getElementById('planDesc').value.trim());
+  
+  const fileInput = document.getElementById("planImageInput");
+  if (fileInput.files[0]) {
+    formData.append("image", fileInput.files[0]);
   }
-  try{
+
+  try {
     let res;
-    if (editingPlanId){
+    if (editingPlanId) {
       res = await fetch(`/athlete/api/plans/${editingPlanId}`, {
-        method:'PUT', headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}`},
-        body: JSON.stringify(payload)
+        method: "PUT",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        body: formData
       });
     } else {
-      res = await fetch('/athlete/api/plans', {
-        method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}`},
-        body: JSON.stringify(payload)
+      res = await fetch("/athlete/api/plans", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        body: formData
       });
     }
-    const data = await (async()=>{try{return await res.json()}catch{return {}}})();
-    if (!res.ok) throw new Error(data?.msg||'Operation failed');
-    alertShow(editingPlanId?'Plan updated':'Plan created','success');
-    bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.msg || "Operation failed");
+
+    alertShow(editingPlanId ? "Plan updated" : "Plan created", "success");
+    bootstrap.Modal.getInstance(document.getElementById("planModal")).hide();
     editingPlanId = null;
     e.target.reset();
     fetchPlans();
-  }catch(err){
-    alertShow(err.message,'danger');
+  } catch (err) {
+    alertShow(err.message, "danger");
   }
 });
 
-async function removePlan(id){
+
+async function removePlan(id) {
   if (!confirm('Delete this plan?')) return;
-  try{
-    const res = await fetch(`/athlete/api/plans/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }});
-    const data = await (async()=>{try{return await res.json()}catch{return {}}})();
-    if (!res.ok) throw new Error(data?.msg||'Delete failed');
-    alertShow('Plan deleted','success');
+  try {
+    const res = await fetch(`/athlete/api/plans/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } });
+    const data = await (async () => { try { return await res.json() } catch { return {} } })();
+    if (!res.ok) throw new Error(data?.msg || 'Delete failed');
+    alertShow('Plan deleted', 'success');
     fetchPlans();
-  }catch(e){ alertShow(e.message,'danger'); }
+  } catch (e) { alertShow(e.message, 'danger'); }
 }
 
 document.getElementById('planSearch').addEventListener('input', renderPlans);
@@ -230,4 +250,9 @@ document.getElementById('planSort').addEventListener('change', renderPlans);
 
 fetchPlans();
 </script>
-{% endblock %}
+<style>
+.animate-pulse { animation: pulse 2s infinite; }
+.animate-hover:hover { transform: translateY(-2px); transition: transform 0.3s; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+</style>
+{% endblock %}  

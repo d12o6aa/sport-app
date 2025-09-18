@@ -15,6 +15,7 @@ class Subscription(db.Model):
         default="active",
         index=True,
     )
+    image_url = db.Column(db.String(255), nullable=True)
 
     user = db.relationship("User", back_populates="subscriptions")
 

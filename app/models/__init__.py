@@ -30,6 +30,11 @@ from .workout_session import WorkoutSession
 from .nutrition_plans import NutritionPlan
 from .notifications import Notification
 from .session_schedules import SessionSchedule
+from .health_integrations import HealthIntegration
+from .points_logs import PointsLog
+from .goal_progress_log import GoalProgressLog
+from .exercises import Exercise
+from .workout_log_exercises import WorkoutLogExercise
 
 __all__ = [
     "User",
@@ -40,4 +45,5 @@ __all__ = [
     "Message",
     "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores", "InjuryRecord","HealthRecord"
     ,"UserSettings", "WorkoutSession", "NutritionPlan", "Notification", "SessionSchedule"
+    ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise"
 ]

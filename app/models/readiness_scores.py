@@ -21,3 +21,13 @@ class ReadinessScore(db.Model):
     recovery_prediction = db.Column(db.String(100))  # e.g., "72% recovery expected"
 
     athlete = db.relationship("User", back_populates="readiness_scores")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "athlete_id": self.athlete_id,
+            "date": self.date.isoformat(),
+            "score": self.score,
+            "injury_risk": self.injury_risk,
+            "recovery_prediction": self.recovery_prediction
+        }

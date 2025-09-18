@@ -12,6 +12,11 @@ class HealthRecord(db.Model):
     calories_intake = db.Column(db.Integer)
     sleep_hours = db.Column(db.Float)
     recorded_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    protein = db.Column(db.Float)
+    carbs = db.Column(db.Float)
+    fats = db.Column(db.Float)
+    calories_burned = db.Column(db.Integer)
+    steps = db.Column(db.Integer)
 
     
     bp_dia = db.Column(db.Integer)   # diastolic

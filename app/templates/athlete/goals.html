@@ -12,7 +12,6 @@
 <section class="section dashboard">
   <div class="row g-3">
 
-    <!-- Header + Add -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="m-0">Goals</h5>
       <div>
@@ -25,7 +24,6 @@
       </div>
     </div>
 
-    <!-- Summary Cards -->
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card sales-card">
         <div class="card-body">
@@ -60,12 +58,9 @@
       </div>
     </div>
 
-    <!-- Goals List -->
     <div class="col-12">
       <div class="card">
         <div class="card-body">
-
-          <!-- Filters -->
           <div class="row g-2 align-items-end mb-3">
             <div class="col-md-4">
               <label class="form-label small text-muted">Search</label>
@@ -75,9 +70,9 @@
               <label class="form-label small text-muted">Status</label>
               <select id="goalStatusFilter" class="form-select">
                 <option value="">All</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
+                <option value="in progress">In Progress</option>
                 <option value="completed">Completed</option>
+                <option value="not started">Not Started</option>
               </select>
             </div>
             <div class="col-md-3">
@@ -90,11 +85,7 @@
               </select>
             </div>
           </div>
-
-          <!-- Goals List -->
           <div id="goalsList" class="row g-3"></div>
-
-          <!-- Empty state -->
           <div id="goalsEmpty" class="text-center py-5 d-none">
             <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
             <p class="mt-2 text-muted">No goals yet. Start by adding your first goal!</p>
@@ -102,11 +93,9 @@
         </div>
       </div>
     </div>
-
   </div>
 </section>
 
-<!-- Add/Edit Goal Modal -->
 <div class="modal fade" id="goalModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form id="goalForm" class="modal-content">
@@ -125,20 +114,16 @@
           <input id="goalTarget" type="number" class="form-control" placeholder="e.g. 5" required>
         </div>
         <div class="mb-3">
+          <label class="form-label">Unit</label>
+          <input id="goalUnit" type="text" class="form-control" placeholder="e.g. km, kg, reps">
+        </div>
+        <div class="mb-3">
           <label class="form-label">Due Date</label>
           <input id="goalDue" type="date" class="form-control" required>
         </div>
         <div class="mb-3">
-          <label class="form-label">Current Progress (%)</label>
-          <input id="goalProgress" type="number" min="0" max="100" class="form-control" value="0">
-        </div>
-        <div class="mb-2">
-          <label class="form-label">Status</label>
-          <select id="goalStatus" class="form-select">
-            <option value="active" selected>Active</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-          </select>
+          <label class="form-label">Image URL</label>
+          <input id="goalImage" type="text" class="form-control" placeholder="Optional URL for a background image">
         </div>
         <div class="mb-0">
           <label class="form-label">Tags (comma separated)</label>
@@ -156,8 +141,9 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-/* ---------- Alert ---------- */
+// ... (alertShow and state variables are the same)
 function alertShow(message, type="info") {
   const container = document.getElementById("alert-container") || document.body;
   const wrapper = document.createElement("div");
@@ -169,10 +155,9 @@ function alertShow(message, type="info") {
   container.appendChild(wrapper);
   setTimeout(() => wrapper.remove(), 4000);
 }
-
-/* ---------- State ---------- */
 let GOALS = [];
 let editingId = null;
+let charts = {}; // To store Chart.js instances
 
 const goalsList = document.getElementById('goalsList');
 const goalsEmpty = document.getElementById('goalsEmpty');
@@ -183,17 +168,20 @@ const completedGoalsCount = document.getElementById('completedGoalsCount');
 function goalCardTpl(g) {
   const due = g.due_date ? new Date(g.due_date).toLocaleDateString() : '';
   const badge = g.status === "completed" ? "bg-success"
-              : g.status === "paused" ? "bg-warning"
-              : "bg-primary";
+              : g.status === "in progress" ? "bg-primary"
+              : "bg-secondary";
   const tags = (g.tags || []).map(t => `<span class="badge rounded-pill text-bg-light me-1">${t}</span>`).join('');
+  
+  const imageStyle = g.image_url ? `background-image: url('${g.image_url}'); background-size: cover; background-position: center;` : '';
+  
   return `
     <div class="col-md-6 col-xl-4">
-      <div class="card h-100">
-        <div class="card-body">
+      <div class="card h-100" style="${imageStyle}">
+        <div class="card-body bg-white rounded shadow-sm">
           <div class="d-flex justify-content-between align-items-start">
             <div>
               <h6 class="mb-1">${g.title}</h6>
-              <div class="small text-muted">Target: ${g.target}</div>
+              <div class="small text-muted">Target: ${g.target} ${g.unit}</div>
             </div>
             <span class="badge ${badge}">${g.status}</span>
           </div>
@@ -202,15 +190,24 @@ function goalCardTpl(g) {
               <span>Progress</span><span>${g.progress}%</span>
             </div>
             <div class="progress">
-              <div class="progress-bar" style="width:${g.progress}%" role="progressbar">${g.progress}%</div>
+              <div class="progress-bar" style="width:${g.progress}%" role="progressbar"></div>
             </div>
           </div>
+          
+          <div class="chart-container mb-3">
+            <canvas id="goalChart-${g.id}"></canvas>
+          </div>
+
           <div class="d-flex justify-content-between align-items-center">
             <div class="small text-muted"><i class="bi bi-calendar2-week me-1"></i>Due: ${due}</div>
             <div>
               <button class="btn btn-sm btn-light me-1" onclick="openEdit(${g.id})"><i class="bi bi-pencil"></i></button>
               <button class="btn btn-sm btn-light text-danger" onclick="removeGoal(${g.id})"><i class="bi bi-trash"></i></button>
             </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <input type="number" id="updateValueInput-${g.id}" class="form-control form-control-sm me-2" placeholder="+ Add ${g.unit}">
+            <button class="btn btn-sm btn-primary" onclick="updateGoalValue(${g.id})">Add</button>
           </div>
           ${tags ? `<div class="mt-2">${tags}</div>` : ``}
         </div>
@@ -219,7 +216,7 @@ function goalCardTpl(g) {
   `;
 }
 
-/* ---------- Render ---------- */
+/* ---------- Render and Charting ---------- */
 function renderGoals() {
   const q = document.getElementById('goalSearch').value.trim().toLowerCase();
   const st = document.getElementById('goalStatusFilter').value;
@@ -229,7 +226,7 @@ function renderGoals() {
   if (q) {
     list = list.filter(g =>
       g.title.toLowerCase().includes(q) ||
-      (g.tags||[]).some(t => t.toLowerCase().includes(q))
+      (g.tags || []).some(t => t.toLowerCase().includes(q))
     );
   }
   if (st) list = list.filter(g => g.status === st);
@@ -244,9 +241,42 @@ function renderGoals() {
 
   goalsList.innerHTML = list.map(goalCardTpl).join('');
   goalsEmpty.classList.toggle('d-none', list.length > 0);
-  activeGoalsCount.textContent = GOALS.filter(g => g.status==='active').length;
+  activeGoalsCount.textContent = GOALS.filter(g => g.status!=='completed').length;
   completedGoalsCount.textContent = GOALS.filter(g => g.status==='completed').length;
+  
+  // Destroy old charts to prevent memory leaks
+  Object.values(charts).forEach(chart => chart.destroy());
+  charts = {};
+
+  // Render new charts
+  list.forEach(g => {
+    const ctx = document.getElementById(`goalChart-${g.id}`);
+    if (ctx) {
+      charts[g.id] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: g.log_data.map(d => new Date(d.date).toLocaleDateString()),
+          datasets: [{
+            label: 'Progress',
+            data: g.log_data.map(d => d.value),
+            borderColor: '#0d6efd',
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: g.target },
+            x: { display: false }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  });
 }
+
 
 /* ---------- API Calls ---------- */
 async function fetchGoals() {
@@ -262,13 +292,20 @@ async function fetchGoals() {
   }
 }
 
+// In your <script> block
+
 async function createGoal(payload) {
   const res = await fetch('/athlete/api/goals', {
     method:'POST',
     headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
     body: JSON.stringify(payload)
   });
-  return res.json().then(d => ({ ok: res.ok, d }));
+  
+  // Await the JSON parsing only if the response is OK
+  const data = res.ok ? await res.json() : { msg: 'Failed to connect to the server.' }; 
+  
+  // Return a consistent object for the caller to check
+  return { ok: res.ok, d: data };
 }
 
 async function updateGoal(id, payload) {
@@ -280,6 +317,35 @@ async function updateGoal(id, payload) {
   return res.json().then(d => ({ ok: res.ok, d }));
 }
 
+async function updateGoalValue(id) {
+  const input = document.getElementById(`updateValueInput-${id}`);
+  const valueToAdd = Number(input.value);
+  if (isNaN(valueToAdd) || valueToAdd <= 0) {
+    alertShow('Please enter a valid number', 'warning');
+    return;
+  }
+  const res = await fetch(`/athlete/api/goals/${id}/update_value`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+    body: JSON.stringify({ value_to_add: valueToAdd })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alertShow('Goal updated successfully', 'success');
+    input.value = '';
+    await fetchGoals();
+  } else {
+    alertShow(data.msg || 'Failed to update goal', 'danger');
+  }
+}
+
+async function removeGoal(id) {
+  if (!confirm('Delete this goal?')) return;
+  const { ok, d } = await deleteGoal(id);
+  if (ok) { alertShow('Goal deleted', 'success'); fetchGoals(); }
+  else { alertShow(d?.msg || 'Delete failed', 'danger'); }
+}
+
 async function deleteGoal(id) {
   const res = await fetch(`/athlete/api/goals/${id}`, {
     method:'DELETE',
@@ -288,7 +354,7 @@ async function deleteGoal(id) {
   return res.json().then(d => ({ ok: res.ok, d }));
 }
 
-/* ---------- Modal ---------- */
+/* ---------- Modal and Listeners ---------- */
 const goalModalEl = document.getElementById('goalModal');
 const goalModal = new bootstrap.Modal(goalModalEl);
 
@@ -302,9 +368,9 @@ document.getElementById('goalForm').addEventListener('submit', async (e)=>{
   const payload = {
     title: document.getElementById('goalTitle').value.trim(),
     target: Number(document.getElementById('goalTarget').value.trim()),
+    unit: document.getElementById('goalUnit').value.trim(),
     due_date: document.getElementById('goalDue').value,
-    current_value: Number(document.getElementById('goalProgress').value || 0), // هنا بدل progress
-    status: document.getElementById('goalStatus').value,
+    image_url: document.getElementById('goalImage').value.trim(),
     tags: document.getElementById('goalTags').value.split(',').map(s=>s.trim()).filter(Boolean)
   };
 
@@ -321,7 +387,6 @@ document.getElementById('goalForm').addEventListener('submit', async (e)=>{
     editingId = null;
     await fetchGoals();
     e.target.reset();
-    document.getElementById('goalProgress').value = 0;
   } else {
     alertShow(result.d?.msg || 'Operation failed', 'danger');
   }
@@ -332,31 +397,21 @@ function openEdit(id) {
   if (!g) return;
   editingId = id;
   document.getElementById('goalModalTitle').textContent = 'Edit Goal';
-  document.getElementById('goalId').value = g.id;
   document.getElementById('goalTitle').value = g.title;
   document.getElementById('goalTarget').value = g.target;
-  document.getElementById('goalDue').value = g.due_date?.slice(0,10);
-  document.getElementById('goalProgress').value = g.current_value || 0;
-  document.getElementById('goalStatus').value = g.status;
+  document.getElementById('goalUnit').value = g.unit;
+  document.getElementById('goalDue').value = g.due_date;
+  document.getElementById('goalImage').value = g.image_url || '';
   document.getElementById('goalTags').value = (g.tags||[]).join(', ');
   goalModal.show();
-}
-
-async function removeGoal(id) {
-  if (!confirm('Delete this goal?')) return;
-  const { ok, d } = await deleteGoal(id);
-  if (ok) { alertShow('Goal deleted', 'success'); fetchGoals(); }
-  else { alertShow(d?.msg || 'Delete failed', 'danger'); }
 }
 
 goalModalEl.addEventListener('hidden.bs.modal', ()=>{
   editingId = null;
   document.getElementById('goalModalTitle').textContent = 'Add Goal';
   document.getElementById('goalForm').reset();
-  document.getElementById('goalProgress').value = 0;
 });
 
-/* ---------- Init ---------- */
 fetchGoals();
 </script>
 {% endblock %}

@@ -15,3 +15,11 @@ class MLInsight(db.Model):
     __table_args__ = (
         db.Index("idx_ml_insights_athlete_id", "athlete_id"),
     )
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "athlete_id": self.athlete_id,
+            "generated_at": self.generated_at.isoformat(),
+            "insight_data": self.insight_data
+        }

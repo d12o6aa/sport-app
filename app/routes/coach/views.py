@@ -129,7 +129,6 @@ def communication_view():
 
 
 
-
 ######### Coach Management Routes #########
 @coach_bp.route("/manage_coachs")
 @jwt_required()

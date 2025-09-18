@@ -42,8 +42,7 @@
                   <td>{{ plan.title }}</td>
                   <td>{{ plan.start_date.strftime('%Y-%m-%d') }}</td>
                   <td>{{ plan.end_date.strftime('%Y-%m-%d') if plan.end_date else 'N/A' }}</td>
-                  <td><span class="badge bg-{{ plan.status == 'active' ? 'primary' : 'secondary' }}">{{ plan.status }}</span></td>
-                </tr>
+                  <td><span class="badge bg-{{ 'primary' if plan.status == 'active' else 'secondary' }}">{{ plan.status }}</span></td>                </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -67,8 +66,7 @@
                 <tr>
                   <td>{{ log.name }}</td>
                   <td>{{ log.logged_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                  <td><span class="badge bg-{{ log.compliance_status == 'completed' ? 'success' : 'warning' }}">{{ log.compliance_status }}</span></td>
-                </tr>
+                  <td><span class="badge bg-{{ 'success' if log.compliance_status == 'completed' else 'warning' }}">{{ log.compliance_status }}</span></td>                </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -119,8 +117,7 @@
                   <td>{{ goal.description }}</td>
                   <td>{{ goal.target_value }}</td>
                   <td>{{ goal.current_value }}</td>
-                  <td><span class="badge bg-{{ goal.status == 'active' ? 'primary' : goal.status == 'completed' ? 'success' : 'secondary' }}">{{ goal.status }}</span></td>
-                </tr>
+                  <td><span class="badge bg-{{ 'primary' if goal.status == 'active' else 'success' if goal.status == 'completed' else 'secondary' }}">{{ goal.status }}</span></td>                </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -129,7 +126,7 @@
     </div>
   </div>
 </section>
-
+{% endblock %}
 {% block scripts %}
 {{ super() }}
 <script>

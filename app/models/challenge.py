@@ -17,6 +17,7 @@ class Challenge(db.Model):
         index=True,
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    image_url = db.Column(db.String(255), nullable=True)
 
     athlete = db.relationship("User", back_populates="ml_insights")
     activities = db.relationship(

@@ -1,0 +1,88 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Log Activity</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('athlete.dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Log Activity</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Log Your Activity</h5>
+          <form id="activityForm" enctype="multipart/form-data" onsubmit="event.preventDefault(); logActivity();">
+            <div class="mb-3">
+              <label for="sessionType" class="form-label">Workout Type</label>
+              <select class="form-select" id="sessionType">
+                <option value="">Select type</option>
+                <option value="strength">Strength</option>
+                <option value="cardio">Cardio</option>
+                <option value="flexibility">Flexibility</option>
+                <option value="endurance">Endurance</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="workoutDetails" class="form-label">Workout Details</label>
+              <textarea class="form-control" id="workoutDetails" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="performanceScore" class="form-label">Performance Score</label>
+              <input type="number" class="form-control" id="performanceScore" step="0.1">
+            </div>
+            <div class="mb-3">
+              <label for="weight" class="form-label">Weight (kg)</label>
+              <input type="number" class="form-control" id="weight" step="0.1">
+            </div>
+            <div class="mb-3">
+              <label for="caloriesIntake" class="form-label">Calories Intake</label>
+              <input type="number" class="form-control" id="caloriesIntake">
+            </div>
+            
+            <div class="mb-3">
+              <label for="file" class="form-label">Before/After Photo</label>
+              <input type="file" class="form-control" id="file" accept=".jpg,.png">
+            </div>
+            <button type="submit" class="btn btn-primary">Log Activity</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function logActivity() {
+  const formData = new FormData();
+  formData.append("session_type", document.getElementById("sessionType").value);
+  formData.append("workout_details", document.getElementById("workoutDetails").value);
+  formData.append("performance_score", document.getElementById("performanceScore").value);
+  formData.append("weight", document.getElementById("weight").value);
+  formData.append("calories_intake", document.getElementById("caloriesIntake").value);
+  const file = document.getElementById("file").files[0];
+  if (file) formData.append("file", file);
+
+  fetch("/athlete/log_activity", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") },
+    body: formData
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+</script>
+{% endblock %}

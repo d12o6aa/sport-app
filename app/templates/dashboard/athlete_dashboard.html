@@ -3,7 +3,7 @@
 {% block content %}
 <section class="section dashboard">
   <div class="row g-3">
-    <!-- Cards -->
+    <!-- Summary Cards -->
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card sales-card"><div class="card-body">
         <h5 class="card-title">Active Goals</h5>
@@ -20,14 +20,14 @@
     </div>
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card revenue-card"><div class="card-body">
-        <h5 class="card-title">Plans</h5>
+        <h5 class="card-title">Assigned Plans</h5>
         <div class="d-flex align-items-center">
           <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
             <i class="bi bi-journal-check"></i>
           </div>
           <div class="ps-3">
             <h6 id="dashPlans">0</h6>
-            <span class="text-muted small">Assigned</span>
+            <span class="text-muted small">Active</span>
           </div>
         </div>
       </div></div>
@@ -48,7 +48,7 @@
     </div>
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card customers-card"><div class="card-body">
-        <h5 class="card-title">Readiness</h5>
+        <h5 class="card-title">Readiness Score</h5>
         <div class="d-flex align-items-center">
           <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
             <i class="bi bi-thermometer-half"></i>
@@ -66,14 +66,7 @@
       <div class="card">
         <div class="card-body">
           <h6 class="card-title">Recent Workouts</h6>
-          <div class="table-responsive">
-            <table class="table align-middle">
-              <thead class="table-light">
-                <tr><th>Title</th><th>Type</th><th>Date</th><th>Intensity</th></tr>
-              </thead>
-              <tbody id="tblRecent"><tr><td colspan="4" class="text-muted">Loading...</td></tr></tbody>
-            </table>
-          </div>
+          <canvas id="workoutsChart" style="min-height: 300px;"></canvas>
         </div>
       </div>
     </div>
@@ -81,17 +74,20 @@
       <div class="card h-100">
         <div class="card-body">
           <h6 class="card-title">Active Goals</h6>
-          <ul id="ulGoals" class="list-group">
-            <li class="list-group-item text-muted">Loading...</li>
-          </ul>
+          <div class="d-flex justify-content-center align-items-center" style="height: 100%;">
+            <canvas id="goalsChart" style="max-height: 250px;"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 {% endblock %}
+
 {% block scripts %}
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 function showAlert(message, type="info") {
   const container = document.getElementById("alert-container") || document.body;
@@ -105,64 +101,76 @@ function showAlert(message, type="info") {
   setTimeout(() => wrapper.remove(), 4000);
 }
 
-// ---- Helpers ----
-async function safeJson(res) {
-  const ct = res.headers.get("content-type") || "";
-  if (!res.ok) throw new Error(await res.text());
-  return ct.includes("application/json") ? res.json() : {};
-}
-
 // ---- Load Dashboard Data ----
 async function loadDashboard() {
   try {
     const token = localStorage.getItem("access_token");
 
-    const [summary, workouts, goals] = await Promise.all([
-      fetch("/athlete/summary", { headers: { Authorization: `Bearer ${token}` } }).then(safeJson).catch(() => ({ active_goals:0, plans:0, week_workouts:0, readiness:"--" })),
-      fetch("/athlete/workouts?limit=5", { headers: { Authorization: `Bearer ${token}` } }).then(safeJson).catch(() => []),
-      fetch("/athlete/goals?status=active", { headers: { Authorization: `Bearer ${token}` } }).then(safeJson).catch(() => [])
-    ]);
-
+    const res = await fetch("/athlete/api/dashboard_data", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    
+    // Check if the response is valid
+    if (!res.ok) {
+        throw new Error(data.msg || "Failed to load dashboard data.");
+    }
+    
     // Update summary cards
-    document.getElementById("dashGoals").textContent = summary.active_goals ?? 0;
-    document.getElementById("dashPlans").textContent = summary.plans ?? 0;
-    document.getElementById("dashWorkouts").textContent = summary.week_workouts ?? 0;
-    document.getElementById("dashReadiness").textContent = summary.readiness ?? "--";
+    document.getElementById("dashGoals").textContent = data.summary.active_goals ?? 0;
+    document.getElementById("dashPlans").textContent = data.summary.assigned_plans ?? 0;
+    document.getElementById("dashWorkouts").textContent = data.summary.week_workouts ?? 0;
+    document.getElementById("dashReadiness").textContent = data.summary.readiness ?? "--";
 
-    // Update workouts table
-    const tbody = document.getElementById("tblRecent");
-    if (Array.isArray(workouts) && workouts.length) {
-      tbody.innerHTML = workouts.map(w => `
-        <tr>
-          <td>${w.title}</td>
-          <td class="text-capitalize">${w.type || "-"}</td>
-          <td>${new Date(w.date).toLocaleDateString()}</td>
-          <td><span class="badge ${w.intensity === "hard" ? "bg-danger" : w.intensity === "moderate" ? "bg-warning" : "bg-success"}">${w.intensity}</span></td>
-        </tr>
-      `).join("");
-    } else {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-muted">No recent workouts</td></tr>`;
-    }
+    // Create workouts chart
+    const workoutLabels = data.workouts.map(w => w.session_type + ' (' + new Date(w.date).toLocaleDateString() + ')');
+    const workoutDurations = data.workouts.map(w => w.duration);
+    
+    new Chart(document.getElementById('workoutsChart'), {
+        type: 'bar',
+        data: {
+            labels: workoutLabels,
+            datasets: [{
+                label: 'Duration (min)',
+                data: workoutDurations,
+                backgroundColor: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#6c757d'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } }
+        }
+    });
 
-    // Update goals list
-    const ul = document.getElementById("ulGoals");
-    if (Array.isArray(goals) && goals.length) {
-      ul.innerHTML = goals.slice(0, 6).map(g => `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold">${g.title}</div>
-            <div class="small text-muted">Due: ${new Date(g.due_date).toLocaleDateString()}</div>
-          </div>
-          <span class="badge bg-primary">${g.progress || 0}%</span>
-        </li>
-      `).join("");
-    } else {
-      ul.innerHTML = `<li class="list-group-item text-muted">No active goals</li>`;
-    }
+    // Create goals chart
+    const goalLabels = data.goals.map(g => g.title);
+    const goalProgress = data.goals.map(g => g.progress);
+    
+    new Chart(document.getElementById('goalsChart'), {
+        type: 'doughnut',
+        data: {
+            labels: goalLabels,
+            datasets: [{
+                data: goalProgress,
+                backgroundColor: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#6c757d'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
 
   } catch (err) {
     console.error(err);
-    showAlert("Failed to load dashboard", "danger");
+    showAlert("Failed to load dashboard: " + err.message, "danger");
   }
 }
 

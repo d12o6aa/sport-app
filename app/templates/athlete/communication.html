@@ -1,0 +1,188 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <h5 class="m-0 fw-bold text-primary mb-4">Chat</h5>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card shadow-lg rounded-4 h-100">
+        <div class="card-body d-flex flex-column p-0">
+          <div class="p-3 border-bottom">
+            <h6 class="mb-0 fw-bold">Contacts</h6>
+          </div>
+          <div id="chatList" class="list-group list-group-flush overflow-auto flex-grow-1">
+            </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card shadow-lg rounded-4 h-100">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+            <img id="chatProfileImage" src="/static/images/default.png" class="rounded-circle me-3" width="50" height="50" alt="Profile">
+            <div>
+              <h6 id="chatTitle" class="mb-0">Select a chat</h6>
+              <small id="chatStatus" class="text-muted"></small> </div>
+          </div>
+          <div id="chatMessages" class="chat-messages flex-grow-1 overflow-auto mb-3">
+            <div class="text-center text-muted p-5">Select a contact to start chatting.</div>
+          </div>
+          <div class="input-group">
+            <input id="messageInput" type="text" class="form-control rounded-pill" placeholder="Type a message...">
+            <button class="btn btn-primary rounded-pill animate-hover ms-2" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+let currentChatId = null;
+const currentUserId = {{ user_id }};
+
+// Function to fetch and display chats list
+function fetchChats() {
+  fetch('/athlete/chats', {
+    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const chatList = document.getElementById('chatList');
+      chatList.innerHTML = ''; // Clear existing list
+      data.forEach(chat => {
+        const item = document.createElement('a');
+        item.href = '#';
+        item.classList.add('list-group-item', 'list-group-item-action');
+        item.innerHTML = `
+          <div class="d-flex align-items-center">
+            <img src="${chat.profile_image}" class="rounded-circle me-3" width="40" height="40" alt="Profile">
+            <div class="flex-grow-1">
+              <h6 class="mb-0">${chat.name}</h6>
+              <small class="text-muted">${chat.last_message || 'Start a conversation'}</small>
+            </div>
+            <small class="text-muted">${chat.last_message_time || ''}</small>
+          </div>
+        `;
+        item.onclick = (e) => {
+          e.preventDefault();
+          selectChat(chat.id, chat.name, chat.profile_image, chat.is_online);
+        };
+        chatList.appendChild(item);
+      });
+    })
+    .catch(error => console.error('Error fetching chats:', error));
+}
+
+// Function to select a chat and load messages
+function selectChat(chatId, chatName, chatImage, isOnline) {
+  currentChatId = chatId;
+  document.getElementById('chatTitle').textContent = chatName;
+  document.getElementById('chatProfileImage').src = chatImage;
+  document.getElementById('chatMessages').innerHTML = ''; // Clear messages
+  
+  // Set online status based on data
+  const statusElement = document.getElementById('chatStatus');
+  if (isOnline) {
+    statusElement.textContent = 'Online';
+    statusElement.classList.remove('text-muted');
+    statusElement.classList.add('text-success');
+  } else {
+    statusElement.textContent = ''; // Or 'Offline', as you prefer
+    statusElement.classList.remove('text-success');
+    statusElement.classList.add('text-muted');
+  }
+
+  fetch(`/athlete/messages/${chatId}`, {
+    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+  })
+    .then(response => response.json())
+    .then(data => {
+      const messagesContainer = document.getElementById('chatMessages');
+      messagesContainer.innerHTML = '';
+      data.forEach(msg => {
+        const messageClass = msg.sender_id === currentUserId ? 'sent-message' : 'received-message';
+        messagesContainer.innerHTML += `
+          <div class="${messageClass}">
+            <p>${msg.content}</p>
+            <small class="text-muted">${new Date(msg.sent_at).toLocaleTimeString()}</small>
+          </div>
+        `;
+      });
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    })
+    .catch(error => console.error('Error fetching messages:', error));
+}
+
+// Function to send a message
+function sendMessage() {
+  const msgInput = document.getElementById('messageInput');
+  const msgContent = msgInput.value;
+  if (!msgContent || !currentChatId) {
+    return;
+  }
+  
+  fetch('/athlete/send_message', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    },
+    body: JSON.stringify({
+      receiver_id: currentChatId,
+      content: msgContent
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.msg === 'Message sent successfully') {
+      const messagesContainer = document.getElementById('chatMessages');
+      messagesContainer.innerHTML += `
+        <div class="sent-message">
+          <p>${msgContent}</p>
+          <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      msgInput.value = '';
+    }
+  })
+  .catch(error => console.error('Error sending message:', error));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  fetchChats();
+});
+</script>
+<style>
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+}
+.sent-message, .received-message {
+  padding: 8px 12px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+.sent-message {
+  background-color: #007bff;
+  color: white;
+  align-self: flex-end;
+}
+.received-message {
+  background-color: #e9ecef;
+  color: black;
+  align-self: flex-start;
+}
+</style>
+{% endblock %}

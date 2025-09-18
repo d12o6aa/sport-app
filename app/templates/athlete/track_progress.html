@@ -1,0 +1,252 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<section class="section dashboard">
+  <h5 class="m-0 fw-bold text-primary mb-4">Track Progress</h5>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Health Score</h6>
+          <div class="progress rounded-pill" style="height: 20px;">
+            <div id="healthScoreBar" class="progress-bar bg-info" role="progressbar" style="width: 0%;"></div>
+          </div>
+          <p class="mt-2 text-muted small" id="healthScoreText">Keep up the good work!</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body text-center">
+          <canvas id="workoutGoalsChart" height="200"></canvas>
+          <p class="mt-2 text-muted small">Almost there! Keep pushing to reach your goal.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Workout Activity</h6>
+          <canvas id="workoutActivityChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4 mt-4">
+    <div class="col-md-4">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Calories</h6>
+          <div class="progress rounded-pill" style="height: 20px;">
+            <div id="caloriesBar" class="progress-bar bg-info" role="progressbar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Weight Data</h6>
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4 mt-4">
+    <div class="col-md-6">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Goals List</h6>
+          <div id="goalsList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Progress Summary</h6>
+          <canvas id="progressChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4 mt-4">
+    <div class="col-md-3">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Protein</h6>
+          <div class="progress rounded-pill" style="height: 20px;">
+            <div id="proteinBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Carbs</h6>
+          <div class="progress rounded-pill" style="height: 20px;">
+            <div id="carbsBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Fats</h6>
+          <div class="progress rounded-pill" style="height: 20px;">
+            <div id="fatsBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body">
+          <h6 class="mb-3">Steps</h6>
+          <div class="progress rounded-pill" style="height: 20px;">
+            <div id="stepsBar" class="progress-bar bg-warning" role="progressbar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function updateUI(data) {
+  // Update Health Score
+  if (data.readiness && data.readiness.score) {
+    document.getElementById('healthScoreBar').style.width = data.readiness.score + '%';
+    document.getElementById('healthScoreText').textContent = data.readiness.score > 80 ? 'Very Healthy' : 'Improve your routine.';
+  } else {
+    document.getElementById('healthScoreText').textContent = 'No data available.';
+  }
+
+  // Update Heart Best
+  if (data.heart_rate && data.heart_rate.value) {
+    document.getElementById('heartRateValue').textContent = data.heart_rate.value + ' bpm';
+    document.getElementById('heartRateStatus').textContent = data.heart_rate.status;
+  } else {
+    document.getElementById('heartRateValue').textContent = 'N/A';
+    document.getElementById('heartRateStatus').textContent = 'No data';
+  }
+
+  // Update Workout Goals Chart
+  const compliance = data.compliance || 0;
+  new Chart(document.getElementById('workoutGoalsChart'), {
+    type: 'doughnut',
+    data: { 
+      labels: ['Completed'], 
+      datasets: [{ 
+        data: [compliance, 100 - compliance], 
+        backgroundColor: ['#36A2EB', '#E4E4E4'] 
+      }] 
+    },
+    options: { cutout: '70%' }
+  });
+
+  // Update Workout Activity Chart
+  const workoutActivityChart = new Chart(document.getElementById('workoutActivityChart'), {
+    type: 'bar',
+    data: { 
+      labels: data.activity_labels || [], 
+      datasets: [{ 
+        label: 'Activity', 
+        data: data.activity_values || [], 
+        backgroundColor: '#FF9F40' 
+      }] 
+    },
+    options: { scales: { y: { beginAtZero: true } } }
+  });
+
+  // Update Weight Data Chart
+  const weightChart = new Chart(document.getElementById('weightChart'), {
+    type: 'line',
+    data: { 
+      labels: data.weight_labels || [], 
+      datasets: [{ 
+        label: 'Weight (kg)', 
+        data: data.weight_values || [], 
+        borderColor: '#FF6384', 
+        fill: false 
+      }] 
+    },
+    options: { scales: { y: { beginAtZero: false } } }
+  });
+  
+  // Update Calories Statistic Chart
+  const caloriesChart = new Chart(document.getElementById('caloriesChart'), {
+    type: 'bar',
+    data: {
+      labels: data.calories_labels || [],
+      datasets: [
+        {
+          label: 'Active',
+          data: data.calories_burned_values || [],
+          backgroundColor: '#FF6384',
+        },
+        {
+          label: 'Resting',
+          data: data.calories_intake_values || [],
+          backgroundColor: '#36A2EB',
+        }
+      ]
+    },
+    options: {
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true }
+      }
+    }
+  });
+
+  // Update Goals List
+  const goalsList = document.getElementById('goalsList');
+  if (data.goals_list && data.goals_list.length > 0) {
+    goalsList.innerHTML = data.goals_list.map(g => `
+      <div class="mb-3">
+        <small>${g.description}</small>
+        <div class="progress rounded-pill" style="height: 10px;">
+          <div class="progress-bar bg-success" style="width: ${g.progress}%;"></div>
+        </div>
+        <small class="d-flex justify-content-between"><span>Current: ${g.current_value}</span><span>Target: ${g.target_value}</span></small>
+      </div>
+    `).join('');
+  } else {
+    goalsList.innerHTML = `<p class="text-muted text-center">No goals set yet.</p>`;
+  }
+
+  // Update Macro Bars and Steps
+  document.getElementById('caloriesBar').style.width = (data.avg_calories_intake / 2500 * 100) + '%';
+  document.getElementById('caloriesText').textContent = (data.avg_calories_intake || 0) + ' / 2500 cal'; // Assuming 2500 cal goal
+  
+  document.getElementById('proteinBar').style.width = data.macros.protein + '%';
+  document.getElementById('proteinText').textContent = data.macros.protein + ' / 32 gr'; // Assuming 32g protein goal
+
+  document.getElementById('carbsBar').style.width = data.macros.carbs + '%';
+  document.getElementById('carbsText').textContent = data.macros.carbs + ' / 120 gr'; // Assuming 120g carbs goal
+
+  document.getElementById('fatsBar').style.width = data.macros.fats + '%';
+  document.getElementById('fatsText').textContent = data.macros.fats + ' / 48 gr'; // Assuming 48g fats goal
+
+  document.getElementById('stepsBar').style.width = (data.avg_steps / 10000 * 100) + '%'; // Assume 10k steps goal
+
+}
+
+fetch('/athlete/progress_data', { headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") } })
+  .then(r => {
+    if (!r.ok) {
+      throw new Error(`HTTP error! status: ${r.status}`);
+    }
+    return r.json();
+  })
+  .then(data => updateUI(data))
+  .catch(error => console.error('Error fetching progress data:', error));
+</script>
+{% endblock %}

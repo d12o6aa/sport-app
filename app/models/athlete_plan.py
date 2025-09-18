@@ -14,6 +14,7 @@ class AthletePlan(db.Model):
         db.CheckConstraint("status IN ('assigned','completed','cancelled')"),
         default="assigned",
     )
+    image_url = db.Column(db.String(255), nullable=True)
 
     athlete = db.relationship("User", back_populates="plan_assignments")
     plan = db.relationship("app.models.training_plan.TrainingPlan", back_populates="athlete_assignments")

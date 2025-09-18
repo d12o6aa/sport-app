@@ -1,0 +1,103 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Health Integrations</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('athlete.dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Health Integrations</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Log Health Data</h5>
+          <form id="integrationForm" onsubmit="event.preventDefault(); logIntegration();">
+            <div class="mb-3">
+              <label for="provider" class="form-label">Provider</label>
+              <select class="form-select" id="provider" required>
+                <option value="apple_health">Apple Health</option>
+                <option value="google_fit">Google Fit</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="steps" class="form-label">Steps</label>
+              <input type="number" class="form-control" id="steps">
+            </div>
+            <div class="mb-3">
+              <label for="calories" class="form-label">Calories Burned</label>
+              <input type="number" class="form-control" id="calories">
+            </div>
+            <button type="submit" class="btn btn-primary">Log Data</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Recent Health Data</h5>
+          <table id="integrationsTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Steps</th>
+                <th>Calories</th>
+                <th>Recorded At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for integration in integrations %}
+                <tr>
+                  <td>{{ integration.provider }}</td>
+                  <td>{{ integration.steps or 'N/A' }}</td>
+                  <td>{{ integration.calories or 'N/A' }}</td>
+                  <td>{{ integration.recorded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+function logIntegration() {
+  const data = {
+    provider: document.getElementById("provider").value,
+    steps: document.getElementById("steps").value,
+    calories: document.getElementById("calories").value
+  };
+
+  fetch("/athlete/integrations", {
+    method: "POST",
+    headers: { 
+      "Authorization": "Bearer " + localStorage.getItem("access_token"),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(data)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.msg) {
+        alert(data.msg);
+        window.location.reload();
+      }
+    });
+}
+
+$(document).ready(function() {
+  $('#integrationsTable').DataTable({ responsive: true, order: [[3, 'desc']] });
+});
+</script>
+{% endblock %}

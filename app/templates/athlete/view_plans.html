@@ -1,0 +1,88 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>My Training Plans</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('athlete.dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item active">View Plans</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Your Training Plans</h5>
+          <table id="plansTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Description</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for plan in plans %}
+                <tr>
+                  <td>{{ plan.title }}</td>
+                  <td>{{ plan.start_date.strftime('%Y-%m-%d') }}</td>
+                  <td>{{ plan.end_date.strftime('%Y-%m-%d') }}</td>
+                  <td>{{ plan.description | truncate(50) }}</td>
+                  <td>
+                    <span class="badge bg-{% if plan.status == 'active' %}primary{% else %}secondary{% endif %}">
+                      {{ plan.status }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Workout Sessions</h5>
+          <table id="sessionsTable" class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Duration</th>
+                <th>Performed At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for session in sessions %}
+                <tr>
+                  <td>{{ session.name }}</td>
+                  <td>{{ session.type }}</td>
+                  <td>{{ session.duration or 'N/A' }} minutes</td>
+                  <td>{{ session.performed_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+  $('#plansTable').DataTable({ responsive: true, order: [[1, 'desc']] });
+  $('#sessionsTable').DataTable({ responsive: true, order: [[3, 'desc']] });
+});
+</script>
+{% endblock %}

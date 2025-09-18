@@ -49,7 +49,7 @@ def profile():
 # Dashboard
 @athlete_bp.route("/dashboard")
 @jwt_required()
-def dashboard():
+def dashboard_view():
     return render_template("athlete/dashboard.html")
 
 # Training
@@ -90,10 +90,6 @@ def send_feedback():
 def view_coach_feedback():
     return render_template("athlete/view_coach_feedback.html")
 
-@athlete_bp.route("/training_plans")
-@jwt_required()
-def training_plans():
-    return render_template("athlete/plans.html")
 
 @athlete_bp.route("/workouts")
 @jwt_required()

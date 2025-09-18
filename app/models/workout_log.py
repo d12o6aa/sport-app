@@ -1,7 +1,8 @@
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSONB
 from app.extensions import db
-
+from sqlalchemy.orm import relationship
+from app.models.workout_log_exercises import WorkoutLogExercise
 class WorkoutLog(db.Model):
     __tablename__ = "workout_logs"
 
@@ -14,12 +15,22 @@ class WorkoutLog(db.Model):
     duration = db.Column(db.Integer)  # minutes
     metrics = db.Column(JSONB, default={})  # sprint_time, jump_height, HRV...
     feedback = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(255), nullable=True)
+
+    calories_burned = db.Column(db.Integer)
     compliance_status = db.Column(
         db.String(20),
         db.CheckConstraint("compliance_status IN ('completed','missed','partial')"),
         default="completed"
     )
     athlete = db.relationship("User", back_populates="workout_logs")
+    exercises = relationship(
+        WorkoutLogExercise,
+        back_populates="workout_log",
+        cascade="all, delete-orphan"
+    )
+
+
 
     __table_args__ = (
         db.Index("idx_workout_logs_athlete_id", "athlete_id"),

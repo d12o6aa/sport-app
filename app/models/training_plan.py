@@ -20,6 +20,7 @@ class TrainingPlan(db.Model):
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     duration_weeks = db.Column(db.Integer, nullable=False, default=4)
+    image_url = db.Column(db.String(255), nullable=True)
 
     # relationships
     coach = db.relationship("User", foreign_keys=[coach_id], back_populates="training_plans")
