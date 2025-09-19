@@ -1,0 +1,259 @@
+{% extends "shared/base.html" %}
+{% block style%}
+  <style>
+  /* Filter Cards */
+  .filter-card {
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .filter-card.active {
+    border-color: #20c997;
+    background-color: #e8f9f5;
+  }
+  
+  /* Additional styles that are unique to this page or used here */
+  .workout-card-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 24px;
+  }
+  
+  .workout-card-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  .workout-card-details .badge {
+    text-transform: capitalize;
+  }
+  
+  /* Responsive Improvements */
+  @media (max-width: 768px) {
+    .workout-card-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+  }
+  </style>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="m-0">Workout Filter</h5>
+    <button class="btn btn-outline-primary" onclick="clearAllFilters()">
+      <i class="bi bi-arrow-clockwise"></i> Clear All
+    </button>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Workout Type</label>
+          <select id="typeFilter" class="form-select" onchange="applyFilters()">
+            <option value="">All Types</option>
+            <option value="strength">Strength Training</option>
+            <option value="cardio">Cardio</option>
+            <option value="yoga">Yoga</option>
+            <option value="crossfit">CrossFit</option>
+            <option value="running">Running</option>
+            <option value="cycling">Cycling</option>
+            <option value="swimming">Swimming</option>
+            <option value="mobility">Mobility</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Duration</label>
+          <select id="durationFilter" class="form-select" onchange="applyFilters()">
+            <option value="">Any Duration</option>
+            <option value="0-15">0-15 minutes</option>
+            <option value="15-30">15-30 minutes</option>
+            <option value="30-45">30-45 minutes</option>
+            <option value="45-60">45-60 minutes</option>
+            <option value="60+">60+ minutes</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Difficulty</label>
+          <select id="difficultyFilter" class="form-select" onchange="applyFilters()">
+            <option value="">All Levels</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select id="statusFilter" class="form-select" onchange="applyFilters()">
+            <option value="">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="in_progress">In Progress</option>
+            <option value="partial">Partial</option>
+            <option value="missed">Missed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h6 class="mb-0">Filtered Workouts</h6>
+      <span class="badge bg-primary" id="resultCount">0 results</span>
+    </div>
+    <div class="card-body">
+      <div id="filteredWorkouts" class="row g-3">
+        </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+  
+  <script>
+  // Define workout configs for dynamic card styling
+  const WORKOUT_CONFIGS = {
+      strength: { emoji: '💪', color: '#f56a6a', bgGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+      cardio: { emoji: '🏃', color: '#4CAF50', bgGradient: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)' },
+      yoga: { emoji: '🧘‍♀️', color: '#2196F3', bgGradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)' },
+      crossfit: { emoji: '🏋️‍♂️', color: '#FF9800', bgGradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)' },
+      running: { emoji: '🏃‍♀️', color: '#FF5722', bgGradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%)' },
+      cycling: { emoji: '🚴', color: '#9C27B0', bgGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      swimming: { emoji: '🏊‍♂️', color: '#03A9F4', bgGradient: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)' },
+      mobility: { emoji: '🤸', color: '#795548', bgGradient: 'linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%)' },
+      custom: { emoji: '✍️', color: '#607D8B', bgGradient: 'linear-gradient(135deg, #d4d2d6 0%, #848286 100%)' }
+  };
+  
+  let filteredWorkouts = [];
+
+  // ================================
+  // Workout Filter Page Functions
+  // ================================
+
+  function applyFilters() {
+    const filters = {
+      type: document.getElementById('typeFilter')?.value || '',
+      duration: document.getElementById('durationFilter')?.value || '',
+      difficulty: document.getElementById('difficultyFilter')?.value || '',
+      status: document.getElementById('statusFilter')?.value || ''
+    };
+    
+    fetch('/athlete/api/workouts/filter', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(filters)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      filteredWorkouts = data;
+      displayFilteredWorkouts();
+      updateResultCount();
+    })
+    .catch(error => {
+      console.error('Error filtering workouts:', error);
+      alertShow('Failed to filter workouts', 'danger');
+    });
+  }
+
+  function clearAllFilters() {
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('durationFilter').value = '';
+    document.getElementById('difficultyFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    applyFilters();
+  }
+
+  function displayFilteredWorkouts() {
+    const container = document.getElementById('filteredWorkouts');
+    if (!container) return;
+    
+    if (filteredWorkouts.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center text-muted py-5">
+          <i class="bi bi-search fs-1"></i>
+          <p class="mt-2">No workouts match your filters</p>
+          <button class="btn btn-outline-primary mt-2" onclick="clearAllFilters()">Clear Filters</button>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = filteredWorkouts.map(workout => {
+      const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+      const statusColor = workout.completion_status === 'completed' ? 'success' : 
+                        workout.completion_status === 'in_progress' ? 'warning' : 'secondary';
+      
+      return `
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 filter-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-3">
+                <div class="workout-card-icon me-3" 
+                    style="background: ${config.bgGradient}; color: white;">
+                  <span>${config.emoji}</span>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">${workout.title}</h6>
+                  <small class="text-muted">${formatDate(workout.date)}</small>
+                </div>
+                <span class="badge bg-${statusColor}">${workout.completion_status}</span>
+              </div>
+              <div class="workout-card-details">
+                <span><i class="bi bi-clock"></i> ${workout.actual_duration || 0}m</span>
+                <span><i class="bi bi-fire"></i> ${workout.calories_burned || 0} cal</span>
+                <span class="badge bg-${workout.difficulty_level === 'advanced' ? 'danger' : 
+                                    workout.difficulty_level === 'intermediate' ? 'warning' : 'success'}">
+                  ${workout.difficulty_level}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updateResultCount() {
+    const counter = document.getElementById('resultCount');
+    if (counter) {
+      counter.textContent = `${filteredWorkouts.length} results`;
+    }
+  }
+
+  // Helper functions
+  function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('en-US', options);
+  }
+  
+  function alertShow(message, type) {
+      console.log(`Alert (${type}): ${message}`);
+      // In a real application, you'd use a UI library to show a toast or a modal.
+  }
+
+  // Initialize page-specific functions when DOM loads
+  document.addEventListener('DOMContentLoaded', function() {
+    applyFilters();
+  });
+  </script>
+{% endblock %}

@@ -64,6 +64,40 @@
         </li>
       </ul>
     </li>
+
+    <!-- Workout Section with Submenu -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="#">
+        <i class="bi bi-heart-pulse"></i><span>Workout</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="workout-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="{{ url_for('athlete.workout_filter_page') }}">
+            <i class="bi bi-circle"></i><span>Workout Filter</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('athlete.workout_top_filter_page') }}">
+            <i class="bi bi-circle"></i><span>Workout Top Filter</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('athlete.body_workout_page') }}">
+            <i class="bi bi-circle"></i><span>Body Workout</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('athlete.create_workout_page') }}">
+            <i class="bi bi-circle"></i><span>Create Workout</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('athlete.workout_summary_page') }}">
+            <i class="bi bi-circle"></i><span>Workout Summary</span>
+          </a>
+        </li>
+      </ul>
+    </li>
     <!-- Training Plans -->
     <li class="nav-item">
         <a href="{{ url_for('athlete.training_plans') }}" class="nav-link">
