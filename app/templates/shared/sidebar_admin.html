@@ -38,6 +38,35 @@
                 
                 </ul>
             </li><!-- End Workout Nav -->
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="{{ url_for('admin.manage_admins') }}">
+                <i class="bi bi-menu-button-wide"></i><span>User Management</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="workout-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ url_for('admin.gym_management') }}">
+                    <i class="bi bi-circle"></i><span>gym_management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.reports') }}">
+                    <i class="bi bi-circle"></i><span>reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.subscription_management') }}">
+                    <i class="bi bi-circle"></i><span>Athletes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.support_security') }}">
+                    <i class="bi bi-circle text-primary"></i><span>support_security Users</span>
+                    </a>
+                </li>
+                
+                </ul>
+            </li><!-- End Workout Nav -->
         </ul>
 
         <!-- Premium Membership Card -->

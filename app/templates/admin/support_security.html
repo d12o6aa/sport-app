@@ -1,0 +1,78 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Support & Security</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item active">Support & Security</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Login Logs</h5>
+          <table class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>IP Address</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in login_logs %}
+                <tr>
+                  <td>{{ log.user_id }}</td>
+                  <td>{{ log.ip_address }}</td>
+                  <td>{{ log.created_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Complaints</h5>
+          <table class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Complaint</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for complaint in complaints %}
+                <tr>
+                  <td>{{ complaint.user_id }}</td>
+                  <td>{{ complaint.content }}</td>
+                  <td>{{ complaint.created_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+  $('.datatable').DataTable();
+});
+</script>
+{% endblock %}

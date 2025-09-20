@@ -13,8 +13,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from flask import render_template
 from app.models import AdminProfile
 
-admin_bp = Blueprint('admin', __name__)
-
+from . import admin_bp
 
 @admin_bp.route("/add_admin", methods=["GET"])
 def add_admin_page():

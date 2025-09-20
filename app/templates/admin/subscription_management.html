@@ -1,0 +1,107 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Subscription Management</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item active">Subscription Management</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Subscriptions</h5>
+          <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#subscriptionModal">Add Subscription</button>
+          <table class="table table-borderless datatable">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Plan Type</th>
+                <th>Amount</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in subscriptions %}
+                <tr>
+                  <td>{{ sub.user_id }}</td>
+                  <td>{{ sub.plan_type }}</td>
+                  <td>${{ sub.amount }}</td>
+                  <td>{{ sub.start_date }}</td>
+                  <td>{{ sub.end_date }}</td>
+                  <td>{{ sub.status }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Subscription Modal -->
+<div class="modal fade" id="subscriptionModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Subscription</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('subscription_management.add_subscription') }}" method="post">
+          <div class="mb-3">
+            <label class="form-label">User ID</label>
+            <input type="number" name="user_id" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Plan Type</label>
+            <select name="plan_type" class="form-select">
+              <option value="basic">Basic</option>
+              <option value="premium">Premium</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input type="number" name="amount" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Start Date</label>
+            <input type="date" name="start_date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">End Date</label>
+            <input type="date" name="end_date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+  $('.datatable').DataTable();
+});
+</script>
+{% endblock %}

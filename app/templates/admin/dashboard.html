@@ -1,0 +1,40 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>Admin Dashboard</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+  </nav>
+</div>
+
+<section class="section">
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Number of Members</h5>
+          <h3>{{ num_members }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Attendance Rate</h5>
+          <h3>{{ attendance_rate }}%</h3>
+        </div>
+      </div>
+    </div>
+    <!-- Add more cards for overview -->
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

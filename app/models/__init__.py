@@ -35,6 +35,10 @@ from .points_logs import PointsLog
 from .goal_progress_log import GoalProgressLog
 from .exercises import Exercise
 from .workout_log_exercises import WorkoutLogExercise
+from .events import Event
+from .login_logs import LoginLog
+from .complaints import Complaint
+from .equipments import Equipment
 
 __all__ = [
     "User",
@@ -45,5 +49,5 @@ __all__ = [
     "Message",
     "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores", "InjuryRecord","HealthRecord"
     ,"UserSettings", "WorkoutSession", "NutritionPlan", "Notification", "SessionSchedule"
-    ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise"
+    ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise", "Event", "LoginLog", "Complaint", "Equipment"
 ]
