@@ -10,6 +10,7 @@ class AthleteProgress(db.Model):
     weight = db.Column(db.Float, nullable=True)
     calories_burned = db.Column(db.Float, nullable=True)
     workouts_done = db.Column(db.Integer, default=0)
+    
 
     athlete = db.relationship("User", back_populates="progress")
 
