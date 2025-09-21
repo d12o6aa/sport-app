@@ -12,56 +12,98 @@
 </div>
 
 <section class="section">
-  <div class="row">
+  <div class="row g-4">
+    <!-- Equipment Section -->
     <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Equipment</h5>
-          <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#equipmentModal">Add Equipment</button>
-          <table class="table table-borderless datatable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div class="card h-100 shadow-sm bg-light">
+        <div class="card-body p-4">
+          <h5 class="card-title text-primary">Equipment</h5>
+          <p class="text-muted mb-3">Manage available gym equipment.</p>
+          <div id="equipmentCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
               {% for equip in equipments %}
-                <tr>
-                  <td>{{ equip.name }}</td>
-                  <td>{{ equip.description }}</td>
-                  <td>{{ equip.status }}</td>
-                </tr>
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                  <div class="card-body text-center">
+                    <h6 class="card-subtitle mb-2 text-muted">{{ equip.name }}</h6>
+                    <p class="card-text">{{ equip.description }}</p>
+                    <span class="badge bg-{{ 'success' if equip.status == 'available' else 'warning' }}">{{ equip.status }}</span>
+                  </div>
+                </div>
               {% endfor %}
-            </tbody>
-          </table>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#equipmentCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#equipmentCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#equipmentModal">Add Equipment</button>
         </div>
       </div>
     </div>
+
+    <!-- Events & Promotions Section -->
     <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Events & Promotions</h5>
-          <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#eventModal">Add Event</button>
-          <table class="table table-borderless datatable">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for event in events %}
-                <tr>
-                  <td>{{ event.title }}</td>
-                  <td>{{ event.description }}</td>
-                  <td>{{ event.date }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+      <div class="card h-100 shadow-sm bg-light">
+        <div class="card-body p-4">
+          <h5 class="card-title text-primary">Events & Promotions</h5>
+          <p class="text-muted mb-3">Plan and promote gym events.</p>
+          <div class="list-group">
+            {% for event in events %}
+              <a href="#" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">{{ event.title }}</h6>
+                  <small>{{ event.date }}</small>
+                </div>
+                <p class="mb-1">{{ event.description }}</p>
+              </a>
+            {% endfor %}
+          </div>
+          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#eventModal">Add Event</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Types Section -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm bg-light">
+        <div class="card-body p-4">
+          <h5 class="card-title text-primary">Workout Types</h5>
+          <p class="text-muted mb-3">Customize workout categories.</p>
+          <div class="list-group">
+            {% for wt in workout_types %}
+              <a href="#" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">{{ wt.name }}</h6>
+                  <small><a href="#" class="text-danger" onclick="deleteWorkoutType({{ wt.id }})">Delete</a></small>
+                </div>
+                <p class="mb-1">{{ wt.description }}</p>
+              </a>
+            {% endfor %}
+          </div>
+          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#workoutTypeModal">Add Workout Type</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Plans Section -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm bg-light">
+        <div class="card-body p-4">
+          <h5 class="card-title text-primary">Workout Plans</h5>
+          <p class="text-muted mb-3">Create detailed workout schedules.</p>
+          <div class="list-group">
+            <!-- Placeholder, to be populated dynamically -->
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">Sample Plan</h6>
+                <small>Edit</small>
+              </div>
+              <p class="mb-1">Includes strength exercises...</p>
+            </a>
+          </div>
+          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#workoutPlanModal">Add Workout Plan</button>
         </div>
       </div>
     </div>
@@ -69,15 +111,15 @@
 </section>
 
 <!-- Equipment Modal -->
-<div class="modal fade" id="equipmentModal" tabindex="-1">
+<div class="modal fade" id="equipmentModal" tabindex="-1" aria-labelledby="equipmentModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add Equipment</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="equipmentModalLabel">Add Equipment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ url_for('admin.add_equipment') }}" method="post">
+        <form action="{{ url_for('gym_management.add_equipment') }}" method="post">
           <div class="mb-3">
             <label class="form-label">Name</label>
             <input type="text" name="name" class="form-control" required>
@@ -93,23 +135,22 @@
               <option value="maintenance">Maintenance</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-primary">Add</button>
-        </form>
+          <button type="submit" class="btn btn-primary w-100">Add</button>
+        </div>
       </div>
     </div>
-  </div>
 </div>
 
 <!-- Event Modal -->
-<div class="modal fade" id="eventModal" tabindex="-1">
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add Event</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="eventModalLabel">Add Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ url_for('admin.add_event') }}" method="post">
+        <form action="{{ url_for('gym_management.add_event') }}" method="post">
           <div class="mb-3">
             <label class="form-label">Title</label>
             <input type="text" name="title" class="form-control" required>
@@ -122,7 +163,80 @@
             <label class="form-label">Date</label>
             <input type="date" name="date" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-primary">Add</button>
+          <button type="submit" class="btn btn-primary w-100">Add</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Workout Type Modal -->
+<div class="modal fade" id="workoutTypeModal" tabindex="-1" aria-labelledby="workoutTypeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="workoutTypeModalLabel">Add Workout Type</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('gym_management.add_workout_type') }}" method="post">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Add</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Workout Plan Modal -->
+<div class="modal fade" id="workoutPlanModal" tabindex="-1" aria-labelledby="workoutPlanModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="workoutPlanModalLabel">Add Workout Plan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="workoutPlanForm" action="{{ url_for('gym_management.add_workout_plan') }}" method="post">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Workout Type</label>
+            <select name="workout_type_id" class="form-select">
+              {% for wt in workout_types %}
+                <option value="{{ wt.id }}">{{ wt.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Exercises</label>
+            <div id="exerciseList">
+              <div class="exercise-row mb-2">
+                <input type="text" name="exercises[0][name]" class="form-control mb-1" placeholder="Exercise Name" required>
+                <div class="row">
+                  <div class="col">
+                    <input type="number" name="exercises[0][sets]" class="form-control mb-1" placeholder="Sets" required>
+                  </div>
+                  <div class="col">
+                    <input type="number" name="exercises[0][reps]" class="form-control mb-1" placeholder="Reps" required>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm add-exercise">Add Another</button>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Add Plan</button>
         </form>
       </div>
     </div>
@@ -135,7 +249,28 @@
 {{ super() }}
 <script>
 $(document).ready(function() {
-  $('.datatable').DataTable();
+  $('.carousel').carousel({ interval: 3000 });
+  let exerciseCount = 1;
+  $('.add-exercise').click(function() {
+    const newRow = $(this).closest('.exercise-row').clone();
+    newRow.find('input').val('').attr('name', `exercises[${exerciseCount}][name]`).next().find('input').attr({
+      'name': `exercises[${exerciseCount}][sets]`,
+      'name': `exercises[${exerciseCount}][reps]`
+    });
+    newRow.find('.add-exercise').remove();
+    $('#exerciseList').append(newRow);
+    exerciseCount++;
+  });
+  $('#workoutPlanForm').on('submit', function(e) {
+    const exercises = $('#exerciseList .exercise-row').map(function() {
+      return {
+        name: $(this).find('[name$="[name]"]').val(),
+        sets: $(this).find('[name$="[sets]"]').val(),
+        reps: $(this).find('[name$="[reps]"]').val()
+      };
+    }).get();
+    $(this).append($('<input>').attr({ type: 'hidden', name: 'exercises', value: JSON.stringify(exercises) }));
+  });
 });
 </script>
 {% endblock %}

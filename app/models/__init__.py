@@ -39,6 +39,7 @@ from .events import Event
 from .login_logs import LoginLog
 from .complaints import Complaint
 from .equipments import Equipment
+from .workout_types import WorkoutType
 
 __all__ = [
     "User",
@@ -49,5 +50,7 @@ __all__ = [
     "Message",
     "AthleteGoal", "AthleteSchedule", "AthleteProgress","readiness_scores", "InjuryRecord","HealthRecord"
     ,"UserSettings", "WorkoutSession", "NutritionPlan", "Notification", "SessionSchedule"
-    ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise", "Event", "LoginLog", "Complaint", "Equipment"
+    ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise",
+    "Event", "LoginLog", "Complaint", "Equipment",
+    "WorkoutType"
 ]
