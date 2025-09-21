@@ -12,98 +12,286 @@
 </div>
 
 <section class="section">
-  <div class="row g-4">
+  <!-- Stats Cards Row -->
+  <div class="row">
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card equipment-card">
+        <div class="card-body">
+          <h5 class="card-title">Equipment</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-tools"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalEquipment">{{ equipments|length }}</h6>
+              <span class="text-success small pt-1 fw-bold">
+                {{ equipments|selectattr("status", "equalto", "available")|list|length }}
+              </span> <span class="text-muted small pt-2 ps-1">available</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card events-card">
+        <div class="card-body">
+          <h5 class="card-title">Events</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalEvents">{{ events|length }}</h6>
+              <span class="text-primary small pt-1 fw-bold">upcoming</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card workout-types-card">
+        <div class="card-body">
+          <h5 class="card-title">Workout Types</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-activity"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalWorkoutTypes">{{ workout_types|length }}</h6>
+              <span class="text-warning small pt-1 fw-bold">active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card plans-card">
+        <div class="card-body">
+          <h5 class="card-title">Training Plans</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalPlans">{{ training_plans|length }}</h6>
+              <span class="text-info small pt-1 fw-bold">active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Management Cards Row -->
+  <div class="row">
     <!-- Equipment Section -->
     <div class="col-lg-6">
-      <div class="card h-100 shadow-sm bg-light">
-        <div class="card-body p-4">
-          <h5 class="card-title text-primary">Equipment</h5>
-          <p class="text-muted mb-3">Manage available gym equipment.</p>
-          <div id="equipmentCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-              {% for equip in equipments %}
-                <div class="carousel-item {% if loop.first %}active{% endif %}">
-                  <div class="card-body text-center">
-                    <h6 class="card-subtitle mb-2 text-muted">{{ equip.name }}</h6>
-                    <p class="card-text">{{ equip.description }}</p>
-                    <span class="badge bg-{{ 'success' if equip.status == 'available' else 'warning' }}">{{ equip.status }}</span>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#equipmentCarousel" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#equipmentCarousel" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">Equipment Management</h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal">
+              <i class="bi bi-plus-circle"></i> Add Equipment
             </button>
           </div>
-          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#equipmentModal">Add Equipment</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Events & Promotions Section -->
-    <div class="col-lg-6">
-      <div class="card h-100 shadow-sm bg-light">
-        <div class="card-body p-4">
-          <h5 class="card-title text-primary">Events & Promotions</h5>
-          <p class="text-muted mb-3">Plan and promote gym events.</p>
-          <div class="list-group">
-            {% for event in events %}
-              <a href="#" class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between">
-                  <h6 class="mb-1">{{ event.title }}</h6>
-                  <small>{{ event.date }}</small>
-                </div>
-                <p class="mb-1">{{ event.description }}</p>
-              </a>
-            {% endfor %}
-          </div>
-          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#eventModal">Add Event</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workout Types Section -->
-    <div class="col-lg-6">
-      <div class="card h-100 shadow-sm bg-light">
-        <div class="card-body p-4">
-          <h5 class="card-title text-primary">Workout Types</h5>
-          <p class="text-muted mb-3">Customize workout categories.</p>
-          <div class="list-group">
-            {% for wt in workout_types %}
-              <a href="#" class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between">
-                  <h6 class="mb-1">{{ wt.name }}</h6>
-                  <small><a href="#" class="text-danger" onclick="deleteWorkoutType({{ wt.id }})">Delete</a></small>
-                </div>
-                <p class="mb-1">{{ wt.description }}</p>
-              </a>
-            {% endfor %}
-          </div>
-          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#workoutTypeModal">Add Workout Type</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workout Plans Section -->
-    <div class="col-lg-6">
-      <div class="card h-100 shadow-sm bg-light">
-        <div class="card-body p-4">
-          <h5 class="card-title text-primary">Workout Plans</h5>
-          <p class="text-muted mb-3">Create detailed workout schedules.</p>
-          <div class="list-group">
-            <!-- Placeholder, to be populated dynamically -->
-            <a href="#" class="list-group-item list-group-item-action">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">Sample Plan</h6>
-                <small>Edit</small>
+          
+          <div class="equipment-list" style="max-height: 400px; overflow-y: auto;">
+            {% for equip in equipments %}
+            <div class="equipment-item d-flex align-items-center p-3 mb-2 bg-light rounded">
+              <div class="equipment-icon me-3">
+                <i class="bi bi-tools text-primary"></i>
               </div>
-              <p class="mb-1">Includes strength exercises...</p>
-            </a>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">{{ equip.name }}</h6>
+                <p class="mb-1 text-muted small">{{ equip.description[:50] }}...</p>
+                <span class="badge bg-{{ 'success' if equip.status == 'available' else 'warning' }}">
+                  {{ equip.status.title() }}
+                </span>
+              </div>
+              <div class="equipment-actions">
+                <button class="btn btn-outline-primary btn-sm me-1" onclick="editEquipment({{ equip.id }})">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="toggleEquipmentStatus({{ equip.id }})">
+                  <i class="bi bi-gear"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
           </div>
-          <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#workoutPlanModal">Add Workout Plan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Events Section -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">Events & Promotions</h5>
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#eventModal">
+              <i class="bi bi-plus-circle"></i> Add Event
+            </button>
+          </div>
+
+          <div class="events-list" style="max-height: 400px; overflow-y: auto;">
+            {% for event in events %}
+            <div class="event-item d-flex align-items-center p-3 mb-2 bg-light rounded">
+              <div class="event-date me-3 text-center">
+                <div class="fw-bold text-primary">{{ event.date.strftime('%d') }}</div>
+                <small class="text-muted">{{ event.date.strftime('%b') }}</small>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">{{ event.title }}</h6>
+                <p class="mb-1 text-muted small">{{ event.description[:40] }}...</p>
+                <small class="text-muted">{{ event.date.strftime('%A') }}</small>
+              </div>
+              <div class="event-actions">
+                <button class="btn btn-outline-info btn-sm" onclick="notifyAllUsers({{ event.id }})">
+                  <i class="bi bi-bell"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workout Types & Plans Row -->
+  <div class="row">
+    <!-- Workout Types -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">Workout Types</h5>
+            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#workoutTypeModal">
+              <i class="bi bi-plus-circle"></i> Add Type
+            </button>
+          </div>
+
+          <div class="workout-types-list" style="max-height: 400px; overflow-y: auto;">
+            {% for wt in workout_types %}
+            <div class="workout-type-item d-flex align-items-center p-3 mb-2 bg-light rounded">
+              <div class="workout-type-icon me-3">
+                <i class="bi bi-activity text-warning"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">{{ wt.name }}</h6>
+                <p class="mb-0 text-muted small">{{ wt.description[:40] }}...</p>
+              </div>
+              <div class="workout-type-actions">
+                <button class="btn btn-outline-primary btn-sm me-1" onclick="editWorkoutType({{ wt.id }})">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteWorkoutType({{ wt.id }})">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Training Plans -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">Training Plans</h5>
+            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#workoutPlanModal">
+              <i class="bi bi-plus-circle"></i> Create Plan
+            </button>
+          </div>
+
+          <div class="training-plans-list" style="max-height: 400px; overflow-y: auto;">
+            {% for plan in training_plans %}
+            <div class="training-plan-item d-flex align-items-center p-3 mb-2 bg-light rounded">
+              <div class="plan-avatar me-3">
+                <div class="bg-info text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                  {{ plan.title[0] if plan.title else 'P' }}
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">{{ plan.title }}</h6>
+                <p class="mb-1 text-muted small">{{ User.query.get(plan.athlete_id).name if plan.athlete_id else 'Unassigned' }}</p>
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-success me-2">{{ plan.status.title() if plan.status else 'Active' }}</span>
+                  <small class="text-muted">{{ plan.start_date }} - {{ plan.end_date }}</small>
+                </div>
+              </div>
+              <div class="plan-actions">
+                <button class="btn btn-outline-primary btn-sm me-1" onclick="viewPlan({{ plan.id }})">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-outline-warning btn-sm" onclick="editPlan({{ plan.id }})">
+                  <i class="bi bi-pencil"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Center -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">
+              <i class="bi bi-bell"></i> Notification Center
+            </h5>
+            <button class="btn btn-danger btn-sm" onclick="sendBulkNotification()">
+              <i class="bi bi-broadcast"></i> Broadcast Message
+            </button>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="notification-template card border-primary" onclick="selectNotificationTemplate('event')">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-calendar-event text-primary" style="font-size: 2rem;"></i>
+                  </div>
+                  <h6 class="card-title">Event Notification</h6>
+                  <p class="card-text small text-muted">Notify about new events</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="notification-template card border-warning" onclick="selectNotificationTemplate('maintenance')">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-tools text-warning" style="font-size: 2rem;"></i>
+                  </div>
+                  <h6 class="card-title">Maintenance Alert</h6>
+                  <p class="card-text small text-muted">Equipment maintenance updates</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="notification-template card border-success" onclick="selectNotificationTemplate('general')">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-megaphone text-success" style="font-size: 2rem;"></i>
+                  </div>
+                  <h6 class="card-title">General Announcement</h6>
+                  <p class="card-text small text-muted">Send general updates</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -111,166 +299,854 @@
 </section>
 
 <!-- Equipment Modal -->
-<div class="modal fade" id="equipmentModal" tabindex="-1" aria-labelledby="equipmentModalLabel" aria-hidden="true">
+<div class="modal fade" id="equipmentModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="equipmentModalLabel">Add Equipment</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="equipmentModalTitle">Add Equipment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ url_for('gym_management.add_equipment') }}" method="post">
+        <form id="equipmentForm">
+          <input type="hidden" id="equipmentId">
           <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" required>
+            <label class="form-label">Equipment Name</label>
+            <input type="text" id="equipmentName" class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3"></textarea>
+            <textarea id="equipmentDescription" class="form-control" rows="3"></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">Status</label>
-            <select name="status" class="form-select">
+            <select id="equipmentStatus" class="form-select">
               <option value="available">Available</option>
-              <option value="maintenance">Maintenance</option>
+              <option value="maintenance">Under Maintenance</option>
+              <option value="out_of_order">Out of Order</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Add</button>
-        </div>
-      </div>
-    </div>
-</div>
-
-<!-- Event Modal -->
-<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="eventModalLabel">Add Event</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form action="{{ url_for('gym_management.add_event') }}" method="post">
-          <div class="mb-3">
-            <label class="form-label">Title</label>
-            <input type="text" name="title" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Date</label>
-            <input type="date" name="date" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Add</button>
-        </div>
-      </div>
-    </div>
-</div>
-
-<!-- Workout Type Modal -->
-<div class="modal fade" id="workoutTypeModal" tabindex="-1" aria-labelledby="workoutTypeModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="workoutTypeModalLabel">Add Workout Type</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form action="{{ url_for('gym_management.add_workout_type') }}" method="post">
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3"></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Add</button>
-        </div>
-      </div>
-    </div>
-</div>
-
-<!-- Workout Plan Modal -->
-<div class="modal fade" id="workoutPlanModal" tabindex="-1" aria-labelledby="workoutPlanModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="workoutPlanModalLabel">Add Workout Plan</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="workoutPlanForm" action="{{ url_for('gym_management.add_workout_plan') }}" method="post">
-          <div class="mb-3">
-            <label class="form-label">Title</label>
-            <input type="text" name="title" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Workout Type</label>
-            <select name="workout_type_id" class="form-select">
-              {% for wt in workout_types %}
-                <option value="{{ wt.id }}">{{ wt.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Exercises</label>
-            <div id="exerciseList">
-              <div class="exercise-row mb-2">
-                <input type="text" name="exercises[0][name]" class="form-control mb-1" placeholder="Exercise Name" required>
-                <div class="row">
-                  <div class="col">
-                    <input type="number" name="exercises[0][sets]" class="form-control mb-1" placeholder="Sets" required>
-                  </div>
-                  <div class="col">
-                    <input type="number" name="exercises[0][reps]" class="form-control mb-1" placeholder="Reps" required>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-secondary btn-sm add-exercise">Add Another</button>
-              </div>
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Add Plan</button>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveEquipment()">Save Equipment</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Event Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="eventForm">
+          <div class="mb-3">
+            <label class="form-label">Event Title</label>
+            <input type="text" id="eventTitle" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea id="eventDescription" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Event Date</label>
+                <input type="date" id="eventDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Start Time</label>
+                <input type="time" id="eventTime" class="form-control">
+              </div>
+            </div>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="notifyMembers" checked>
+            <label class="form-check-label" for="notifyMembers">
+              Send notification to all members
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" onclick="saveEvent()">Create Event</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workout Type Modal -->
+<div class="modal fade" id="workoutTypeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Workout Type</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="workoutTypeForm">
+          <div class="mb-3">
+            <label class="form-label">Type Name</label>
+            <input type="text" id="workoutTypeName" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea id="workoutTypeDescription" class="form-control" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" onclick="saveWorkoutType()">Save Type</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Training Plan Modal -->
+<div class="modal fade" id="workoutPlanModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Training Plan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="workoutPlanForm">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Plan Title</label>
+                <input type="text" id="planTitle" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Assign to Athlete</label>
+                <select id="planAthlete" class="form-select" required>
+                  <option value="">Select Athlete</option>
+                  {% for user in User.query.filter_by(role="athlete").all() %}
+                    <option value="{{ user.id }}">{{ user.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea id="planDescription" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" id="planStartDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">End Date</label>
+                <input type="date" id="planEndDate" class="form-control" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Exercises</label>
+            <div id="exercisesList">
+              <div class="exercise-row card mb-2">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <input type="text" class="form-control exercise-name" placeholder="Exercise Name" required>
+                    </div>
+                    <div class="col-md-3">
+                      <input type="number" class="form-control exercise-sets" placeholder="Sets" min="1" required>
+                    </div>
+                    <div class="col-md-3">
+                      <input type="number" class="form-control exercise-reps" placeholder="Reps" min="1" required>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addExerciseRow()">
+              <i class="bi bi-plus"></i> Add Exercise
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-info" onclick="saveTrainingPlan()">Create Plan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Notification</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="notificationForm">
+          <div class="mb-3">
+            <label class="form-label">Notification Type</label>
+            <select id="notificationType" class="form-select">
+              <option value="event">Event Announcement</option>
+              <option value="maintenance">Maintenance Alert</option>
+              <option value="general">General Notice</option>
+              <option value="promotion">Promotion/Offer</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" id="notificationTitle" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea id="notificationMessage" class="form-control" rows="4" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Send to</label>
+            <select id="notificationRecipients" class="form-select">
+              <option value="all">All Members</option>
+              <option value="athletes">Athletes Only</option>
+              <option value="coaches">Coaches Only</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="sendNotification()">
+          <i class="bi bi-send"></i> Send Notification
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
 {{ super() }}
+<style>
+/* Nice Admin Compatible Styles */
+.equipment-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
+.events-card .card-icon { background: linear-gradient(90deg, #27a844, #20c997); }
+.workout-types-card .card-icon { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+.plans-card .card-icon { background: linear-gradient(90deg, #17a2b8, #6f42c1); }
+
+.notification-template {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.notification-template:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.equipment-item:hover,
+.event-item:hover,
+.workout-type-item:hover,
+.training-plan-item:hover {
+  background-color: #f1f3ff !important;
+  transform: translateX(5px);
+  transition: all 0.3s ease;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.exercise-row {
+  border: 1px solid #e1e5e9;
+}
+</style>
+
 <script>
+// Global Variables
+let equipmentData = [];
+let editingEquipmentId = null;
+let exerciseCount = 1;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+});
+
+function loadData() {
+  // This would normally fetch from API, for now we use the template data
+  console.log('Loading gym management data...');
+}
+
+// Equipment Functions
+function editEquipment(id) {
+  editingEquipmentId = id;
+  document.getElementById('equipmentModalTitle').textContent = 'Edit Equipment';
+  
+  // Here you would fetch equipment data and populate the form
+  // For now, just show the modal
+  new bootstrap.Modal(document.getElementById('equipmentModal')).show();
+}
+
+function saveEquipment() {
+  const name = document.getElementById('equipmentName').value;
+  const description = document.getElementById('equipmentDescription').value;
+  const status = document.getElementById('equipmentStatus').value;
+  
+  if (!name.trim()) {
+    showAlert('Equipment name is required', 'warning');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('description', description);
+  formData.append('status', status);
+  
+  const url = editingEquipmentId ? 
+    `/admin/api/equipment/${editingEquipmentId}` : 
+    '/admin/add_equipment';
+  
+  const method = editingEquipmentId ? 'PUT' : 'POST';
+  
+  fetch(url, {
+    method: method,
+    body: formData
+  })
+  .then(response => {
+    if (response.ok) {
+      showAlert('Equipment saved successfully!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('equipmentModal')).hide();
+      resetEquipmentForm();
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      throw new Error('Failed to save equipment');
+    }
+  })
+  .catch(error => {
+    showAlert('Error saving equipment', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+function resetEquipmentForm() {
+  document.getElementById('equipmentName').value = '';
+  document.getElementById('equipmentDescription').value = '';
+  document.getElementById('equipmentStatus').value = 'available';
+  document.getElementById('equipmentModalTitle').textContent = 'Add Equipment';
+  editingEquipmentId = null;
+}
+
+function toggleEquipmentStatus(id) {
+  fetch(`/admin/api/equipment/${id}/toggle-status`, {
+    method: 'POST'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showAlert('Equipment status updated!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      throw new Error(data.error || 'Failed to update status');
+    }
+  })
+  .catch(error => {
+    showAlert('Error updating equipment status', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+// Event Functions
+function saveEvent() {
+  const title = document.getElementById('eventTitle').value;
+  const description = document.getElementById('eventDescription').value;
+  const date = document.getElementById('eventDate').value;
+  const time = document.getElementById('eventTime').value;
+  const notify = document.getElementById('notifyMembers').checked;
+  
+  if (!title.trim() || !date) {
+    showAlert('Title and date are required', 'warning');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('date', date);
+  formData.append('start_time', time);
+  if (notify) formData.append('notify_members', 'on');
+  
+  fetch('/admin/add_event', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (response.ok) {
+      showAlert('Event created successfully!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+      resetEventForm();
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      throw new Error('Failed to create event');
+    }
+  })
+  .catch(error => {
+    showAlert('Error creating event', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+function resetEventForm() {
+  document.getElementById('eventTitle').value = '';
+  document.getElementById('eventDescription').value = '';
+  document.getElementById('eventDate').value = '';
+  document.getElementById('eventTime').value = '';
+  document.getElementById('notifyMembers').checked = true;
+}
+
+function notifyAllUsers(eventId) {
+  fetch(`/admin/api/send-event-notification/${eventId}`, {
+    method: 'POST'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showAlert(`Notification sent to ${data.recipients_count || 'all'} members!`, 'success');
+    } else {
+      throw new Error(data.error || 'Failed to send notification');
+    }
+  })
+  .catch(error => {
+    showAlert('Error sending notification', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+// Workout Type Functions
+function editWorkoutType(id) {
+  // Implement edit functionality
+  console.log('Edit workout type:', id);
+}
+
+function saveWorkoutType() {
+  const name = document.getElementById('workoutTypeName').value;
+  const description = document.getElementById('workoutTypeDescription').value;
+  
+  if (!name.trim()) {
+    showAlert('Workout type name is required', 'warning');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('description', description);
+  
+  fetch('/admin/add_workout_type', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (response.ok) {
+      showAlert('Workout type added successfully!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('workoutTypeModal')).hide();
+      resetWorkoutTypeForm();
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      throw new Error('Failed to add workout type');
+    }
+  })
+  .catch(error => {
+    showAlert('Error adding workout type', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+function resetWorkoutTypeForm() {
+  document.getElementById('workoutTypeName').value = '';
+  document.getElementById('workoutTypeDescription').value = '';
+}
+
+function deleteWorkoutType(id) {
+  if (confirm('Are you sure you want to delete this workout type?')) {
+    fetch(`/admin/delete_workout_type/${id}`, {
+      method: 'POST'
+    })
+    .then(response => {
+      if (response.ok) {
+        showAlert('Workout type deleted successfully!', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        throw new Error('Failed to delete workout type');
+      }
+    })
+    .catch(error => {
+      showAlert('Error deleting workout type', 'danger');
+      console.error('Error:', error);
+    });
+  }
+}
+
+// Training Plan Functions
+function addExerciseRow() {
+  exerciseCount++;
+  const exercisesList = document.getElementById('exercisesList');
+  const newRow = document.createElement('div');
+  newRow.className = 'exercise-row card mb-2';
+  newRow.innerHTML = `
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-5">
+          <input type="text" class="form-control exercise-name" placeholder="Exercise Name" required>
+        </div>
+        <div class="col-md-2">
+          <input type="number" class="form-control exercise-sets" placeholder="Sets" min="1" required>
+        </div>
+        <div class="col-md-2">
+          <input type="number" class="form-control exercise-reps" placeholder="Reps" min="1" required>
+        </div>
+        <div class="col-md-3">
+          <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeExerciseRow(this)">
+            <i class="bi bi-trash"></i> Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  exercisesList.appendChild(newRow);
+}
+
+function removeExerciseRow(button) {
+  button.closest('.exercise-row').remove();
+}
+
+function saveTrainingPlan() {
+  const title = document.getElementById('planTitle').value;
+  const athleteId = document.getElementById('planAthlete').value;
+  const description = document.getElementById('planDescription').value;
+  const startDate = document.getElementById('planStartDate').value;
+  const endDate = document.getElementById('planEndDate').value;
+  
+  if (!title.trim() || !athleteId || !startDate || !endDate) {
+    showAlert('Please fill all required fields', 'warning');
+    return;
+  }
+  
+  // Collect exercises
+  const exercises = [];
+  const exerciseRows = document.querySelectorAll('.exercise-row');
+  
+  exerciseRows.forEach(row => {
+    const name = row.querySelector('.exercise-name').value;
+    const sets = row.querySelector('.exercise-sets').value;
+    const reps = row.querySelector('.exercise-reps').value;
+    
+    if (name && sets && reps) {
+      exercises.push({ name, sets: parseInt(sets), reps: parseInt(reps) });
+    }
+  });
+  
+  if (exercises.length === 0) {
+    showAlert('Please add at least one exercise', 'warning');
+    return;
+  }
+  
+  const planData = {
+    title,
+    athlete_id: athleteId,
+    description,
+    start_date: startDate,
+    end_date: endDate,
+    exercises
+  };
+  
+  fetch('/admin/add_workout_plan', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(planData)
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Failed to create training plan');
+    }
+  })
+  .then(data => {
+    if (data.success) {
+      showAlert('Training plan created successfully!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('workoutPlanModal')).hide();
+      resetTrainingPlanForm();
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      throw new Error(data.error || 'Failed to create plan');
+    }
+  })
+  .catch(error => {
+    showAlert('Error creating training plan', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+function resetTrainingPlanForm() {
+  document.getElementById('planTitle').value = '';
+  document.getElementById('planAthlete').value = '';
+  document.getElementById('planDescription').value = '';
+  document.getElementById('planStartDate').value = '';
+  document.getElementById('planEndDate').value = '';
+  
+  // Reset exercises to just one row
+  const exercisesList = document.getElementById('exercisesList');
+  exercisesList.innerHTML = `
+    <div class="exercise-row card mb-2">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <input type="text" class="form-control exercise-name" placeholder="Exercise Name" required>
+          </div>
+          <div class="col-md-3">
+            <input type="number" class="form-control exercise-sets" placeholder="Sets" min="1" required>
+          </div>
+          <div class="col-md-3">
+            <input type="number" class="form-control exercise-reps" placeholder="Reps" min="1" required>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  exerciseCount = 1;
+}
+
+function viewPlan(id) {
+  $.getJSON(`/admin/view_plan/${id}`, function(data) {
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    const plan = data.plan;
+    let html = `<div class="modal" tabindex="-1" id="viewPlanModal${id}">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">View Plan: ${plan.title}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Athlete:</strong> ${plan.athlete_name}</p>
+            <p><strong>Start Date:</strong> ${plan.start_date}</p>
+            <p><strong>End Date:</strong> ${plan.end_date}</p>
+            <p><strong>Description:</strong> ${plan.description}</p>
+            <h6>Exercises:</h6>
+            <ul>`;
+    plan.exercises.forEach(ex => {
+      html += `<li>${ex.name} - Sets: ${ex.sets}, Reps: ${ex.reps}</li>`;
+    });
+    html += `</ul></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div>`;
+    $('body').append(html);
+    new bootstrap.Modal(document.getElementById(`viewPlanModal${id}`)).show();
+  });
+}
+
+function editPlan(id) {
+  $.getJSON(`/admin/edit_plan/${id}`, function(data) {
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    const plan = data.plan;
+    $('#planId').val(plan.id);
+    $('#athleteId').val(plan.athlete_id);
+    $('#planTitle').val(plan.title);
+    $('#planDescription').val(plan.description);
+    $('#workoutTypeId').val(plan.workout_type_id);
+    $('#startDate').val(plan.start_date);
+    $('#endDate').val(plan.end_date);
+    $('#exerciseList').empty();
+    plan.exercises.forEach((ex, index) => {
+      const row = `<div class="exercise-row mb-2 p-2 border rounded">
+        <input type="text" name="exercise_name_${index}" class="form-control mb-1" value="${ex.name}" required>
+        <div class="row">
+          <div class="col"><input type="number" name="exercise_sets_${index}" class="form-control mb-1" value="${ex.sets}" required></div>
+          <div class="col"><input type="number" name="exercise_reps_${index}" class="form-control mb-1" value="${ex.reps}" required></div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm add-exercise">Add Another</button>
+      </div>`;
+      $('#exerciseList').append(row);
+    });
+    $('#workoutPlanModal').modal('show');
+    $('#workoutPlanForm').attr('action', `/admin/update_workout_plan/${id}`);
+  });
+}
+
 $(document).ready(function() {
-  $('.carousel').carousel({ interval: 3000 });
-  let exerciseCount = 1;
-  $('.add-exercise').click(function() {
+  let exerciseCount = $('#exerciseList .exercise-row').length;
+  $('#exerciseList').on('click', '.add-exercise', function() {
     const newRow = $(this).closest('.exercise-row').clone();
-    newRow.find('input').val('').attr('name', `exercises[${exerciseCount}][name]`).next().find('input').attr({
-      'name': `exercises[${exerciseCount}][sets]`,
-      'name': `exercises[${exerciseCount}][reps]`
+    newRow.find('input').val('').attr({
+      'name': `exercise_name_${exerciseCount}`,
+      'name': `exercise_sets_${exerciseCount}`,
+      'name': `exercise_reps_${exerciseCount}`
     });
     newRow.find('.add-exercise').remove();
     $('#exerciseList').append(newRow);
     exerciseCount++;
   });
+
   $('#workoutPlanForm').on('submit', function(e) {
-    const exercises = $('#exerciseList .exercise-row').map(function() {
-      return {
-        name: $(this).find('[name$="[name]"]').val(),
-        sets: $(this).find('[name$="[sets]"]').val(),
-        reps: $(this).find('[name$="[reps]"]').val()
-      };
-    }).get();
-    $(this).append($('<input>').attr({ type: 'hidden', name: 'exercises', value: JSON.stringify(exercises) }));
+    e.preventDefault();
+    const exercises = [];
+    $('#exerciseList .exercise-row').each(function(index) {
+      exercises.push({
+        name: $(this).find('[name^="exercise_name"]').val(),
+        sets: $(this).find('[name^="exercise_sets"]').val(),
+        reps: $(this).find('[name^="exercise_reps"]').val()
+      });
+    });
+    $.ajax({
+      url: $(this).attr('action'),
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ ...$(this).serializeArray().reduce((obj, item) => ({ ...obj, [item.name]: item.value }), {}), exercises }),
+      success: function() {
+        window.location.href = "{{ url_for('admin.gym_management') }}";
+      },
+      error: function() {
+        alert("Error saving workout plan!");
+      }
+    });
   });
 });
+
+// Notification Functions
+function selectNotificationTemplate(templateType) {
+  const templates = {
+    event: {
+      title: 'New Event Announcement',
+      message: 'We have an exciting new event coming up! Join us for...'
+    },
+    maintenance: {
+      title: 'Equipment Maintenance Notice',
+      message: 'Please note that some equipment will be under maintenance...'
+    },
+    general: {
+      title: 'Important Announcement',
+      message: 'We would like to inform all members about...'
+    }
+  };
+  
+  const template = templates[templateType];
+  if (template) {
+    document.getElementById('notificationTitle').value = template.title;
+    document.getElementById('notificationMessage').value = template.message;
+    document.getElementById('notificationType').value = templateType;
+  }
+  
+  new bootstrap.Modal(document.getElementById('notificationModal')).show();
+}
+
+function sendBulkNotification() {
+  new bootstrap.Modal(document.getElementById('notificationModal')).show();
+}
+
+function sendNotification() {
+  const type = document.getElementById('notificationType').value;
+  const title = document.getElementById('notificationTitle').value;
+  const message = document.getElementById('notificationMessage').value;
+  const recipients = document.getElementById('notificationRecipients').value;
+  
+  if (!title.trim() || !message.trim()) {
+    showAlert('Title and message are required', 'warning');
+    return;
+  }
+  
+  const notificationData = {
+    type,
+    title,
+    message,
+    recipients
+  };
+  
+  fetch('/admin/api/send-notification', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(notificationData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showAlert(`Notification sent to ${data.recipients_count} users!`, 'success');
+      bootstrap.Modal.getInstance(document.getElementById('notificationModal')).hide();
+      resetNotificationForm();
+    } else {
+      throw new Error(data.error || 'Failed to send notification');
+    }
+  })
+  .catch(error => {
+    showAlert('Error sending notification', 'danger');
+    console.error('Error:', error);
+  });
+}
+
+function resetNotificationForm() {
+  document.getElementById('notificationTitle').value = '';
+  document.getElementById('notificationMessage').value = '';
+  document.getElementById('notificationType').value = 'general';
+  document.getElementById('notificationRecipients').value = 'all';
+}
+
+// Utility Functions
+function showAlert(message, type = 'info') {
+  // Create alert element
+  const alertContainer = document.createElement('div');
+  alertContainer.className = 'position-fixed top-0 end-0 p-3';
+  alertContainer.style.zIndex = '9999';
+  
+  const alertElement = document.createElement('div');
+  alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+  alertElement.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  alertContainer.appendChild(alertElement);
+  document.body.appendChild(alertContainer);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (alertContainer && alertContainer.parentNode) {
+      alertContainer.parentNode.removeChild(alertContainer);
+    }
+  }, 5000);
+}
+
+// Reset forms when modals are hidden
+document.getElementById('equipmentModal').addEventListener('hidden.bs.modal', resetEquipmentForm);
+document.getElementById('eventModal').addEventListener('hidden.bs.modal', resetEventForm);
+document.getElementById('workoutTypeModal').addEventListener('hidden.bs.modal', resetWorkoutTypeForm);
+document.getElementById('workoutPlanModal').addEventListener('hidden.bs.modal', resetTrainingPlanForm);
+document.getElementById('notificationModal').addEventListener('hidden.bs.modal', resetNotificationForm);
 </script>
 {% endblock %}

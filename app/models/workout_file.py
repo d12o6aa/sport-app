@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.extensions import db
+from sqlalchemy.dialects.postgresql import JSONB
 
 class WorkoutFile(db.Model):
     __tablename__ = "workout_files"

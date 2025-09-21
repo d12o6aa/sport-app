@@ -40,6 +40,9 @@ from .login_logs import LoginLog
 from .complaints import Complaint
 from .equipments import Equipment
 from .workout_types import WorkoutType
+from .event_registrations import EventRegistration
+from .maintenance_logs import MaintenanceLog
+from .equipment_reservations import EquipmentReservation
 
 __all__ = [
     "User",
@@ -52,5 +55,5 @@ __all__ = [
     ,"UserSettings", "WorkoutSession", "NutritionPlan", "Notification", "SessionSchedule"
     ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise",
     "Event", "LoginLog", "Complaint", "Equipment",
-    "WorkoutType"
+    "WorkoutType", "EventRegistration", "MaintenanceLog", "EquipmentReservation"
 ]

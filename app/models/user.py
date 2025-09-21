@@ -2,6 +2,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
 
+
 USERS_TABLE = "users"
 
 
@@ -111,7 +112,15 @@ class User(db.Model):
         lazy="dynamic",
         cascade="all, delete-orphan"
     )
-
+    
+    maintenance_logs = db.relationship("MaintenanceLog", back_populates="technician", lazy="dynamic", cascade="all, delete-orphan")
+    equipment_reservations = db.relationship("EquipmentReservation", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
+    event_registrations = db.relationship("EventRegistration", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
+    events = db.relationship("Event", back_populates="organizer", lazy="dynamic", cascade="all, delete-orphan")
+    complaints = db.relationship("Complaint", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
+    login_logs = db.relationship("LoginLog", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
+    workout_types = db.relationship("WorkoutType", back_populates="creator", lazy="dynamic", cascade="all, delete-orphan")
+    equipments = db.relationship("Equipment", back_populates="owner", foreign_keys="[Equipment.owner_id]", lazy="dynamic", cascade="all, delete-orphan")    
 
     # Helpers
     def set_password(self, password: str):

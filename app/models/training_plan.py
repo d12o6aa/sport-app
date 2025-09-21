@@ -14,6 +14,7 @@ class TrainingPlan(db.Model):
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
 
+    workout_type_id = db.Column(db.Integer, db.ForeignKey("workout_types.id"), nullable=True)  # Nullable if not always required
     status = db.Column(
         db.String(20),
         db.CheckConstraint("status IN ('active','completed','archived')"),
@@ -36,6 +37,7 @@ class TrainingPlan(db.Model):
         cascade="all, delete-orphan",
         lazy="dynamic"
     )
+    workout_type = db.relationship("WorkoutType", back_populates="training_plans")  # Link to WorkoutType
 
     __table_args__ = (
         db.CheckConstraint("status IN ('active','completed','archived')", name="check_status"),

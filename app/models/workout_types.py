@@ -10,3 +10,7 @@ class WorkoutType(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (db.Index("idx_workout_types_name", "name"),)
+    # Relationships
+    creator_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    creator = db.relationship("User", back_populates="workout_types")
+    training_plans = db.relationship("TrainingPlan", back_populates="workout_type", cascade="all, delete-orphan")
