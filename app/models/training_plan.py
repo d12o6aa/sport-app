@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.extensions import db
+from sqlalchemy.dialects.postgresql import JSONB
 
 class TrainingPlan(db.Model):
     __tablename__ = "training_plans"
@@ -21,7 +22,7 @@ class TrainingPlan(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     duration_weeks = db.Column(db.Integer, nullable=False, default=4)
     image_url = db.Column(db.String(255), nullable=True)
-
+    exercises = db.Column(JSONB, server_default="{}", default=dict)  # New field
     # relationships
     coach = db.relationship("User", foreign_keys=[coach_id], back_populates="training_plans")
     athlete = db.relationship("User", foreign_keys=[athlete_id])
