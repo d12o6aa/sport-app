@@ -1,6 +1,7 @@
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
+from flask import url_for
 
 
 USERS_TABLE = "users"
@@ -156,4 +157,8 @@ class User(db.Model):
     @property
     def is_active(self):
         return not self.is_deleted and self.status == "active"
+    
+    @property
+    def profile_image_url(self):
+        return self.profile_image or url_for('static', filename='images/default.jpg')
     
