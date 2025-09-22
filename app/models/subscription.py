@@ -9,6 +9,7 @@ class Subscription(db.Model):
     plan_name = db.Column(db.String(100), nullable=False)
     start_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_date = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(
         db.String(20),
         db.CheckConstraint("status IN ('active','expired','canceled')"),
