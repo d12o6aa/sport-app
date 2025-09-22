@@ -481,7 +481,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 {{ super() }}
@@ -587,69 +587,42 @@ function initializeCharts() {
 
 // Revenue & Growth Chart
 function initRevenueChart() {
-  const ctx = document.getElementById('revenueChart').getContext('2d');
-  revenueChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: {{ revenue_chart_labels|default([])|tojson }},
-      datasets: [
-        {
-          label: 'Revenue ($)',
-          data: {{ revenue_data|default([])|tojson }},
-          borderColor: '#4154f1',
-          backgroundColor: 'rgba(65, 84, 241, 0.1)',
-          tension: 0.4,
-          fill: true
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ revenue_chart_labels|default([])|tojson }},
+            datasets: [
+                {
+                    label: 'Revenue ($)',
+                    data: {{ revenue_data|default([])|tojson }},
+                    borderColor: '#4154f1',
+                    backgroundColor: 'rgba(65, 84, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'New Members',
+                    data: {{ member_growth_data|default([])|tojson }},
+                    borderColor: '#2eca6a',
+                    backgroundColor: 'rgba(46, 202, 106, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }
+            ]
         },
-        {
-          label: 'New Members',
-          data: {{ member_growth_data|default([])|tojson }},
-          borderColor: '#2eca6a',
-          backgroundColor: 'rgba(46, 202, 106, 0.1)',
-          tension: 0.4,
-          yAxisID: 'y1'
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Revenue ($)' } },
+                y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Members' }, grid: { drawOnChartArea: false } }
+            }
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      plugins: {
-        legend: {
-          position: 'top',
-        }
-      },
-      scales: {
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Revenue ($)'
-          }
-        },
-        y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Members'
-          },
-          grid: {
-            drawOnChartArea: false,
-          },
-        }
-      }
-    }
-  });
+    });
 }
-
 // Membership Distribution Chart
 function initMembershipChart() {
   const ctx = document.getElementById('membershipChart').getContext('2d');

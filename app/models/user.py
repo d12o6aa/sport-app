@@ -26,6 +26,8 @@ class User(db.Model):
         default="pending",
         index=True,
     )
+    
+    last_active = db.Column(db.DateTime, nullable=True)  # New field
     profile_image = db.Column(db.String(255), nullable=True, default="default.jpg")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
