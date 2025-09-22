@@ -26,7 +26,7 @@ class User(db.Model):
         default="pending",
         index=True,
     )
-    profile_image = db.Column(db.Text, default="default.jpg")
+    profile_image = db.Column(db.String(255), nullable=True, default="default.jpg")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 🆕 Soft delete fields

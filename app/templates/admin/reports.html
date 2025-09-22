@@ -207,9 +207,9 @@
                 </div>
               </div>
               <div class="performer-avatar me-3">
-                <img src="{{ coach.profile_image|default('default-avatar.jpg') }}" 
-                     alt="Coach" class="rounded-circle" 
-                     style="width: 40px; height: 40px; object-fit: cover;">
+                <img src="{{ coach.profile_image|default(url_for('static', filename='images/default.jpg')) }}"
+                  alt="Coach" class="rounded-circle"
+                  style="width: 40px; height: 40px; object-fit: cover;">
               </div>
               <div class="flex-grow-1">
                 <h6 class="mb-1">{{ coach.coach_name|default('Coach ' + coach.coach_id|string) }}</h6>
