@@ -17,6 +17,7 @@ class Equipment(db.Model):
     brand = db.Column(db.String(100))
     model = db.Column(db.String(100))
     serial_number = db.Column(db.String(100), unique=True)
+    last_used = db.Column(db.DateTime)
     
     # Status and condition
     status = db.Column(

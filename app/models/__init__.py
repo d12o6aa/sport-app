@@ -43,6 +43,11 @@ from .workout_types import WorkoutType
 from .event_registrations import EventRegistration
 from .maintenance_logs import MaintenanceLog
 from .equipment_reservations import EquipmentReservation
+from .subscription_plans import SubscriptionPlan
+from .subscription_usage import SubscriptionUsage
+from .payment_methods import PaymentMethod
+from .payments import Payment
+
 
 __all__ = [
     "User",
@@ -55,5 +60,6 @@ __all__ = [
     ,"UserSettings", "WorkoutSession", "NutritionPlan", "Notification", "SessionSchedule"
     ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise",
     "Event", "LoginLog", "Complaint", "Equipment",
-    "WorkoutType", "EventRegistration", "MaintenanceLog", "EquipmentReservation"
+    "WorkoutType", "EventRegistration", "MaintenanceLog", "EquipmentReservation",
+    "SubscriptionPlan", "SubscriptionUsage", "PaymentMethod", "Payment"
 ]
