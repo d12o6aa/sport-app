@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template,current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -10,135 +10,241 @@ from app.models.subscription import Subscription
 from app.models.events import Event
 from . import admin_bp
 from sqlalchemy import or_
+import logging
+from app.models.subscription_plans import SubscriptionPlan
+from app.models.subscription_usage import SubscriptionUsage
+from app.models.payments import Payment
+from app.models.coach_athlete import CoachAthlete
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def is_admin(user_id):
     user = User.query.get(user_id)
     return user and user.role == "admin"
-def calculate_retention_rate(start_date, end_date):
-    # Count users who were active at the start and still active at the end
-    active_at_start = User.query.filter_by(is_deleted=False).filter(User.created_at <= start_date).count()
-    active_at_end = User.query.filter_by(is_deleted=False).filter(
-        User.created_at <= start_date,
-        or_(User.last_active >= end_date, User.last_active.is_(None))
-    ).count()
-    return (active_at_end / active_at_start * 100) if active_at_start > 0 else 0
 
-@admin_bp.route("/reports", methods=["GET"])
+def format_change(value):
+    """Format a numerical change with + or - sign and one decimal place."""
+    if value is None:
+        return "0.0%"
+    sign = "+" if value >= 0 else "-"
+    return f"{sign}{abs(value):.1f}%"
+
+def register_filters(app):
+    """Register custom Jinja2 filters."""
+    app.jinja_env.filters['format_change'] = format_change
+
+def get_membership_types(start_date, end_date):
+    """Generate a list of membership types with their counts for a given date range"""
+    try:
+        color_map = {
+            "Premium": "#4154f1",
+            "Standard": "#2eca6a",
+            "Basic": "#ff771d",
+            "Enterprise": "#ff2d55"
+        }
+        plans = SubscriptionPlan.query.filter_by(is_active=True).all()
+        membership_types = [
+            {
+                "name": plan.name,
+                "count": Subscription.query
+                    .join(SubscriptionPlan)
+                    .filter(SubscriptionPlan.id == Subscription.plan_id)
+                    .filter(SubscriptionPlan.name == plan.name)
+                    .filter(Subscription.created_at.between(start_date, end_date))
+                    .count(),
+                "color": color_map.get(plan.name, "#6c757d")
+            }
+            for plan in plans
+        ]
+        return membership_types
+    except Exception as e:
+        logger.error(f"Error generating membership types: {str(e)}")
+        return []
+
+def calculate_retention_rate(start_date, end_date):
+    """Calculate retention rate based on active subscriptions"""
+    try:
+        active_at_start = Subscription.query.filter(
+            Subscription.status.in_(['active', 'trial']),
+            Subscription.created_at <= start_date
+        ).count()
+        active_at_end = Subscription.query.filter(
+            Subscription.status.in_(['active', 'trial']),
+            Subscription.created_at <= start_date,
+            Subscription.end_date >= end_date
+        ).count()
+        return (active_at_end / active_at_start * 100) if active_at_start > 0 else 0
+    except Exception as e:
+        logger.error(f"Error calculating retention rate: {str(e)}")
+        return 0
+
+@admin_bp.route('/reports', methods=['GET'])
 @jwt_required()
 def reports():
+    """Render the reports page with membership metrics"""
     identity = get_jwt_identity()
     if not is_admin(identity):
         return jsonify({"msg": "Unauthorized"}), 403
 
-    # Define date range (e.g., last 30 days)
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=30)
+    try:
+        # Define date range (e.g., last 30 days)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=30)
 
-    num_members = User.query.filter_by(is_deleted=False).filter(User.created_at.between(start_date, end_date)).count()
-    avg_progress = db.session.query(func.avg(func.coalesce(TrainingPlan.exercises['progress'].astext.cast(db.Float), 0))).filter(TrainingPlan.created_at.between(start_date, end_date)).scalar() or 0
-    revenues = db.session.query(func.sum(Event.registration_fee)).filter(Event.created_at.between(start_date, end_date)).scalar() or 0
-    retention_rate = calculate_retention_rate(start_date, end_date)
+        # Query parameters for custom date range
+        start = request.args.get('start_date')
+        end = request.args.get('end_date')
+        if start and end:
+            try:
+                start_date = datetime.strptime(start, '%Y-%m-%d')
+                end_date = datetime.strptime(end, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}), 400
 
-    # Membership types
-    membership_types = [
-        {"name": "Premium", "count": Subscription.query.filter_by(plan_name="Premium").filter(Subscription.created_at.between(start_date, end_date)).count(), "color": "#4154f1"},
-        {"name": "Standard", "count": Subscription.query.filter_by(plan_name="Standard").filter(Subscription.created_at.between(start_date, end_date)).count(), "color": "#2eca6a"},
-        {"name": "Basic", "count": Subscription.query.filter_by(plan_name="Basic").filter(Subscription.created_at.between(start_date, end_date)).count(), "color": "#ff771d"}
-    ]
+        # Metrics
+        num_members = User.query.filter_by(role='athlete').filter(User.created_at.between(start_date, end_date)).count()
+        avg_progress = db.session.query(
+            func.avg(
+                func.coalesce(
+                    (SubscriptionUsage.usage_count / func.nullif(SubscriptionUsage.usage_limit, 0) * 100),
+                    0
+                )
+            )
+        )\
+            .filter(SubscriptionUsage.feature == 'workouts')\
+            .filter(SubscriptionUsage.period_start.between(start_date, end_date))\
+            .scalar() or 0
+        revenues = db.session.query(func.sum(Payment.amount))\
+            .filter(Payment.status == 'completed')\
+            .filter(Payment.processed_at.between(start_date, end_date))\
+            .scalar() or 0
+        retention_rate = calculate_retention_rate(start_date, end_date)
 
-    # Detailed metrics (dynamic calculations)
-    previous_start = start_date - timedelta(days=30)
-    previous_revenues = db.session.query(func.sum(Event.registration_fee)).filter(Event.created_at.between(previous_start, start_date)).scalar() or 0
-    previous_retention = calculate_retention_rate(previous_start, start_date)
-    previous_progress = db.session.query(func.avg(func.coalesce(TrainingPlan.exercises['progress'].astext.cast(db.Float), 0))).filter(TrainingPlan.created_at.between(previous_start, start_date)).scalar() or 0
-    equipment_usage_previous = db.session.query(func.avg(Equipment.usage_hours)).filter(Equipment.last_used.between(previous_start, start_date)).scalar() or 0
-    equipment_usage_current = db.session.query(func.avg(Equipment.usage_hours)).filter(Equipment.last_used.between(start_date, end_date)).scalar() or 0
+        # Membership types
+        membership_types = get_membership_types(start_date, end_date)
 
-    detailed_metrics = [
-        {
-            "name": "Member Retention",
-            "current_value": f"{retention_rate:.1f}%",
-            "previous_value": f"{previous_retention:.1f}%",
-            "change": retention_rate - previous_retention,
-            "trend_icon": "bi-arrow-up" if retention_rate >= previous_retention else "bi-arrow-down",
-            "trend_color": "success" if retention_rate >= previous_retention else "danger",
-            "target": "95%",
-            "achievement_percentage": (retention_rate / 95 * 100),
-            "achievement_color": "success" if retention_rate >= 95 else "warning",
-            "description": "Monthly retention rate"
-        },
-        {
-            "name": "Workout Completion",
-            "current_value": f"{avg_progress:.1f}%",
-            "previous_value": f"{previous_progress:.1f}%",
-            "change": avg_progress - previous_progress,
-            "trend_icon": "bi-arrow-up" if avg_progress >= previous_progress else "bi-arrow-down",
-            "trend_color": "success" if avg_progress >= previous_progress else "danger",
-            "target": "85%",
-            "achievement_percentage": (avg_progress / 85 * 100),
-            "achievement_color": "success" if avg_progress >= 85 else "warning",
-            "description": "Average workout completion rate"
-        },
-        {
-            "name": "Revenue Growth",
-            "current_value": f"${revenues:.2f}",
-            "previous_value": f"${previous_revenues:.2f}",
-            "change": ((revenues - previous_revenues) / previous_revenues * 100) if previous_revenues > 0 else 0,
-            "trend_icon": "bi-arrow-up" if revenues >= previous_revenues else "bi-arrow-down",
-            "trend_color": "success" if revenues >= previous_revenues else "danger",
-            "target": "$15000",
-            "achievement_percentage": (revenues / 15000 * 100),
-            "achievement_color": "success" if revenues >= 15000 else "warning",
-            "description": "Monthly revenue from registrations"
-        },
-        {
-            "name": "Equipment Utilization",
-            "current_value": f"{equipment_usage_current:.1f}%",
-            "previous_value": f"{equipment_usage_previous:.1f}%",
-            "change": equipment_usage_current - equipment_usage_previous,
-            "trend_icon": "bi-arrow-up" if equipment_usage_current >= equipment_usage_previous else "bi-arrow-down",
-            "trend_color": "success" if equipment_usage_current >= equipment_usage_previous else "danger",
-            "target": "75%",
-            "achievement_percentage": (equipment_usage_current / 75 * 100),
-            "achievement_color": "success" if equipment_usage_current >= 75 else "warning",
-            "description": "Average equipment usage"
-        }
-    ]
+        # Previous period for comparison
+        previous_start = start_date - timedelta(days=30)
+        previous_revenues = db.session.query(func.sum(Payment.amount))\
+            .filter(Payment.status == 'completed')\
+            .filter(Payment.processed_at.between(previous_start, start_date))\
+            .scalar() or 0
+        previous_retention = calculate_retention_rate(previous_start, start_date)
+        previous_progress = db.session.query(
+            func.avg(
+                func.coalesce(
+                    (SubscriptionUsage.usage_count / func.nullif(SubscriptionUsage.usage_limit, 0) * 100),
+                    0
+                )
+            )
+        )\
+            .filter(SubscriptionUsage.feature == 'workouts')\
+            .filter(SubscriptionUsage.period_start.between(previous_start, start_date))\
+            .scalar() or 0
+        equipment_usage_current = 0  # Placeholder
+        equipment_usage_previous = 0  # Placeholder
 
-    # Coaches performance
-    coaches = User.query.filter_by(role='coach').limit(2).all()
-    coaches_performance = [
-        {
-            "coach_id": c.id,
-            "coach_name": c.name,
-            "profile_image": c.profile_image_url,
-            "athlete_count": len(c.athlete_links.all()),
-            "avg_progress": db.session.query(func.avg(func.coalesce(TrainingPlan.exercises['progress'].astext.cast(db.Float), 0)))
-                .filter(TrainingPlan.coach_id == c.id)
-                .filter(TrainingPlan.created_at.between(start_date, end_date)).scalar() or 0
-        } for c in coaches
-    ]
+        detailed_metrics = [
+            {
+                "name": "Member Retention",
+                "current_value": f"{retention_rate:.1f}%",
+                "previous_value": f"{previous_retention:.1f}%",
+                "change": retention_rate - previous_retention,
+                "trend_icon": "bi-arrow-up" if retention_rate >= previous_retention else "bi-arrow-down",
+                "trend_color": "success" if retention_rate >= previous_retention else "danger",
+                "target": "95%",
+                "achievement_percentage": (retention_rate / 95 * 100),
+                "achievement_color": "success" if retention_rate >= 95 else "warning",
+                "description": "Monthly retention rate"
+            },
+            {
+                "name": "Workout Completion",
+                "current_value": f"{avg_progress:.1f}%",
+                "previous_value": f"{previous_progress:.1f}%",
+                "change": avg_progress - previous_progress,
+                "trend_icon": "bi-arrow-up" if avg_progress >= previous_progress else "bi-arrow-down",
+                "trend_color": "success" if avg_progress >= previous_progress else "danger",
+                "target": "85%",
+                "achievement_percentage": (avg_progress / 85 * 100),
+                "achievement_color": "success" if avg_progress >= 85 else "warning",
+                "description": "Average workout completion rate"
+            },
+            {
+                "name": "Revenue Growth",
+                "current_value": f"${revenues:.2f}",
+                "previous_value": f"${previous_revenues:.2f}",
+                "change": ((revenues - previous_revenues) / previous_revenues * 100) if previous_revenues > 0 else 0,
+                "trend_icon": "bi-arrow-up" if revenues >= previous_revenues else "bi-arrow-down",
+                "trend_color": "success" if revenues >= previous_revenues else "danger",
+                "target": "$15000",
+                "achievement_percentage": (revenues / 15000 * 100),
+                "achievement_color": "success" if revenues >= 15000 else "warning",
+                "description": "Monthly revenue from subscriptions"
+            },
+            {
+                "name": "Equipment Utilization",
+                "current_value": f"{equipment_usage_current:.1f}%",
+                "previous_value": f"{equipment_usage_previous:.1f}%",
+                "change": equipment_usage_current - equipment_usage_previous,
+                "trend_icon": "bi-arrow-up" if equipment_usage_current >= equipment_usage_previous else "bi-arrow-down",
+                "trend_color": "success" if equipment_usage_current >= equipment_usage_previous else "danger",
+                "target": "75%",
+                "achievement_percentage": (equipment_usage_current / 75 * 100),
+                "achievement_color": "success" if equipment_usage_current >= 75 else "warning",
+                "description": "Average equipment usage (placeholder)"
+            }
+        ]
 
-    # Equipment usage
-    equipment_usage = [
-        {
-            "name": e.name,
-            "usage_hours": e.usage_hours or 0,
-            "usage_percentage": (e.usage_hours / 100 * 100) if e.usage_hours else 50  # Adjust based on max hours
-        } for e in Equipment.query.filter(Equipment.last_used.between(start_date, end_date)).limit(2).all()
-    ]
+        # Coaches performance
+        coaches = User.query.filter_by(role='coach').limit(2).all()
+        coaches_performance = [
+            {
+                "coach_id": c.id,
+                "coach_name": c.name,
+                "profile_image": c.profile_image or '/static/images/default.jpg',
+                "athlete_count": c.athlete_links.count(),
+                "avg_progress": db.session.query(
+                    func.avg(
+                        func.coalesce(
+                            (SubscriptionUsage.usage_count / func.nullif(SubscriptionUsage.usage_limit, 0) * 100),
+                            0
+                        )
+                    )
+                )
+                    .join(Subscription, SubscriptionUsage.subscription_id == Subscription.id)
+                    .join(CoachAthlete, Subscription.user_id == CoachAthlete.athlete_id)
+                    .filter(CoachAthlete.coach_id == c.id)
+                    .filter(SubscriptionUsage.feature == 'workouts')
+                    .filter(SubscriptionUsage.period_start.between(start_date, end_date))
+                    .scalar() or 0
+            } for c in coaches
+        ]
 
-    return render_template(
-        "admin/reports.html",
-        num_members=num_members,
-        avg_progress=avg_progress,
-        revenues=revenues,
-        retention_rate=retention_rate,
-        membership_types=membership_types,
-        detailed_metrics=detailed_metrics,
-        coaches_performance=coaches_performance,
-        equipment_usage=equipment_usage
-    )
+        # Equipment usage (placeholder)
+        equipment_usage = [
+            {
+                "name": "Placeholder Equipment",
+                "usage_hours": 0,
+                "usage_percentage": 50
+            }
+        ]
+
+        return render_template(
+            "admin/reports.html",
+            num_members=num_members,
+            avg_progress=avg_progress,
+            revenues=revenues,
+            retention_rate=retention_rate,
+            membership_types=membership_types,
+            detailed_metrics=detailed_metrics,
+            coaches_performance=coaches_performance,
+            equipment_usage=equipment_usage
+        )
+    except Exception as e:
+        logger.error(f"Error rendering reports page: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/reports/update', methods=['POST'])
 @jwt_required()

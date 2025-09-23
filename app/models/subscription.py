@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.extensions import db
 
 
@@ -10,9 +10,9 @@ class Subscription(db.Model):
     plan_id = db.Column(db.Integer, db.ForeignKey("subscription_plans.id"), nullable=False)
     
     # Subscription details
-    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    start_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     end_date = db.Column(db.DateTime)
-    trial_end_date = db.Column(db.DateTime)  # For free trials
+    trial_end_date = db.Column(db.DateTime)
     auto_renew = db.Column(db.Boolean, default=True)
     
     # Status and lifecycle
@@ -39,8 +39,8 @@ class Subscription(db.Model):
     last_activity_at = db.Column(db.DateTime)
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = db.relationship("User", back_populates="subscriptions")
@@ -55,16 +55,16 @@ class Subscription(db.Model):
     
     @property
     def is_active(self):
-        return self.status == 'active' and self.end_date and self.end_date > datetime.utcnow()
+        return self.status == 'active' and self.end_date and self.end_date > datetime.now(timezone.utc)
     
     @property
     def is_trial(self):
-        return self.status == 'trial' and self.trial_end_date and self.trial_end_date > datetime.utcnow()
+        return self.status == 'trial' and self.trial_end_date and self.trial_end_date > datetime.now(timezone.utc)
     
     @property
     def days_remaining(self):
         if self.end_date:
-            delta = self.end_date - datetime.utcnow()
+            delta = self.end_date - datetime.now(timezone.utc)
             return max(0, delta.days)
         return 0
     
@@ -77,26 +77,33 @@ class Subscription(db.Model):
         if not months:
             months = self.plan.duration_months
         
-        if self.end_date and self.end_date > datetime.utcnow():
+        now = datetime.now(timezone.utc)
+        if self.end_date and self.end_date > now:
             # Extend from current end date
             self.end_date = self.end_date + timedelta(days=30 * months)
         else:
             # Start from now
-            self.end_date = datetime.utcnow() + timedelta(days=30 * months)
+            self.end_date = now + timedelta(days=30 * months)
         
         self.status = 'active'
-        self.updated_at = datetime.utcnow()
+        self.updated_at = now
+        if self.auto_renew:
+            self.next_billing_date = self.end_date
+        self.current_period_end = self.end_date
     
     def cancel_subscription(self, reason=None, immediate=False):
         """Cancel subscription"""
+        now = datetime.now(timezone.utc)
         self.cancellation_reason = reason
-        self.canceled_at = datetime.utcnow()
+        self.canceled_at = now
         
         if immediate:
             self.status = 'canceled'
-            self.end_date = datetime.utcnow()
+            self.end_date = now
+            self.current_period_end = now
+            self.next_billing_date = None
         else:
             self.cancel_at_period_end = True
         
         self.auto_renew = False
-        self.updated_at = datetime.utcnow()
+        self.updated_at = now

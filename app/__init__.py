@@ -4,6 +4,7 @@ from flask_cors import CORS
 from app.extensions import db, ma, jwt, migrate
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from app.models import User, Subscription, WorkoutFile
+from app.filters import register_filters
 
 def create_app():
     app = Flask(__name__)
@@ -44,7 +45,7 @@ def create_app():
         except Exception:
             pass
         return dict(user=None)
-
+    register_filters(app)
     # استيراد الـ Blueprints
     from app.routes.home import home_bp
     from app.routes.auth import auth_bp
