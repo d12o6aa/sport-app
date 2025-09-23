@@ -47,6 +47,8 @@ from .subscription_plans import SubscriptionPlan
 from .subscription_usage import SubscriptionUsage
 from .payment_methods import PaymentMethod
 from .payments import Payment
+from .support_tickets import SupportTicket
+
 
 
 __all__ = [
@@ -61,5 +63,5 @@ __all__ = [
     ,"HealthIntegration","PointsLog", "GoalProgressLog", "Exercise", "WorkoutLogExercise",
     "Event", "LoginLog", "Complaint", "Equipment",
     "WorkoutType", "EventRegistration", "MaintenanceLog", "EquipmentReservation",
-    "SubscriptionPlan", "SubscriptionUsage", "PaymentMethod", "Payment"
+    "SubscriptionPlan", "SubscriptionUsage", "PaymentMethod", "Payment", "SupportTicket"
 ]

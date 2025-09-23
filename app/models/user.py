@@ -3,9 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
 from flask import url_for
 
-
 USERS_TABLE = "users"
-
 
 class User(db.Model):
     __tablename__ = USERS_TABLE
@@ -52,15 +50,16 @@ class User(db.Model):
     settings = db.relationship("UserSettings", back_populates="user", uselist=False)
     points_logs = db.relationship("PointsLog", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
     health_integrations = db.relationship("HealthIntegration", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
+    support_tickets = db.relationship("SupportTicket", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")    
     
-
+    
     # Groups
     training_groups = db.relationship("TrainingGroup", back_populates="trainer", lazy="dynamic")  # as trainer/owner
     group_assignments = db.relationship("AthleteGroup", back_populates="athlete", lazy="dynamic", cascade="all, delete-orphan")
 
     # Plans
-    training_plans = db.relationship("TrainingPlan", back_populates="coach",foreign_keys="TrainingPlan.coach_id", lazy="dynamic", cascade="all, delete-orphan")
-    plan_assignments = db.relationship("AthletePlan", back_populates="athlete",foreign_keys="AthletePlan.athlete_id", lazy="dynamic", cascade="all, delete-orphan")
+    training_plans = db.relationship("TrainingPlan", back_populates="coach", foreign_keys="TrainingPlan.coach_id", lazy="dynamic", cascade="all, delete-orphan")
+    plan_assignments = db.relationship("AthletePlan", back_populates="athlete", foreign_keys="AthletePlan.athlete_id", lazy="dynamic", cascade="all, delete-orphan")
 
     # Coach <-> Athlete link (ownership / roster)
     athlete_links = db.relationship("CoachAthlete", foreign_keys="[CoachAthlete.coach_id]", back_populates="coach", lazy="dynamic", cascade="all, delete-orphan")
@@ -121,7 +120,7 @@ class User(db.Model):
     event_registrations = db.relationship("EventRegistration", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
     events = db.relationship("Event", back_populates="organizer", lazy="dynamic", cascade="all, delete-orphan")
     complaints = db.relationship("Complaint", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
-    login_logs = db.relationship("LoginLog", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
+    login_logs = db.relationship("LoginLog", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")  # Single definition
     workout_types = db.relationship("WorkoutType", back_populates="creator", lazy="dynamic", cascade="all, delete-orphan")
     equipments = db.relationship("Equipment", back_populates="owner", foreign_keys="[Equipment.owner_id]", lazy="dynamic", cascade="all, delete-orphan")    
 
@@ -138,6 +137,7 @@ class User(db.Model):
         db.Index("idx_users_status", "status"),
         db.Index("idx_users_deleted", "is_deleted"),
     )
+
     # ------- helper properties -------
     @property
     def is_admin(self):
@@ -146,7 +146,6 @@ class User(db.Model):
     @property
     def is_superadmin(self):
         return self.role == "admin" and self.admin_profile and self.admin_profile.is_superadmin
-
 
     @property
     def is_coach(self):
@@ -163,4 +162,3 @@ class User(db.Model):
     @property
     def profile_image_url(self):
         return self.profile_image or url_for('static', filename='images/default.jpg')
-    

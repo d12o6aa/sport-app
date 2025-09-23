@@ -12,67 +12,769 @@
 </div>
 
 <section class="section">
+  <!-- Stats Cards Row -->
   <div class="row">
-    <div class="col-lg-6">
-      <div class="card">
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card logins-card">
         <div class="card-body">
-          <h5 class="card-title">Login Logs</h5>
-          <table class="table table-borderless datatable">
-            <thead>
-              <tr>
-                <th>User ID</th>
-                <th>IP Address</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for log in login_logs %}
-                <tr>
-                  <td>{{ log.user_id }}</td>
-                  <td>{{ log.ip_address }}</td>
-                  <td>{{ log.created_at }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <h5 class="card-title">Login Activity</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-person-check"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalLogins">{{ login_logs|length }}</h6>
+              <span class="text-success small pt-1 fw-bold">
+                {{ login_logs|selectattr("created_at")|selectattr("created_at", "ge", today)|list|length }}
+              </span> <span class="text-muted small pt-2 ps-1">today</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card complaints-card">
+        <div class="card-body">
+          <h5 class="card-title">Support Tickets</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-chat-dots"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalComplaints">{{ complaints|length }}</h6>
+              <span class="text-warning small pt-1 fw-bold">
+                {{ complaints|selectattr("status", "equalto", "pending")|list|length }}
+              </span> <span class="text-muted small pt-2 ps-1">pending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card security-card">
+        <div class="card-body">
+          <h5 class="card-title">Security Alerts</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-shield-exclamation"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="securityAlerts">8</h6>
+              <span class="text-danger small pt-1 fw-bold">3</span> <span class="text-muted small pt-2 ps-1">high priority</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card response-card">
+        <div class="card-body">
+          <h5 class="card-title">Response Time</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="avgResponseTime">2.4h</h6>
+              <span class="text-success small pt-1 fw-bold">-15%</span> <span class="text-muted small pt-2 ps-1">improved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Alerts Banner -->
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="alert-heading mb-1">Active Security Alerts</h6>
+            <p class="mb-2">Multiple failed login attempts detected from IP: 192.168.1.100 (5 attempts in last 10 minutes)</p>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-danger btn-sm" onclick="blockSuspiciousIP('192.168.1.100')">
+                <i class="bi bi-ban"></i> Block IP
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="viewSecurityDetails()">
+                <i class="bi bi-eye"></i> View Details
+              </button>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Row -->
+  <div class="row">
+    <!-- Login Logs Section -->
     <div class="col-lg-6">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Complaints</h5>
-          <table class="table table-borderless datatable">
-            <thead>
-              <tr>
-                <th>User ID</th>
-                <th>Complaint</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for complaint in complaints %}
-                <tr>
-                  <td>{{ complaint.user_id }}</td>
-                  <td>{{ complaint.content }}</td>
-                  <td>{{ complaint.created_at }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">
+              <i class="bi bi-activity text-primary me-2"></i>Recent Login Activity
+            </h5>
+            <div class="dropdown">
+              <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-funnel"></i> Filter
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="filterLogins('all')">All Logins</a></li>
+                <li><a class="dropdown-item" href="#" onclick="filterLogins('suspicious')">Suspicious Only</a></li>
+                <li><a class="dropdown-item" href="#" onclick="filterLogins('failed')">Failed Attempts</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" onclick="exportLogs('login')">
+                  <i class="bi bi-download me-1"></i>Export CSV
+                </a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input type="text" class="form-control" placeholder="Search by user or IP..." id="loginSearch">
+            </div>
+          </div>
+          
+          <div class="login-logs-container" style="max-height: 500px; overflow-y: auto;">
+            {% for log in login_logs %}
+            <div class="login-log-item d-flex align-items-center p-3 mb-2 bg-light rounded border-start border-4 border-{{ 'success' if log.status == 'success' else 'danger' }}">
+              <div class="log-user-info me-3">
+                <div class="user-avatar bg-{{ 'success' if log.status == 'success' else 'danger' }} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                  {% if log.user %}
+                    {{ log.user.name[0].upper() }}
+                  {% else %}
+                    <i class="bi bi-person-x"></i>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">
+                  {% if log.user %}
+                    {{ log.user.name }}
+                    <small class="text-muted">({{ log.user.email }})</small>
+                  {% else %}
+                    <span class="text-danger">Unknown User</span>
+                  {% endif %}
+                </h6>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge bg-secondary">
+                    <i class="bi bi-geo-alt"></i> {{ log.ip_address }}
+                  </span>
+                  <span class="badge bg-{{ 'success' if log.status == 'success' else 'danger' }}">
+                    {{ log.status|title }}
+                  </span>
+                </div>
+                <small class="text-muted">
+                  <i class="bi bi-clock"></i> {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                </small>
+              </div>
+              <div class="log-actions">
+                <div class="btn-group" role="group">
+                  <button class="btn btn-outline-primary btn-sm" onclick="viewLoginDetails({{ log.id }})" title="View Details">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  {% if log.status != 'success' %}
+                  <button class="btn btn-outline-danger btn-sm" onclick="blockUserIP('{{ log.ip_address }}')" title="Block IP">
+                    <i class="bi bi-ban"></i>
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complaints/Support Section -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">
+              <i class="bi bi-headset text-success me-2"></i>Support Tickets
+            </h5>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#newTicketModal">
+                <i class="bi bi-plus-circle"></i> New Ticket
+              </button>
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  Status
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#" onclick="filterComplaints('all')">All Tickets</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="filterComplaints('pending')">Pending</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="filterComplaints('in_progress')">In Progress</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="filterComplaints('resolved')">Resolved</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input type="text" class="form-control" placeholder="Search tickets..." id="complaintSearch">
+            </div>
+          </div>
+
+          <div class="complaints-container" style="max-height: 500px; overflow-y: auto;">
+            {% for complaint in complaints %}
+            <div class="complaint-item card mb-2 border-start border-4 border-{{ 'warning' if complaint.status == 'pending' else 'success' if complaint.status == 'resolved' else 'info' }}">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-start justify-content-between">
+                  <div class="d-flex align-items-start flex-grow-1">
+                    <div class="complaint-avatar me-3">
+                      <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        {{ complaint.user.name[0].upper() if complaint.user else '?' }}
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <h6 class="mb-0">{{ complaint.user.name if complaint.user else 'Anonymous' }}</h6>
+                        <span class="badge bg-{{ 'warning' if complaint.status == 'pending' else 'success' if complaint.status == 'resolved' else 'info' }}">
+                          {{ complaint.status|title }}
+                        </span>
+                        <span class="badge bg-{{ 'danger' if complaint.priority == 'high' else 'warning' if complaint.priority == 'medium' else 'secondary' }}">
+                          {{ complaint.priority|title if complaint.priority else 'Normal' }} Priority
+                        </span>
+                      </div>
+                      <p class="mb-2 text-truncate" style="max-width: 300px;" title="{{ complaint.content }}">
+                        <i class="bi bi-chat-quote"></i> {{ complaint.content[:80] }}{% if complaint.content|length > 80 %}...{% endif %}
+                      </p>
+                      <small class="text-muted">
+                        <i class="bi bi-calendar"></i> {{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}
+                      </small>
+                    </div>
+                  </div>
+                  <div class="complaint-actions">
+                    <div class="btn-group-vertical" role="group">
+                      <button class="btn btn-outline-primary btn-sm mb-1" onclick="viewComplaint({{ complaint.id }})" title="View Full Complaint">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      <button class="btn btn-outline-success btn-sm mb-1" onclick="respondToComplaint({{ complaint.id }})" title="Respond">
+                        <i class="bi bi-reply"></i>
+                      </button>
+                      {% if complaint.status != 'resolved' %}
+                      <button class="btn btn-outline-warning btn-sm" onclick="markResolved({{ complaint.id }})" title="Mark Resolved">
+                        <i class="bi bi-check-circle"></i>
+                      </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Tools & Actions -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">
+              <i class="bi bi-shield-lock text-danger me-2"></i>Security Management Tools
+            </h5>
+            <button class="btn btn-danger btn-sm" onclick="viewSecurityReport()">
+              <i class="bi bi-file-earmark-text"></i> Security Report
+            </button>
+          </div>
+
+          <div class="row g-3">
+            <!-- Two-Factor Authentication -->
+            <div class="col-md-3">
+              <div class="security-tool-card card border-primary h-100" onclick="manage2FA()">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-shield-check text-primary" style="font-size: 2.5rem;"></i>
+                  </div>
+                  <h6 class="card-title">Two-Factor Auth</h6>
+                  <p class="card-text small text-muted">Enable 2FA for enhanced security</p>
+                  <div class="mt-auto">
+                    <span class="badge bg-success">65% Enabled</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Policies -->
+            <div class="col-md-3">
+              <div class="security-tool-card card border-warning h-100" onclick="managePasswordPolicies()">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-key text-warning" style="font-size: 2.5rem;"></i>
+                  </div>
+                  <h6 class="card-title">Password Policies</h6>
+                  <p class="card-text small text-muted">Configure password requirements</p>
+                  <div class="mt-auto">
+                    <span class="badge bg-warning">Medium</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- IP Blacklist -->
+            <div class="col-md-3">
+              <div class="security-tool-card card border-danger h-100" onclick="manageIPBlacklist()">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-ban text-danger" style="font-size: 2.5rem;"></i>
+                  </div>
+                  <h6 class="card-title">IP Blacklist</h6>
+                  <p class="card-text small text-muted">Manage blocked IP addresses</p>
+                  <div class="mt-auto">
+                    <span class="badge bg-danger">12 Blocked</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Session Management -->
+            <div class="col-md-3">
+              <div class="security-tool-card card border-info h-100" onclick="manageActiveSessions()">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-person-lines-fill text-info" style="font-size: 2.5rem;"></i>
+                  </div>
+                  <h6 class="card-title">Active Sessions</h6>
+                  <p class="card-text small text-muted">Monitor user sessions</p>
+                  <div class="mt-auto">
+                    <span class="badge bg-info">247 Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- New Support Ticket Modal -->
+<div class="modal fade" id="newTicketModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Support Ticket</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="newTicketForm">
+          <div class="mb-3">
+            <label class="form-label">User</label>
+            <select class="form-select" id="ticketUserId" required>
+              <option value="">Select User</option>
+              {% for user in users %}
+              <option value="{{ user.id }}">{{ user.name }} ({{ user.email }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <select class="form-select" id="ticketPriority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subject</label>
+            <input type="text" class="form-control" id="ticketSubject" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="ticketContent" rows="4" required></textarea>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ticketNotifyUser" checked>
+            <label class="form-check-label" for="ticketNotifyUser">
+              Notify user via email
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" onclick="createSupportTicket()">
+          <i class="bi bi-plus-circle"></i> Create Ticket
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Complaint Modal -->
+<div class="modal fade" id="viewComplaintModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Support Ticket Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="complaintDetails">
+        <!-- Dynamic content will be loaded here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="respondToComplaintModal()">
+          <i class="bi bi-reply"></i> Respond
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script>
-$(document).ready(function() {
-  $('.datatable').DataTable();
-});
-</script>
+  <style>
+  /* Nice Admin Compatible Styles */
+  .logins-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
+  .complaints-card .card-icon { background: linear-gradient(90deg, #ff771d, #ffb347); }
+  .security-card .card-icon { background: linear-gradient(90deg, #dc3545, #c82333); }
+  .response-card .card-icon { background: linear-gradient(90deg, #20c997, #17a2b8); }
+
+  .security-tool-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .security-tool-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+
+  .login-log-item:hover,
+  .complaint-item:hover {
+    background-color: #f8f9fa !important;
+    transform: translateX(3px);
+    transition: all 0.3s ease;
+  }
+
+  .user-avatar {
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+
+  .complaint-avatar {
+    font-weight: bold;
+    font-size: 0.85rem;
+  }
+
+  .border-4 {
+    border-width: 4px !important;
+  }
+
+  .btn-group-vertical .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .alert-danger {
+    border-left: 4px solid #dc3545;
+  }
+
+  .login-logs-container::-webkit-scrollbar,
+  .complaints-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .login-logs-container::-webkit-scrollbar-track,
+  .complaints-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 6px;
+  }
+
+  .login-logs-container::-webkit-scrollbar-thumb,
+  .complaints-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+  }
+
+  .login-logs-container::-webkit-scrollbar-thumb:hover,
+  .complaints-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  </style>
+
+  <script>
+  // Global Variables
+  let currentComplaintId = null;
+  let loginLogsData = [];
+  let complaintsData = [];
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    loadSecurityData();
+    initializeSearchFilters();
+  });
+
+  function loadSecurityData() {
+    // In a real implementation, this would fetch from your Flask API
+    console.log('Loading security and support data...');
+  }
+
+  function initializeSearchFilters() {
+    // Login search functionality
+    const loginSearch = document.getElementById('loginSearch');
+    if (loginSearch) {
+      loginSearch.addEventListener('input', function() {
+        filterLoginLogs(this.value);
+      });
+    }
+
+    // Complaint search functionality
+    const complaintSearch = document.getElementById('complaintSearch');
+    if (complaintSearch) {
+      complaintSearch.addEventListener('input', function() {
+        filterComplaintTickets(this.value);
+      });
+    }
+  }
+
+  // Login Management Functions
+  function filterLogins(type) {
+    const url = `/admin/api/login-logs?filter=${type}`;
+    
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        refreshLoginLogs(data.logs);
+        showAlert(`Filtered to ${type} logins`, 'info');
+      }
+    })
+    .catch(error => {
+      showAlert('Error filtering login logs', 'danger');
+      console.error('Error:', error);
+    });
+  }
+
+  function filterLoginLogs(searchTerm) {
+    const logItems = document.querySelectorAll('.login-log-item');
+    
+    logItems.forEach(item => {
+      const userInfo = item.textContent.toLowerCase();
+      const shouldShow = userInfo.includes(searchTerm.toLowerCase());
+      item.style.display = shouldShow ? 'flex' : 'none';
+    });
+  }
+
+  function viewLoginDetails(logId) {
+    fetch(`/admin/api/login-log/${logId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const log = data.log;
+        showAlert(`Login Details: ${log.user_name} from ${log.ip_address} at ${log.timestamp}`, 'info');
+      }
+    })
+    .catch(error => {
+      showAlert('Error loading login details', 'danger');
+      console.error('Error:', error);
+    });
+  }
+
+  function blockUserIP(ipAddress) {
+    if (confirm(`Are you sure you want to block IP address: ${ipAddress}?`)) {
+      const formData = new FormData();
+      formData.append('ip_address', ipAddress);
+      formData.append('reason', 'Suspicious activity detected');
+      
+      fetch('/admin/api/block-ip', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showAlert(`IP ${ipAddress} has been blocked successfully`, 'success');
+          // Refresh the login logs
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          throw new Error(data.error || 'Failed to block IP');
+        }
+      })
+      .catch(error => {
+        showAlert('Error blocking IP address', 'danger');
+        console.error('Error:', error);
+      });
+    }
+  }
+
+  function exportLogs(logType) {
+    const url = `/admin/api/export-${logType}-logs`;
+    
+    // Create a temporary link to download the file
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${logType}_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert(`${logType.charAt(0).toUpperCase() + logType.slice(1)} logs exported successfully`, 'success');
+  }
+
+  // Complaint/Support Functions
+  function filterComplaints(status) {
+    const url = `/admin/api/complaints?status=${status}`;
+    
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        refreshComplaintTickets(data.complaints);
+        showAlert(`Filtered to ${status} tickets`, 'info');
+      }
+    })
+    .catch(error => {
+      showAlert('Error filtering complaints', 'danger');
+      console.error('Error:', error);
+    });
+  }
+
+  function filterComplaintTickets(searchTerm) {
+    const complaintItems = document.querySelectorAll('.complaint-item');
+    
+    complaintItems.forEach(item => {
+      const complaintInfo = item.textContent.toLowerCase();
+      const shouldShow = complaintInfo.includes(searchTerm.toLowerCase());
+      item.style.display = shouldShow ? 'block' : 'none';
+    });
+  }
+
+  function createSupportTicket() {
+    const userId = document.getElementById('ticketUserId').value;
+    const priority = document.getElementById('ticketPriority').value;
+    const subject = document.getElementById('ticketSubject').value;
+    const content = document.getElementById('ticketContent').value;
+    const notifyUser = document.getElementById('ticketNotifyUser').checked;
+    
+    if (!userId || !subject.trim() || !content.trim()) {
+      showAlert('Please fill all required fields', 'warning');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('user_id', userId);
+    formData.append('priority', priority);
+    formData.append('subject', subject);
+    formData.append('content', content);
+    if (notifyUser) formData.append('notify_user', 'on');
+    
+    fetch('/admin/api/create-support-ticket', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showAlert('Support ticket created successfully', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('newTicketModal')).hide();
+        resetSupportTicketForm();
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        throw new Error(data.error || 'Failed to create ticket');
+      }
+    })
+    .catch(error => {
+      showAlert('Error creating support ticket', 'danger');
+      console.error('Error:', error);
+    });
+  }
+
+  function resetSupportTicketForm() {
+      document.getElementById('ticketUserId').value = '';
+      document.getElementById('ticketPriority').value = 'medium';
+      document.getElementById('ticketSubject').value = '';
+      document.getElementById('ticketContent').value = '';
+      document.getElementById('ticketNotifyUser').checked = true;
+  }
+
+  // Generic alert function
+  function showAlert(message, type) {
+      const alertPlaceholder = document.createElement('div');
+      alertPlaceholder.innerHTML = `
+          <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+              ${message}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+      `;
+      document.body.appendChild(alertPlaceholder);
+      setTimeout(() => alertPlaceholder.remove(), 5000);
+  }
+
+  // Additional functions (placeholders)
+  function viewComplaint(complaintId) {
+      currentComplaintId = complaintId;
+      fetch(`/admin/api/complaints/${complaintId}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  document.getElementById('complaintDetails').innerHTML = `
+                      <p><strong>User:</strong> ${data.complaint.user}</p>
+                      <p><strong>Content:</strong> ${data.complaint.content}</p>
+                      <p><strong>Status:</strong> ${data.complaint.status}</p>
+                      <p><strong>Created:</strong> ${data.complaint.created_at}</p>
+                  `;
+                  new bootstrap.Modal(document.getElementById('viewComplaintModal')).show();
+              }
+          });
+  }
+
+  function respondToComplaintModal() {
+      if (currentComplaintId) {
+          showAlert(`Responding to ticket ${currentComplaintId}`, 'info');
+          // Implement response logic here
+      }
+  }
+
+  function markResolved(complaintId) {
+      if (confirm(`Mark ticket ${complaintId} as resolved?`)) {
+          fetch(`/admin/api/complaints/${complaintId}/resolve`, { method: 'POST' })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      showAlert('Ticket marked as resolved', 'success');
+                      setTimeout(() => location.reload(), 1000);
+                  }
+              });
+      }
+  }
+
+  // Security-related functions (placeholders)
+  function blockSuspiciousIP(ip) { blockUserIP(ip); }
+  function viewSecurityDetails() { showAlert('Viewing security details...', 'info'); }
+  function viewSecurityReport() { showAlert('Security report generated', 'info'); }
+  function manage2FA() { showAlert('Managing 2FA settings...', 'info'); }
+  function managePasswordPolicies() { showAlert('Managing password policies...', 'info'); }
+  function manageIPBlacklist() { showAlert('Managing IP blacklist...', 'info'); }
+  function manageActiveSessions() { showAlert('Managing active sessions...', 'info'); }
+
+  </script>
 {% endblock %}
