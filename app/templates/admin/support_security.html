@@ -452,329 +452,789 @@
 {% block scripts %}
 {{ super() }}
   <style>
-  /* Nice Admin Compatible Styles */
-  .logins-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
-  .complaints-card .card-icon { background: linear-gradient(90deg, #ff771d, #ffb347); }
-  .security-card .card-icon { background: linear-gradient(90deg, #dc3545, #c82333); }
-  .response-card .card-icon { background: linear-gradient(90deg, #20c997, #17a2b8); }
+    /* Nice Admin Compatible Styles */
+    .logins-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
+    .complaints-card .card-icon { background: linear-gradient(90deg, #ff771d, #ffb347); }
+    .security-card .card-icon { background: linear-gradient(90deg, #dc3545, #c82333); }
+    .response-card .card-icon { background: linear-gradient(90deg, #20c997, #17a2b8); }
 
-  .security-tool-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
+    .security-tool-card {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-  .security-tool-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  }
+    .security-tool-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
 
-  .login-log-item:hover,
-  .complaint-item:hover {
-    background-color: #f8f9fa !important;
-    transform: translateX(3px);
-    transition: all 0.3s ease;
-  }
+    .login-log-item:hover,
+    .complaint-item:hover {
+      background-color: #f8f9fa !important;
+      transform: translateX(3px);
+      transition: all 0.3s ease;
+    }
 
-  .user-avatar {
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
+    .user-avatar {
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
 
-  .complaint-avatar {
-    font-weight: bold;
-    font-size: 0.85rem;
-  }
+    .complaint-avatar {
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
 
-  .border-4 {
-    border-width: 4px !important;
-  }
+    .border-4 {
+      border-width: 4px !important;
+    }
 
-  .btn-group-vertical .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-  }
+    .btn-group-vertical .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
 
-  .alert-danger {
-    border-left: 4px solid #dc3545;
-  }
+    .alert-danger {
+      border-left: 4px solid #dc3545;
+    }
 
-  .login-logs-container::-webkit-scrollbar,
-  .complaints-container::-webkit-scrollbar {
-    width: 6px;
-  }
+    .login-logs-container::-webkit-scrollbar,
+    .complaints-container::-webkit-scrollbar {
+      width: 6px;
+    }
 
-  .login-logs-container::-webkit-scrollbar-track,
-  .complaints-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 6px;
-  }
+    .login-logs-container::-webkit-scrollbar-track,
+    .complaints-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 6px;
+    }
 
-  .login-logs-container::-webkit-scrollbar-thumb,
-  .complaints-container::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 6px;
-  }
+    .login-logs-container::-webkit-scrollbar-thumb,
+    .complaints-container::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 6px;
+    }
 
-  .login-logs-container::-webkit-scrollbar-thumb:hover,
-  .complaints-container::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
+    .login-logs-container::-webkit-scrollbar-thumb:hover,
+    .complaints-container::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
   </style>
 
   <script>
-  // Global Variables
-  let currentComplaintId = null;
-  let loginLogsData = [];
-  let complaintsData = [];
+      // Global Variables
+    let currentComplaintId = null;
+    let loginLogsData = [];
+    let complaintsData = [];
 
-  // Initialize
-  document.addEventListener('DOMContentLoaded', function() {
-    loadSecurityData();
-    initializeSearchFilters();
-  });
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing...');
+        loadSecurityData();
+        initializeSearchFilters();
+        initializeModals();
+    });
 
-  function loadSecurityData() {
-    // In a real implementation, this would fetch from your Flask API
-    console.log('Loading security and support data...');
-  }
-
-  function initializeSearchFilters() {
-    // Login search functionality
-    const loginSearch = document.getElementById('loginSearch');
-    if (loginSearch) {
-      loginSearch.addEventListener('input', function() {
-        filterLoginLogs(this.value);
-      });
+    function initializeModals() {
+        // Make sure Bootstrap modals are properly initialized
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (!bootstrap.Modal.getInstance(modal)) {
+                new bootstrap.Modal(modal);
+            }
+        });
     }
 
-    // Complaint search functionality
-    const complaintSearch = document.getElementById('complaintSearch');
-    if (complaintSearch) {
-      complaintSearch.addEventListener('input', function() {
-        filterComplaintTickets(this.value);
-      });
+    function loadSecurityData() {
+        console.log('Loading security and support data...');
+        // You can add initial data loading here if needed
     }
-  }
 
-  // Login Management Functions
-  function filterLogins(type) {
-    const url = `/admin/api/login-logs?filter=${type}`;
-    
-    fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        refreshLoginLogs(data.logs);
-        showAlert(`Filtered to ${type} logins`, 'info');
-      }
-    })
-    .catch(error => {
-      showAlert('Error filtering login logs', 'danger');
-      console.error('Error:', error);
-    });
-  }
-
-  function filterLoginLogs(searchTerm) {
-    const logItems = document.querySelectorAll('.login-log-item');
-    
-    logItems.forEach(item => {
-      const userInfo = item.textContent.toLowerCase();
-      const shouldShow = userInfo.includes(searchTerm.toLowerCase());
-      item.style.display = shouldShow ? 'flex' : 'none';
-    });
-  }
-
-  function viewLoginDetails(logId) {
-    fetch(`/admin/api/login-log/${logId}`)
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        const log = data.log;
-        showAlert(`Login Details: ${log.user_name} from ${log.ip_address} at ${log.timestamp}`, 'info');
-      }
-    })
-    .catch(error => {
-      showAlert('Error loading login details', 'danger');
-      console.error('Error:', error);
-    });
-  }
-
-  function blockUserIP(ipAddress) {
-    if (confirm(`Are you sure you want to block IP address: ${ipAddress}?`)) {
-      const formData = new FormData();
-      formData.append('ip_address', ipAddress);
-      formData.append('reason', 'Suspicious activity detected');
-      
-      fetch('/admin/api/block-ip', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showAlert(`IP ${ipAddress} has been blocked successfully`, 'success');
-          // Refresh the login logs
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          throw new Error(data.error || 'Failed to block IP');
+    function initializeSearchFilters() {
+        // Login search functionality
+        const loginSearch = document.getElementById('loginSearch');
+        if (loginSearch) {
+            loginSearch.addEventListener('input', function() {
+                filterLoginLogs(this.value);
+            });
         }
-      })
-      .catch(error => {
-        showAlert('Error blocking IP address', 'danger');
-        console.error('Error:', error);
-      });
+
+        // Complaint search functionality
+        const complaintSearch = document.getElementById('complaintSearch');
+        if (complaintSearch) {
+            complaintSearch.addEventListener('input', function() {
+                filterComplaintTickets(this.value);
+            });
+        }
     }
-  }
 
-  function exportLogs(logType) {
-    const url = `/admin/api/export-${logType}-logs`;
-    
-    // Create a temporary link to download the file
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${logType}_logs_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showAlert(`${logType.charAt(0).toUpperCase() + logType.slice(1)} logs exported successfully`, 'success');
-  }
-
-  // Complaint/Support Functions
-  function filterComplaints(status) {
-    const url = `/admin/api/complaints?status=${status}`;
-    
-    fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        refreshComplaintTickets(data.complaints);
-        showAlert(`Filtered to ${status} tickets`, 'info');
-      }
-    })
-    .catch(error => {
-      showAlert('Error filtering complaints', 'danger');
-      console.error('Error:', error);
-    });
-  }
-
-  function filterComplaintTickets(searchTerm) {
-    const complaintItems = document.querySelectorAll('.complaint-item');
-    
-    complaintItems.forEach(item => {
-      const complaintInfo = item.textContent.toLowerCase();
-      const shouldShow = complaintInfo.includes(searchTerm.toLowerCase());
-      item.style.display = shouldShow ? 'block' : 'none';
-    });
-  }
-
-  function createSupportTicket() {
-    const userId = document.getElementById('ticketUserId').value;
-    const priority = document.getElementById('ticketPriority').value;
-    const subject = document.getElementById('ticketSubject').value;
-    const content = document.getElementById('ticketContent').value;
-    const notifyUser = document.getElementById('ticketNotifyUser').checked;
-    
-    if (!userId || !subject.trim() || !content.trim()) {
-      showAlert('Please fill all required fields', 'warning');
-      return;
+    // Login Management Functions
+    function filterLogins(type) {
+        console.log(`Filtering logins by: ${type}`);
+        const url = `/admin/api/login-logs?filter=${type}`;
+        
+        fetch(url, {
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Login filter response:', data);
+            if (data.success) {
+                refreshLoginLogs(data.logs);
+                showAlert(`Filtered to ${type} logins`, 'info');
+            } else {
+                throw new Error(data.error || 'Failed to filter logins');
+            }
+        })
+        .catch(error => {
+            console.error('Error filtering login logs:', error);
+            showAlert('Error filtering login logs: ' + error.message, 'danger');
+        });
     }
-    
-    const formData = new FormData();
-    formData.append('user_id', userId);
-    formData.append('priority', priority);
-    formData.append('subject', subject);
-    formData.append('content', content);
-    if (notifyUser) formData.append('notify_user', 'on');
-    
-    fetch('/admin/api/create-support-ticket', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        showAlert('Support ticket created successfully', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('newTicketModal')).hide();
-        resetSupportTicketForm();
-        setTimeout(() => location.reload(), 1000);
-      } else {
-        throw new Error(data.error || 'Failed to create ticket');
-      }
-    })
-    .catch(error => {
-      showAlert('Error creating support ticket', 'danger');
-      console.error('Error:', error);
+
+    function refreshLoginLogs(logs) {
+        const container = document.querySelector('.login-logs-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        logs.forEach(log => {
+            const logItem = createLoginLogElement(log);
+            container.appendChild(logItem);
+        });
+    }
+
+    function createLoginLogElement(log) {
+        const div = document.createElement('div');
+        div.className = `login-log-item d-flex align-items-center p-3 mb-2 bg-light rounded border-start border-4 border-${log.status === 'success' ? 'success' : 'danger'}`;
+        
+        div.innerHTML = `
+            <div class="log-user-info me-3">
+                <div class="user-avatar bg-${log.status === 'success' ? 'success' : 'danger'} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                    ${log.user_name ? log.user_name[0].toUpperCase() : '?'}
+                </div>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">
+                    ${log.user_name || 'Unknown User'}
+                    <small class="text-muted">(${log.user_email || 'No email'})</small>
+                </h6>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary">
+                        <i class="bi bi-geo-alt"></i> ${log.ip_address}
+                    </span>
+                    <span class="badge bg-${log.status === 'success' ? 'success' : 'danger'}">
+                        ${log.status.charAt(0).toUpperCase() + log.status.slice(1)}
+                    </span>
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> ${log.timestamp}
+                </small>
+            </div>
+            <div class="log-actions">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-primary btn-sm" onclick="viewLoginDetails(${log.id})" title="View Details">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    ${log.status !== 'success' ? `
+                    <button class="btn btn-outline-danger btn-sm" onclick="blockUserIP('${log.ip_address}')" title="Block IP">
+                        <i class="bi bi-ban"></i>
+                    </button>` : ''}
+                </div>
+            </div>
+        `;
+        
+        return div;
+    }
+
+    function filterLoginLogs(searchTerm) {
+        const logItems = document.querySelectorAll('.login-log-item');
+        const term = searchTerm.toLowerCase();
+        
+        logItems.forEach(item => {
+            const userInfo = item.textContent.toLowerCase();
+            const shouldShow = userInfo.includes(term);
+            item.style.display = shouldShow ? 'flex' : 'none';
+        });
+    }
+
+    function viewLoginDetails(logId) {
+        console.log(`Viewing login details for ID: ${logId}`);
+        
+        fetch(`/admin/api/login-log/${logId}`, {
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Login details response:', data);
+            if (data.success) {
+                const log = data.log;
+                showAlert(`Login Details: ${log.user_name} from ${log.ip_address} at ${log.timestamp}`, 'info');
+            } else {
+                throw new Error(data.error || 'Failed to load login details');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading login details:', error);
+            showAlert('Error loading login details: ' + error.message, 'danger');
+        });
+    }
+
+    function blockUserIP(ipAddress) {
+        if (!confirm(`Are you sure you want to block IP address: ${ipAddress}?`)) {
+            return;
+        }
+        
+        console.log(`Blocking IP: ${ipAddress}`);
+        
+        fetch('/admin/api/block-ip', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'ip_address': ipAddress,
+                'reason': 'Suspicious activity detected'
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Block IP response:', data);
+            if (data.success) {
+                showAlert(`IP ${ipAddress} has been blocked successfully`, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.error || 'Failed to block IP');
+            }
+        })
+        .catch(error => {
+            console.error('Error blocking IP address:', error);
+            showAlert('Error blocking IP address: ' + error.message, 'danger');
+        });
+    }
+
+    function exportLogs(logType) {
+        console.log(`Exporting ${logType} logs`);
+        
+        fetch(`/admin/api/export-${logType}-logs`, {
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Export response:', data);
+            if (data.success) {
+                showAlert(`${logType.charAt(0).toUpperCase() + logType.slice(1)} logs exported successfully`, 'success');
+                if (data.download_url) {
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.href = data.download_url;
+                    link.download = `${logType}_logs_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } else {
+                throw new Error(data.error || 'Export failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error exporting logs:', error);
+            showAlert('Error exporting logs: ' + error.message, 'danger');
+        });
+    }
+
+    // Complaint/Support Functions
+    function filterComplaints(status) {
+        console.log(`Filtering complaints by status: ${status}`);
+        
+        fetch(`/admin/api/complaints?status=${status}`, {
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Complaints filter response:', data);
+            if (data.success) {
+                refreshComplaintTickets(data.complaints);
+                showAlert(`Filtered to ${status} tickets`, 'info');
+            } else {
+                throw new Error(data.error || 'Failed to filter complaints');
+            }
+        })
+        .catch(error => {
+            console.error('Error filtering complaints:', error);
+            showAlert('Error filtering complaints: ' + error.message, 'danger');
+        });
+    }
+
+    function refreshComplaintTickets(complaints) {
+        const container = document.querySelector('.complaints-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        complaints.forEach(complaint => {
+            const complaintItem = createComplaintElement(complaint);
+            container.appendChild(complaintItem);
+        });
+    }
+
+    function createComplaintElement(complaint) {
+        const priorityColor = complaint.priority === 'high' ? 'danger' : 
+                            complaint.priority === 'medium' ? 'warning' : 'secondary';
+        const statusColor = complaint.status === 'pending' ? 'warning' : 
+                          complaint.status === 'resolved' ? 'success' : 'info';
+        
+        const div = document.createElement('div');
+        div.className = `complaint-item card mb-2 border-start border-4 border-${statusColor}`;
+        
+        div.innerHTML = `
+            <div class="card-body p-3">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-start flex-grow-1">
+                        <div class="complaint-avatar me-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                ${complaint.user ? complaint.user[0].toUpperCase() : '?'}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <h6 class="mb-0">${complaint.user || 'Anonymous'}</h6>
+                                <span class="badge bg-${statusColor}">
+                                    ${complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1)}
+                                </span>
+                                <span class="badge bg-${priorityColor}">
+                                    ${complaint.priority ? complaint.priority.charAt(0).toUpperCase() + complaint.priority.slice(1) : 'Normal'} Priority
+                                </span>
+                            </div>
+                            <p class="mb-2 text-truncate" style="max-width: 300px;" title="${complaint.content}">
+                                <i class="bi bi-chat-quote"></i> ${complaint.content.length > 80 ? complaint.content.substring(0, 80) + '...' : complaint.content}
+                            </p>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> ${complaint.created_at}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="complaint-actions">
+                        <div class="btn-group-vertical" role="group">
+                            <button class="btn btn-outline-primary btn-sm mb-1" onclick="viewComplaint(${complaint.id})" title="View Full Complaint">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-success btn-sm mb-1" onclick="respondToComplaint(${complaint.id})" title="Respond">
+                                <i class="bi bi-reply"></i>
+                            </button>
+                            ${complaint.status !== 'resolved' ? `
+                            <button class="btn btn-outline-warning btn-sm" onclick="markResolved(${complaint.id})" title="Mark Resolved">
+                                <i class="bi bi-check-circle"></i>
+                            </button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        return div;
+    }
+
+    function filterComplaintTickets(searchTerm) {
+        const complaintItems = document.querySelectorAll('.complaint-item');
+        const term = searchTerm.toLowerCase();
+        
+        complaintItems.forEach(item => {
+            const complaintInfo = item.textContent.toLowerCase();
+            const shouldShow = complaintInfo.includes(term);
+            item.style.display = shouldShow ? 'block' : 'none';
+        });
+    }
+
+    function createSupportTicket() {
+        const userId = document.getElementById('ticketUserId').value;
+        const priority = document.getElementById('ticketPriority').value;
+        const subject = document.getElementById('ticketSubject').value;
+        const content = document.getElementById('ticketContent').value;
+        const notifyUser = document.getElementById('ticketNotifyUser').checked;
+        
+        if (!userId || !subject.trim() || !content.trim()) {
+            showAlert('Please fill all required fields', 'warning');
+            return;
+        }
+        
+        console.log('Creating support ticket...');
+        
+        fetch('/admin/api/create-support-ticket', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'user_id': userId,
+                'priority': priority,
+                'subject': subject,
+                'content': content,
+                'notify_user': notifyUser
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Create ticket response:', data);
+            if (data.success) {
+                showAlert('Support ticket created successfully', 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newTicketModal'));
+                if (modal) modal.hide();
+                resetSupportTicketForm();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                throw new Error(data.error || 'Failed to create ticket');
+            }
+        })
+        .catch(error => {
+            console.error('Error creating support ticket:', error);
+            showAlert('Error creating support ticket: ' + error.message, 'danger');
+        });
+    }
+
+    function resetSupportTicketForm() {
+        document.getElementById('ticketUserId').value = '';
+        document.getElementById('ticketPriority').value = 'medium';
+        document.getElementById('ticketSubject').value = '';
+        document.getElementById('ticketContent').value = '';
+        document.getElementById('ticketNotifyUser').checked = true;
+    }
+
+    function viewComplaint(complaintId) {
+        console.log(`Viewing complaint ID: ${complaintId}`);
+        currentComplaintId = complaintId;
+        
+        fetch(`/admin/api/complaints/${complaintId}`, {
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Complaint details response:', data);
+            if (data.success) {
+                const complaint = data.complaint;
+                document.getElementById('complaintDetails').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>User:</strong> ${complaint.user}</p>
+                            <p><strong>Email:</strong> ${complaint.user_email}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-info">${complaint.status}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Priority:</strong> <span class="badge bg-warning">${complaint.priority}</span></p>
+                            <p><strong>Created:</strong> ${complaint.created_at}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p><strong>Subject:</strong> ${complaint.subject}</p>
+                            <p><strong>Content:</strong></p>
+                            <div class="border p-3 bg-light rounded">
+                                ${complaint.content}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const modal = new bootstrap.Modal(document.getElementById('viewComplaintModal'));
+                modal.show();
+            } else {
+                throw new Error(data.error || 'Failed to load complaint details');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading complaint details:', error);
+            showAlert('Error loading complaint details: ' + error.message, 'danger');
+        });
+    }
+
+    function respondToComplaint(complaintId) {
+        showAlert(`Opening response interface for ticket ${complaintId}`, 'info');
+        // TODO: Implement response interface
+    }
+
+    function respondToComplaintModal() {
+        if (currentComplaintId) {
+            showAlert(`Responding to ticket ${currentComplaintId}`, 'info');
+            // TODO: Implement response logic here
+        }
+    }
+
+    function markResolved(complaintId) {
+        if (!confirm(`Mark ticket ${complaintId} as resolved?`)) {
+            return;
+        }
+        
+        console.log(`Marking complaint ${complaintId} as resolved`);
+        
+        fetch(`/admin/api/complaints/${complaintId}/resolve`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + getJWTToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Resolve complaint response:', data);
+            if (data.success) {
+                showAlert('Ticket marked as resolved', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                throw new Error(data.error || 'Failed to resolve ticket');
+            }
+        })
+        .catch(error => {
+            console.error('Error resolving complaint:', error);
+            showAlert('Error resolving complaint: ' + error.message, 'danger');
+        });
+    }
+
+    // Security-related functions (placeholders with better error handling)
+    function blockSuspiciousIP(ip) { 
+        blockUserIP(ip); 
+    }
+
+    function viewSecurityDetails() { 
+        showAlert('Loading security details...', 'info'); 
+    }
+
+    function viewSecurityReport() { 
+        showAlert('Generating security report...', 'info'); 
+    }
+
+    function manage2FA() { 
+        showAlert('Opening 2FA management...', 'info'); 
+    }
+
+    function managePasswordPolicies() { 
+        showAlert('Opening password policy settings...', 'info'); 
+    }
+
+    function manageIPBlacklist() { 
+        showAlert('Opening IP blacklist management...', 'info'); 
+    }
+
+    function manageActiveSessions() { 
+        showAlert('Opening active sessions monitor...', 'info'); 
+    }
+
+    // Utility Functions
+    function getJWTToken() {
+        // Try to get token from localStorage or sessionStorage
+        // Adjust this based on how you store the JWT token
+        return localStorage.getItem('access_token') || 
+              sessionStorage.getItem('access_token') ||
+              getCookie('access_token') || '';
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    // Enhanced alert function with better positioning and auto-dismiss
+    function showAlert(message, type = 'info', duration = 5000) {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.temp-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        const alertPlaceholder = document.createElement('div');
+        alertPlaceholder.className = 'temp-alert';
+        alertPlaceholder.style.position = 'fixed';
+        alertPlaceholder.style.top = '20px';
+        alertPlaceholder.style.right = '20px';
+        alertPlaceholder.style.zIndex = '9999';
+        alertPlaceholder.style.minWidth = '300px';
+        
+        const alertId = 'alert-' + Date.now();
+        
+        alertPlaceholder.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert" id="${alertId}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-${getAlertIcon(type)} me-2"></i>
+                    <div class="flex-grow-1">${message}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(alertPlaceholder);
+        
+        // Auto remove after duration
+        setTimeout(() => {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                const bsAlert = bootstrap.Alert.getInstance(alert) || new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+            alertPlaceholder.remove();
+        }, duration);
+        
+        console.log(`Alert: [${type.toUpperCase()}] ${message}`);
+    }
+
+    function getAlertIcon(type) {
+        const icons = {
+            'success': 'check-circle',
+            'danger': 'exclamation-triangle',
+            'warning': 'exclamation-circle',
+            'info': 'info-circle',
+            'primary': 'info-circle',
+            'secondary': 'info-circle'
+        };
+        return icons[type] || 'info-circle';
+    }
+
+    // Error handling wrapper for async functions
+    function handleAsyncError(asyncFn) {
+        return async function(...args) {
+            try {
+                await asyncFn.apply(this, args);
+            } catch (error) {
+                console.error('Async error:', error);
+                showAlert('An unexpected error occurred: ' + error.message, 'danger');
+            }
+        };
+    }
+
+    // Debounce function for search inputs
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Enhanced search with debouncing
+    const debouncedLoginSearch = debounce(filterLoginLogs, 300);
+    const debouncedComplaintSearch = debounce(filterComplaintTickets, 300);
+
+    // Update search initialization to use debounced functions
+    function initializeSearchFilters() {
+        const loginSearch = document.getElementById('loginSearch');
+        if (loginSearch) {
+            loginSearch.addEventListener('input', function() {
+                debouncedLoginSearch(this.value);
+            });
+        }
+
+        const complaintSearch = document.getElementById('complaintSearch');
+        if (complaintSearch) {
+            complaintSearch.addEventListener('input', function() {
+                debouncedComplaintSearch(this.value);
+            });
+        }
+    }
+
+    // Loading state management
+    function setLoadingState(element, isLoading) {
+        if (!element) return;
+        
+        if (isLoading) {
+            element.disabled = true;
+            const originalText = element.innerHTML;
+            element.setAttribute('data-original-text', originalText);
+            element.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Loading...';
+        } else {
+            element.disabled = false;
+            const originalText = element.getAttribute('data-original-text');
+            if (originalText) {
+                element.innerHTML = originalText;
+                element.removeAttribute('data-original-text');
+            }
+        }
+    }
+
+    // Enhanced error reporting
+    window.addEventListener('error', function(e) {
+        console.error('JavaScript Error:', e.error);
+        showAlert('A JavaScript error occurred. Check the console for details.', 'danger');
     });
-  }
 
-  function resetSupportTicketForm() {
-      document.getElementById('ticketUserId').value = '';
-      document.getElementById('ticketPriority').value = 'medium';
-      document.getElementById('ticketSubject').value = '';
-      document.getElementById('ticketContent').value = '';
-      document.getElementById('ticketNotifyUser').checked = true;
-  }
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled Promise Rejection:', e.reason);
+        showAlert('A network or server error occurred.', 'danger');
+        e.preventDefault();
+    });
 
-  // Generic alert function
-  function showAlert(message, type) {
-      const alertPlaceholder = document.createElement('div');
-      alertPlaceholder.innerHTML = `
-          <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-              ${message}
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-      `;
-      document.body.appendChild(alertPlaceholder);
-      setTimeout(() => alertPlaceholder.remove(), 5000);
-  }
-
-  // Additional functions (placeholders)
-  function viewComplaint(complaintId) {
-      currentComplaintId = complaintId;
-      fetch(`/admin/api/complaints/${complaintId}`)
-          .then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  document.getElementById('complaintDetails').innerHTML = `
-                      <p><strong>User:</strong> ${data.complaint.user}</p>
-                      <p><strong>Content:</strong> ${data.complaint.content}</p>
-                      <p><strong>Status:</strong> ${data.complaint.status}</p>
-                      <p><strong>Created:</strong> ${data.complaint.created_at}</p>
-                  `;
-                  new bootstrap.Modal(document.getElementById('viewComplaintModal')).show();
-              }
-          });
-  }
-
-  function respondToComplaintModal() {
-      if (currentComplaintId) {
-          showAlert(`Responding to ticket ${currentComplaintId}`, 'info');
-          // Implement response logic here
-      }
-  }
-
-  function markResolved(complaintId) {
-      if (confirm(`Mark ticket ${complaintId} as resolved?`)) {
-          fetch(`/admin/api/complaints/${complaintId}/resolve`, { method: 'POST' })
-              .then(response => response.json())
-              .then(data => {
-                  if (data.success) {
-                      showAlert('Ticket marked as resolved', 'success');
-                      setTimeout(() => location.reload(), 1000);
-                  }
-              });
-      }
-  }
-
-  // Security-related functions (placeholders)
-  function blockSuspiciousIP(ip) { blockUserIP(ip); }
-  function viewSecurityDetails() { showAlert('Viewing security details...', 'info'); }
-  function viewSecurityReport() { showAlert('Security report generated', 'info'); }
-  function manage2FA() { showAlert('Managing 2FA settings...', 'info'); }
-  function managePasswordPolicies() { showAlert('Managing password policies...', 'info'); }
-  function manageIPBlacklist() { showAlert('Managing IP blacklist...', 'info'); }
-  function manageActiveSessions() { showAlert('Managing active sessions...', 'info'); }
-
+    console.log('Support & Security JavaScript loaded successfully');
   </script>
+  <script>
+    // Debug logging
+    function debugLog(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        console.log(`[${timestamp}] ${message}`);
+    }
+
+    // Error catching
+    window.addEventListener('error', function(e) {
+        debugLog(`ERROR: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+    });
+
+    debugLog('Page loaded successfully');
+  </script>
+  
 {% endblock %}

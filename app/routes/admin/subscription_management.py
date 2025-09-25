@@ -7,9 +7,6 @@ from sqlalchemy import func
 import logging
 from datetime import timezone
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 from . import admin_bp  # Assuming admin_bp is defined in __init__.py of the admin package
 
@@ -46,7 +43,6 @@ def get_membership_types(start_date=None, end_date=None):
         ]
         return membership_types
     except Exception as e:
-        logger.error(f"Error generating membership types: {str(e)}")
         return []
 
 def format_change(value):
@@ -120,7 +116,6 @@ def subscriptions():
             plans=plans
         )
     except Exception as e:
-        logger.error(f"Error rendering subscriptions page: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/membership_types', methods=['GET'])
@@ -147,7 +142,6 @@ def api_membership_types():
         membership_types = get_membership_types(start_date, end_date)
         return jsonify({"success": True, "membership_types": membership_types})
     except Exception as e:
-        logger.error(f"Error fetching membership types: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/subscriptions', methods=['GET'])
@@ -193,7 +187,6 @@ def get_subscriptions():
 
         return jsonify({"success": True, "subscriptions": subscription_data})
     except Exception as e:
-        logger.error(f"Error fetching subscriptions: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/subscriptions', methods=['POST'])
@@ -286,7 +279,6 @@ def create_subscription():
         return jsonify({"success": True, "message": "Subscription created successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error creating subscription: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -343,7 +335,6 @@ def get_subscription(id):
 
         return jsonify({"success": True, "subscription": subscription_data})
     except Exception as e:
-        logger.error(f"Error fetching subscription {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/subscriptions/<int:id>/renew', methods=['POST'])
@@ -365,7 +356,6 @@ def renew_subscription(id):
         return jsonify({"success": True, "message": "Subscription renewed successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error renewing subscription {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/subscriptions/<int:id>/cancel', methods=['POST'])
@@ -387,7 +377,6 @@ def cancel_subscription(id):
         return jsonify({"success": True, "message": "Subscription canceled successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error canceling subscription {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/subscriptions/<int:id>/convert', methods=['POST'])
@@ -413,7 +402,6 @@ def convert_trial(id):
         return jsonify({"success": True, "message": "Trial converted to paid subscription"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error converting trial {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/subscriptions/bulk', methods=['POST'])
@@ -469,7 +457,6 @@ def bulk_actions():
         return jsonify({"success": True, "message": f"Bulk action {action} executed successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error executing bulk action: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/plans', methods=['GET'])
@@ -497,7 +484,6 @@ def get_plans():
         ]
         return jsonify({"success": True, "plans": plan_data})
     except Exception as e:
-        logger.error(f"Error fetching plans: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/plans', methods=['POST'])
@@ -546,7 +532,6 @@ def create_plan():
         return jsonify({"success": True, "message": "Plan created successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error creating plan: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/plans/<int:id>', methods=['GET'])
@@ -575,7 +560,6 @@ def get_plan(id):
         }
         return jsonify({"success": True, "plan": plan_data})
     except Exception as e:
-        logger.error(f"Error fetching plan {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/plans/<int:id>', methods=['PUT'])
@@ -611,7 +595,6 @@ def update_plan(id):
         return jsonify({"success": True, "message": "Plan updated successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error updating plan {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/plans/<int:id>', methods=['DELETE'])
@@ -635,5 +618,4 @@ def delete_plan(id):
         return jsonify({"success": True, "message": "Plan deleted successfully"})
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error deleting plan {id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500

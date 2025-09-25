@@ -17,8 +17,6 @@ from app.models.payments import Payment
 from app.models.coach_athlete import CoachAthlete
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 def is_admin(user_id):
     user = User.query.get(user_id)
@@ -60,7 +58,6 @@ def get_membership_types(start_date, end_date):
         ]
         return membership_types
     except Exception as e:
-        logger.error(f"Error generating membership types: {str(e)}")
         return []
 
 def calculate_retention_rate(start_date, end_date):
@@ -77,7 +74,6 @@ def calculate_retention_rate(start_date, end_date):
         ).count()
         return (active_at_end / active_at_start * 100) if active_at_start > 0 else 0
     except Exception as e:
-        logger.error(f"Error calculating retention rate: {str(e)}")
         return 0
 
 @admin_bp.route('/reports', methods=['GET'])
@@ -243,7 +239,6 @@ def reports():
             equipment_usage=equipment_usage
         )
     except Exception as e:
-        logger.error(f"Error rendering reports page: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @admin_bp.route('/api/reports/update', methods=['POST'])
