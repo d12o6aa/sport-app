@@ -1,3 +1,4 @@
+# Updated Subscription model (app/models/subscription.py)
 from datetime import datetime, timedelta, timezone
 from app.extensions import db
 
@@ -46,6 +47,7 @@ class Subscription(db.Model):
     user = db.relationship("User", back_populates="subscriptions")
     plan = db.relationship("SubscriptionPlan", back_populates="subscriptions")
     payments = db.relationship("Payment", back_populates="subscription", lazy="dynamic", cascade="all, delete-orphan")
+    usage_records = db.relationship("SubscriptionUsage", back_populates="subscription", lazy="dynamic", cascade="all, delete-orphan")
 
     __table_args__ = (
         db.Index("idx_subscription_user_id", "user_id"),
@@ -70,12 +72,12 @@ class Subscription(db.Model):
     
     @property
     def total_paid(self):
-        return sum(p.amount for p in self.payments if p.status == 'completed')
+        return float(sum(p.amount for p in self.payments if p.status == 'completed'))
     
     def extend_subscription(self, months=None):
         """Extend subscription by plan duration or specified months"""
         if not months:
-            months = self.plan.duration_months
+            months = self.plan.duration_months if self.plan else 1
         
         now = datetime.now(timezone.utc)
         if self.end_date and self.end_date > now:
@@ -107,3 +109,6 @@ class Subscription(db.Model):
         
         self.auto_renew = False
         self.updated_at = now
+    
+    def __repr__(self):
+        return f'<Subscription {self.id}: {self.user.name if self.user else "Unknown"} - {self.plan.name if self.plan else "No Plan"}>'

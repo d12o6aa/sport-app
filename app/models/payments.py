@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+# app/models/payment.py  
+from datetime import datetime
 from app.extensions import db
-from enum import Enum
+
 
 class Payment(db.Model):
     __tablename__ = "payments"
@@ -13,16 +14,35 @@ class Payment(db.Model):
     status = db.Column(
         db.String(20),
         db.CheckConstraint("status IN ('pending','completed','failed','refunded','canceled')"),
-        default="pending"
+        default="pending",
+        index=True
     )
-    provider = db.Column(db.String(50))  # paypal, stripe, bank
+    provider = db.Column(db.String(50))  # 'stripe', 'paypal', 'bank'
     provider_transaction_id = db.Column(db.String(255))
-    provider_fee = db.Column(db.Numeric(10, 2))
+    provider_fee = db.Column(db.Numeric(10, 2), default=0)
     failure_reason = db.Column(db.Text)
     extra_data = db.Column(db.JSON)  # Store provider-specific data
     processed_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     subscription = db.relationship("Subscription", back_populates="payments")
     payment_method = db.relationship("PaymentMethod", back_populates="payments")
+    
+    __table_args__ = (
+        db.Index('idx_payment_subscription_id', 'subscription_id'),
+        db.Index('idx_payment_status', 'status'),
+        db.Index('idx_payment_processed_at', 'processed_at'),
+    )
+    
+    def __repr__(self):
+        return f'<Payment {self.id}: ${self.amount} - {self.status}>'
+    
+    @property
+    def is_successful(self):
+        return self.status == 'completed'
+    
+    @property
+    def net_amount(self):
+        return float(self.amount) - float(self.provider_fee or 0)

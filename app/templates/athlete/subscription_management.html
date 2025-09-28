@@ -1,0 +1,1139 @@
+{% extends "shared/base.html" %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1><i class="bi bi-crown me-2"></i>My Subscription</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('athlete.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item active">Subscription</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xxl-3 col-md-6">
+            <div class="card info-card subscription-card">
+                <div class="card-body">
+                    <h5 class="card-title">Current Plan</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-star"></i>
+                        </div>
+                        <div class="ps-3">
+                            <h6 id="currentPlan">{{ current_subscription.plan.name if current_subscription else 'No Active Plan' }}</h6>
+                            <span class="text-{{ 'success' if is_active_subscription else 'muted' }} small pt-1 fw-bold">
+                                {{ current_subscription.status.title() if current_subscription else 'Inactive' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-md-6">
+            <div class="card info-card days-card">
+                <div class="card-body">
+                    <h5 class="card-title">Days Remaining</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-calendar"></i>
+                        </div>
+                        <div class="ps-3">
+                            <h6 id="daysRemaining">{{ days_remaining if current_subscription else 0 }}</h6>
+                            <span class="text-muted small pt-2 ps-1">days left</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-md-6">
+            <div class="card info-card spending-card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Spent</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="ps-3">
+                            <h6 id="totalSpent">${{ "{:,.2f}".format(total_spent|default(0)) }}</h6>
+                            <span class="text-muted small pt-2 ps-1">lifetime</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-md-6">
+            <div class="card info-card payments-card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Payments</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <div class="ps-3">
+                            <h6 id="recentPayments">{{ recent_payments|default(0) }}</h6>
+                            <span class="text-muted small pt-2 ps-1">this month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Subscription Card -->
+    {% if current_subscription %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-crown me-2"></i>Current Subscription
+                        </h5>
+                        <div class="subscription-actions">
+                            {% if current_subscription.status == 'trial' %}
+                            <button class="btn btn-success btn-sm me-2" onclick="convertTrial()">
+                                <i class="bi bi-arrow-up me-1"></i>Convert to Paid
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-primary btn-sm me-2" onclick="showUpgradeModal()">
+                                <i class="bi bi-arrow-up me-1"></i>Upgrade
+                            </button>
+                            <button class="btn btn-warning btn-sm me-2" onclick="toggleAutoRenew()">
+                                <i class="bi bi-arrow-repeat me-1"></i>
+                                {{ 'Disable' if current_subscription.auto_renew else 'Enable' }} Auto-Renew
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="showCancelModal()">
+                                <i class="bi bi-x me-1"></i>Cancel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="subscription-details">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-1">Plan Name</h6>
+                                        <p class="mb-3">{{ current_subscription.plan.name }}</p>
+                                        
+                                        <h6 class="text-muted mb-1">Status</h6>
+                                        <span class="status-badge status-{{ current_subscription.status }} mb-3">
+                                            {{ current_subscription.status.title() }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-1">Price</h6>
+                                        <p class="mb-3">${{ "{:.2f}".format(current_subscription.plan.price) }}/month</p>
+                                        
+                                        <h6 class="text-muted mb-1">Auto Renew</h6>
+                                        <span class="badge {{ 'bg-success' if current_subscription.auto_renew else 'bg-secondary' }} mb-3">
+                                            {{ 'Enabled' if current_subscription.auto_renew else 'Disabled' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-1">Start Date</h6>
+                                        <p class="mb-3">{{ current_subscription.start_date.strftime('%b %d, %Y') }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-1">End Date</h6>
+                                        <p class="mb-3">{{ current_subscription.end_date.strftime('%b %d, %Y') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="usage-summary">
+                                <h6 class="text-muted mb-3">Usage Summary</h6>
+                                {% for usage in usage_data %}
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-sm">{{ usage.feature.title() }}</span>
+                                        <span class="text-sm">{{ usage.used }}/{{ usage.limit }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-{{ 'danger' if usage.percentage > 80 else 'warning' if usage.percentage > 60 else 'success' }}" 
+                                             style="width: {{ usage.percentage }}%"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if current_subscription.plan.features %}
+                    <div class="plan-features mt-4">
+                        <h6 class="text-muted mb-2">Plan Features</h6>
+                        <div class="row">
+                            {% for feature in current_subscription.plan.features %}
+                            <div class="col-md-6 mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>{{ feature }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Plans -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-grid me-2"></i>Available Plans
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshPlans()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="row" id="plansContainer">
+                        {% for plan in available_plans %}
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card plan-card h-100 {{ 'border-primary' if current_subscription and current_subscription.plan_id == plan.id else '' }}">
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <h5 class="card-title">{{ plan.name }}</h5>
+                                        <div class="price">
+                                            <h2 class="text-primary">${{ "{:.2f}".format(plan.price) }}</h2>
+                                            <span class="text-muted">/month</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if plan.description %}
+                                    <p class="card-text text-muted mb-3">{{ plan.description }}</p>
+                                    {% endif %}
+                                    
+                                    <div class="plan-specs mb-3">
+                                        <div class="spec-item mb-2">
+                                            <i class="bi bi-people me-2 text-primary"></i>
+                                            {{ plan.max_athletes }} Athletes
+                                        </div>
+                                        <div class="spec-item mb-2">
+                                            <i class="bi bi-list-task me-2 text-primary"></i>
+                                            {{ plan.max_workouts }} Workouts
+                                        </div>
+                                        <div class="spec-item mb-2">
+                                            <i class="bi bi-hdd me-2 text-primary"></i>
+                                            {{ plan.storage_gb }} GB Storage
+                                        </div>
+                                    </div>
+                                    
+                                    {% if plan.features %}
+                                    <div class="plan-features mb-3">
+                                        <h6 class="text-muted mb-2">Features:</h6>
+                                        {% for feature in plan.features[:3] %}
+                                        <div class="feature-item mb-1">
+                                            <i class="bi bi-check text-success me-2"></i>
+                                            <small>{{ feature }}</small>
+                                        </div>
+                                        {% endfor %}
+                                        {% if plan.features|length > 3 %}
+                                        <small class="text-muted">+{{ plan.features|length - 3 }} more features</small>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="mt-auto">
+                                        {% if current_subscription and current_subscription.plan_id == plan.id %}
+                                        <button class="btn btn-outline-success w-100" disabled>
+                                            <i class="bi bi-check me-1"></i>Current Plan
+                                        </button>
+                                        {% elif current_subscription and plan.price > current_subscription.plan.price %}
+                                        <button class="btn btn-primary w-100" onclick="upgradeToPlan({{ plan.id }}, '{{ plan.name }}')">
+                                            <i class="bi bi-arrow-up me-1"></i>Upgrade to {{ plan.name }}
+                                        </button>
+                                        {% elif not current_subscription %}
+                                        <button class="btn btn-success w-100" onclick="subscribeToPlan({{ plan.id }}, '{{ plan.name }}')">
+                                            <i class="bi bi-plus me-1"></i>Subscribe Now
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-outline-secondary w-100" disabled>
+                                            <i class="bi bi-arrow-down me-1"></i>Downgrade
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription History -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-clock-history me-2"></i>Subscription History
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="subscriptionHistoryTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Status</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Total Paid</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in subscription_history %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ sub.plan.name if sub.plan else 'Unknown Plan' }}</div>
+                                        <small class="text-muted">${{ "{:.2f}".format(sub.plan.price if sub.plan else 0) }}/month</small>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ sub.status }}">{{ sub.status.title() }}</span>
+                                    </td>
+                                    <td>{{ sub.start_date.strftime('%b %d, %Y') if sub.start_date else 'N/A' }}</td>
+                                    <td>{{ sub.end_date.strftime('%b %d, %Y') if sub.end_date else 'N/A' }}</td>
+                                    <td class="fw-bold text-success">${{ "{:.2f}".format(sub.total_paid) }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewSubscriptionDetails({{ sub.id }})">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-credit-card me-2"></i>Recent Payments
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadPaymentHistory()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="paymentHistoryTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Plan</th>
+                                    <th>Status</th>
+                                    <th>Method</th>
+                                    <th>Transaction ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentHistoryBody">
+                                <!-- Payment history will be loaded via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Subscribe Modal -->
+<div class="modal fade" id="subscribeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus me-2"></i>Subscribe to Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="subscribeForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Selected Plan</label>
+                            <div class="selected-plan-info p-3 bg-light rounded">
+                                <h6 id="selectedPlanName">-</h6>
+                                <div class="price">
+                                    <span class="h4 text-primary" id="selectedPlanPrice">$0.00</span>
+                                    <span class="text-muted">/month</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Billing Cycle</label>
+                            <select name="billing_cycle" class="form-select" onchange="updatePricing()">
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly (10% off)</option>
+                                <option value="yearly">Yearly (20% off)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">Payment Method</label>
+                            <div class="payment-methods">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="card" checked>
+                                    <label class="form-check-label">
+                                        <i class="bi bi-credit-card me-2"></i>Credit/Debit Card
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="paypal">
+                                    <label class="form-check-label">
+                                        <i class="bi bi-paypal me-2"></i>PayPal
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="cardDetails" class="card-details">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" name="card_number" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">CVV</label>
+                                <input type="text" name="card_cvv" class="form-control" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="text" name="card_expiry" class="form-control" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" name="cardholder_name" class="form-control" placeholder="John Doe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="trial_enabled" id="trialEnabled">
+                        <label class="form-check-label" for="trialEnabled">
+                            <i class="bi bi-gift me-2"></i>Start with 14-day free trial
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="auto_renew" id="autoRenew" checked>
+                        <label class="form-check-label" for="autoRenew">
+                            <i class="bi bi-arrow-repeat me-2"></i>Enable auto-renewal
+                        </label>
+                    </div>
+
+                    <input type="hidden" name="plan_id" id="subscriptionPlanId">
+                </form>
+
+                <div class="subscription-summary p-3 bg-light rounded">
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <span id="subtotalAmount">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Discount:</span>
+                        <span id="discountAmount" class="text-success">$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span id="totalAmount">$0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="subscribeForm" class="btn btn-success">
+                    <i class="bi bi-credit-card me-2"></i>Subscribe Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="modal fade" id="upgradeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-up me-2"></i>Upgrade Subscription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upgradeForm">
+                    <div class="upgrade-comparison mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="current-plan p-3 border rounded">
+                                    <h6 class="text-muted">Current Plan</h6>
+                                    <h5 id="currentPlanName">{{ current_subscription.plan.name if current_subscription else 'N/A' }}</h5>
+                                    <div class="price text-muted">
+                                        ${{ "{:.2f}".format(current_subscription.plan.price if current_subscription else 0) }}/month
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="new-plan p-3 border border-primary rounded">
+                                    <h6 class="text-muted">New Plan</h6>
+                                    <h5 id="newPlanName">-</h5>
+                                    <div class="price text-primary">
+                                        <span id="newPlanPrice">$0.00</span>/month
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="prorated-calculation mb-4">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Prorated Billing</h6>
+                            <p class="mb-1">You have <span id="remainingDays">{{ days_remaining if current_subscription else 0 }}</span> days remaining on your current plan.</p>
+                            <p class="mb-0">You will be charged a prorated amount of <strong id="proratedAmount">$0.00</strong> for the upgrade.</p>
+                        </div>
+                    </div>
+
+                    <div class="payment-method-upgrade mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method_id" class="form-select">
+                            <option value="">Select payment method...</option>
+                            {% for method in payment_methods %}
+                            <option value="{{ method.id }}">{{ method.display_name() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <input type="hidden" name="plan_id" id="upgradePlanId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="upgradeForm" class="btn btn-primary">
+                    <i class="bi bi-arrow-up me-2"></i>Upgrade Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Cancel Subscription
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Are you sure you want to cancel your subscription?</strong>
+                </div>
+                
+                <form id="cancelForm">
+                    <div class="mb-3">
+                        <label class="form-label">Reason for cancellation (optional)</label>
+                        <select name="reason" class="form-select mb-2">
+                            <option value="">Select a reason...</option>
+                            <option value="too_expensive">Too expensive</option>
+                            <option value="not_using">Not using enough</option>
+                            <option value="missing_features">Missing features</option>
+                            <option value="found_alternative">Found alternative</option>
+                            <option value="temporary_break">Taking a temporary break</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <textarea name="reason_details" class="form-control" rows="3" placeholder="Additional details (optional)..."></textarea>
+                    </div>
+
+                    <div class="cancellation-options">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="cancel_type" value="end_of_period" checked>
+                            <label class="form-check-label">
+                                <strong>Cancel at end of billing period</strong><br>
+                                <small class="text-muted">Continue using until {{ current_subscription.end_date.strftime('%b %d, %Y') if current_subscription else 'N/A' }}</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="cancel_type" value="immediate">
+                            <label class="form-check-label">
+                                <strong class="text-danger">Cancel immediately</strong><br>
+                                <small class="text-muted">Lose access right away (no refund)</small>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Subscription</button>
+                <button type="submit" form="cancelForm" class="btn btn-danger">
+                    <i class="bi bi-x me-2"></i>Cancel Subscription
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Subscription Details Modal -->
+<div class="modal fade" id="subscriptionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-eye me-2"></i>Subscription Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="subscriptionDetailsBody">
+                <!-- Details will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+{{ super() }}
+
+
+<style>
+    .subscription-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
+    .days-card .card-icon { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+    .spending-card .card-icon { background: linear-gradient(90deg, #28a745, #20c997); }
+    .payments-card .card-icon { background: linear-gradient(90deg, #dc3545, #e91e63); }
+
+    .status-badge { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+    .status-active { background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+    .status-trial { background: rgba(52, 152, 219, 0.1); color: #3498db; }
+    .status-expired { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+    .status-canceled { background: rgba(149, 165, 166, 0.1); color: #95a5a6; }
+    .status-pending { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
+
+    .plan-card { 
+        transition: all 0.3s ease; 
+        border: 2px solid transparent;
+    }
+    .plan-card:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+        border-color: #007bff;
+    }
+
+    .plan-card.border-primary {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%);
+    }
+
+    .subscription-details h6 {
+        color: #6c757d;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .usage-summary .progress {
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .payment-methods .form-check {
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .payment-methods .form-check:hover {
+        border-color: #007bff;
+        background-color: #f8f9ff;
+    }
+
+    .payment-methods .form-check-input:checked + .form-check-label {
+        color: #007bff;
+        font-weight: 500;
+    }
+
+    .card-details {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.375rem;
+        margin-top: 1rem;
+    }
+
+    .subscription-summary {
+        margin-top: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .subscription-actions .btn {
+        margin-right: 0.5rem;
+    }
+
+    .upgrade-comparison .current-plan {
+        background: #f8f9fa;
+    }
+
+    .upgrade-comparison .new-plan {
+        background: #e7f3ff;
+    }
+
+    .prorated-calculation .alert {
+        border-left: 4px solid #17a2b8;
+    }
+
+    @media (max-width: 768px) {
+        .subscription-actions {
+            margin-top: 1rem;
+        }
+        
+        .subscription-actions .btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            margin-right: 0;
+        }
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#subscriptionHistoryTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[2, 'desc']],
+            columnDefs: [{ orderable: false, targets: [5] }],
+            language: {
+                search: "Search subscriptions:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries"
+            }
+        });
+
+        $('#paymentHistoryTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            language: {
+                search: "Search payments:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries"
+            }
+        });
+
+        loadPaymentHistory();
+        setupCardValidation();
+
+        $('input[name="payment_method"]').change(function() {
+            if ($(this).val() === 'card') {
+                $('#cardDetails').show();
+            } else {
+                $('#cardDetails').hide();
+            }
+        });
+
+        $('#trialEnabled').change(function() {
+            updatePricing();
+        });
+
+        $(document).on('click', '.subscribe-btn', function() {
+            const planId = $(this).data('plan-id');
+            const planName = $(this).data('plan-name');
+            subscribeToPlan(planId, planName);
+        });
+
+        $(document).on('click', '.upgrade-btn', function() {
+            const planId = $(this).data('plan-id');
+            const planName = $(this).data('plan-name');
+            upgradeToPlan(planId, planName);
+        });
+    });
+
+    let currentPlanId = null;
+    let currentPlanPrice = 0;
+
+    function subscribeToPlan(planId, planName) {
+        currentPlanId = planId;
+        const planCard = $(`.plan-card:has(button[data-plan-id="${planId}"])`);
+        const planPrice = planCard.find('.price h2').text().replace('$', '');
+        $('#selectedPlanName').text(planName);
+        $('#selectedPlanPrice').text(`$${planPrice}`);
+        $('#subscriptionPlanId').val(planId);
+        currentPlanPrice = parseFloat(planPrice);
+        updatePricing();
+        $('#subscribeModal').modal('show');
+    }
+
+    function upgradeToPlan(planId, planName) {
+        currentPlanId = planId;
+        const planCard = $(`.plan-card:has(button[data-plan-id="${planId}"])`);
+        const planPrice = planCard.find('.price h2').text().replace('$', '');
+        $('#newPlanName').text(planName);
+        $('#newPlanPrice').text(`$${planPrice}`);
+        $('#upgradePlanId').val(planId);
+        const currentPrice = {{ current_subscription.plan.price if current_subscription else 0 }};
+        const newPrice = parseFloat(planPrice);
+        const daysRemaining = {{ days_remaining if current_subscription else 0 }};
+        const dailyRateOld = currentPrice / 30;
+        const dailyRateNew = newPrice / 30;
+        const proratedAmount = (dailyRateNew - dailyRateOld) * daysRemaining;
+        $('#proratedAmount').text(`$${proratedAmount.toFixed(2)}`);
+        $('#upgradeModal').modal('show');
+    }
+
+    function updatePricing() {
+        const billingCycle = $('select[name="billing_cycle"]').val();
+        const isTrialEnabled = $('#trialEnabled').is(':checked');
+        let price = currentPlanPrice;
+        let discount = 0;
+        if (billingCycle === 'quarterly') {
+            price = currentPlanPrice * 3 * 0.9;
+            discount = currentPlanPrice * 3 * 0.1;
+        } else if (billingCycle === 'yearly') {
+            price = currentPlanPrice * 12 * 0.8;
+            discount = currentPlanPrice * 12 * 0.2;
+        }
+        const subtotal = isTrialEnabled ? 0 : price;
+        const total = subtotal;
+        $('#subtotalAmount').text(isTrialEnabled ? '$0.00 (Trial)' : `$${price.toFixed(2)}`);
+        $('#discountAmount').text(`$${discount.toFixed(2)}`);
+        $('#totalAmount').text(`$${total.toFixed(2)}`);
+    }
+
+    function showUpgradeModal() {
+        loadUpgradePlans();
+    }
+
+    function showCancelModal() {
+        $('#cancelModal').modal('show');
+    }
+
+    function convertTrial() {
+        if (confirm('Convert your trial to a paid subscription?')) {
+            fetch('/athlete/api/convert_trial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    if (data.payment_url) {
+                        window.location.href = data.payment_url;
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    showAlert(data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error converting trial: ' + error.message, 'danger');
+            });
+        }
+    }
+
+    function toggleAutoRenew() {
+        const currentAutoRenew = {{ 'true' if current_subscription and current_subscription.auto_renew else 'false' }};
+        const newAutoRenew = !currentAutoRenew;
+        fetch('/athlete/api/update_auto_renew', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ auto_renew: newAutoRenew })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                location.reload();
+            } else {
+                showAlert(data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error updating auto-renewal: ' + error.message, 'danger');
+        });
+    }
+
+    function refreshPlans() {
+        location.reload();
+    }
+
+    function loadPaymentHistory() {
+        fetch('/athlete/api/payment_history')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updatePaymentHistoryTable(data.payments);
+            } else {
+                showAlert('Error loading payment history: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error loading payment history: ' + error.message, 'danger');
+        });
+    }
+
+    function updatePaymentHistoryTable(payments) {
+        const tbody = $('#paymentHistoryBody');
+        tbody.empty();
+        payments.forEach(payment => {
+            const row = `
+                <tr>
+                    <td>${payment.date}</td>
+                    <td class="fw-bold ${payment.status === 'completed' ? 'text-success' : payment.status === 'failed' ? 'text-danger' : 'text-warning'}">
+                        $${payment.amount.toFixed(2)}
+                    </td>
+                    <td>${payment.plan_name}</td>
+                    <td><span class="status-badge status-${payment.status}">${payment.status}</span></td>
+                    <td>${payment.provider || 'N/A'}</td>
+                    <td><small class="text-muted">${payment.provider_transaction_id || 'N/A'}</small></td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+    }
+
+    function setupCardValidation() {
+        $('input[name="card_number"]').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+            $(this).val(value.trim());
+            if (value.replace(/\s/g, '').length >= 16) {
+                $(this).addClass('is-valid').removeClass('is-invalid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+
+        $('input[name="card_cvv"]').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            $(this).val(value);
+            if (value.length >= 3 && value.length <= 4) {
+                $(this).addClass('is-valid').removeClass('is-invalid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+
+        $('input[name="card_expiry"]').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            $(this).val(value.substring(0, 5));
+            const regex = /^(0[1-9]|1[0-2])\/([0-9]{2})$/;
+            if (regex.test($(this).val())) {
+                const [month, year] = $(this).val().split('/');
+                const expiryDate = new Date(`20${year}`, month - 1);
+                const currentDate = new Date();
+                if (expiryDate > currentDate) {
+                    $(this).addClass('is-valid').removeClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                }
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+
+        $('input[name="cardholder_name"]').on('input', function() {
+            let value = $(this).val().trim();
+            if (value.length > 2) {
+                $(this).addClass('is-valid').removeClass('is-invalid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+    }
+
+    function loadUpgradePlans() {
+        fetch('/athlete/api/available_plans')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = $('#upgradeForm select[name="plan_id"]');
+                select.empty();
+                select.append('<option value="">Select a plan...</option>');
+                data.plans.forEach(plan => {
+                    if (plan.can_upgrade) {
+                        select.append(`<option value="${plan.id}">${plan.name} - $${plan.price.toFixed(2)}/month</option>`);
+                    }
+                });
+                $('#upgradeModal').modal('show');
+            } else {
+                showAlert('Error loading upgrade plans: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error loading upgrade plans: ' + error.message, 'danger');
+        });
+    }
+
+    function showAlert(message, type) {
+        const alertContainer = $('<div>').addClass(`alert alert-${type} alert-dismissible fade show`)
+            .attr('role', 'alert')
+            .css({
+                'position': 'fixed',
+                'top': '20px',
+                'right': '20px',
+                'z-index': '1050',
+                'min-width': '300px'
+            });
+        alertContainer.html(`
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `);
+        $('body').append(alertContainer);
+        setTimeout(() => {
+            alertContainer.alert('close');
+        }, 5000);
+    }
+
+    function validateSubscribeForm() {
+        const paymentMethod = $('input[name="payment_method"]:checked').val();
+        let isValid = true;
+        if (paymentMethod === 'card') {
+            const cardNumber = $('input[name="card_number"]').val().replace(/\s/g, '');
+            const cardCvv = $('input[name="card_cvv"]').val();
+            const cardExpiry = $('input[name="card_expiry"]').val();
+            const cardholderName = $('input[name="cardholder_name"]').val();
+            if (cardNumber.length < 16) {
+                $('input[name="card_number"]').addClass('is-invalid');
+                isValid = false;
+            }
+            if (cardCvv.length < 3 || cardCvv.length > 4) {
+                $('input[name="card_cvv"]').addClass('is-invalid');
+                isValid = false;
+            }
+            if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(cardExpiry)) {
+                $('input[name="card_expiry"]').addClass('is-invalid');
+                isValid = false;
+            }
+            if (cardholderName.length < 2) {
+                $('input[name="cardholder_name"]').addClass('is-invalid');
+                isValid = false;
+            }
+        }
+        if (!$('#subscriptionPlanId').val()) {
+            showAlert('Please select a plan to subscribe to', 'danger');
+            isValid = false;
+        }
+        return isValid;
+    }
+
+    $('#subscribeForm').on('submit', function(e) {
+        e.preventDefault();
+        if (validateSubscribeForm()) {
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            data.auto_renew = data.auto_renew === 'on';
+            data.trial_enabled = data.trial_enabled === 'on';
+            fetch('/athlete/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    $('#subscribeModal').modal('hide');
+                    if (data.payment_url) {
+                        window.location.href = data.payment_url;
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    showAlert(data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error creating subscription: ' + error.message, 'danger');
+            });
+        }
+    });
+
+    function viewSubscriptionDetails(subscriptionId) {
+        fetch(`/athlete/api/subscription_history?subscription_id=${subscriptionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const subscription = data.subscriptions.find(sub => sub.id == subscriptionId);
+                if (subscription) {
+                    const detailsHtml = `
+                        <div class="subscription-details">
+                            <h5>Subscription #${subscription.id}</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">Plan Name</h6>
+                                    <p>${subscription.plan_name}</p>
+                                    <h6 class="text-muted">Status</h6>
+                                    <span class="status-badge status-${subscription.status}">${subscription.status}</span>
+                                    <h6 class="text-muted">Billing Cycle</h6>
+                                    <p>${subscription.billing_cycle}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">Start Date</h6>
+                                    <p>${subscription.start_date || 'N/A'}</p>
+                                    <h6 class="text-muted">End Date</h6>
+                                    <p>${subscription.end_date || 'N/A'}</p>
+                                    <h6 class="text-muted">Total Paid</h6>
+                                    <p class="text-success">$${subscription.total_paid.toFixed(2)}</p>
+                                </div>
+                            </div>
+                            ${subscription.cancellation_reason ? `
+                                <h6 class="text-muted mt-3">Cancellation Reason</h6>
+                                <p>${subscription.cancellation_reason}</p>
+                                <h6 class="text-muted">Cancelled At</h6>
+                                <p>${subscription.cancelled_at || 'N/A'}</p>
+                            ` : ''}
+                        </div>
+                    `;
+                    $('#subscriptionDetailsBody').html(detailsHtml);
+                    $('#subscriptionDetailsModal').modal('show');
+                } else {
+                    showAlert('Subscription not found', 'danger');
+                }
+            } else {
+                showAlert('Error loading subscription details: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error loading subscription details: ' + error.message, 'danger');
+        });
+    }
+</script>
+{% endblock %}
