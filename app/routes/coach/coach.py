@@ -383,51 +383,6 @@ def duplicate_plan(plan_id):
         db.session.rollback()
         return jsonify({"msg": f"Error: {str(e)}"}), 500
 
-# Send message to athlete
-@coach_bp.route("/athlete/<int:athlete_id>/send_message", methods=["GET", "POST"])
-@jwt_required()
-def send_message(athlete_id):
-    identity = get_jwt_identity()
-    if not is_coach(identity):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    link = CoachAthlete.query.filter_by(coach_id=identity, athlete_id=athlete_id, is_active=True).first()
-    if not link:
-        return jsonify({"msg": "Not your athlete"}), 403
-
-    if request.method == "POST":
-        data = request.form
-        message = Message(
-            sender_id=identity,
-            receiver_id=athlete_id,
-            content=data.get("content"),
-            sent_at=datetime.utcnow(),
-            is_read=False
-        )
-        db.session.add(message)
-        db.session.commit()
-        flash("Message sent successfully!", "success")
-        return redirect(url_for("coach.view_messages", athlete_id=athlete_id))
-
-    athlete = User.query.get_or_404(athlete_id)
-    return render_template("coach/send_message.html", athlete=athlete)
-
-# View messages with athlete
-@coach_bp.route("/athlete/<int:athlete_id>/messages", methods=["GET"])
-@jwt_required()
-def view_messages(athlete_id):
-    identity = get_jwt_identity()
-    if not is_coach(identity):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    messages = Message.query.filter(
-        ((Message.sender_id == identity) & (Message.receiver_id == athlete_id)) |
-        ((Message.sender_id == athlete_id) & (Message.receiver_id == identity))
-    ).order_by(Message.sent_at.desc()).all()
-
-    athlete = User.query.get_or_404(athlete_id)
-    return render_template("coach/view_messages.html", athlete=athlete, messages=messages)
-
 
 # View workout log details
 @coach_bp.route("/logs/<int:log_id>", methods=["GET"])

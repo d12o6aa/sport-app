@@ -2,187 +2,1181 @@
 
 {% block content %}
 <section class="section dashboard">
-  <h5 class="m-0 fw-bold text-primary mb-4">Chat</h5>
-  <div class="row g-4">
-    <div class="col-md-4">
-      <div class="card shadow-lg rounded-4 h-100">
-        <div class="card-body d-flex flex-column p-0">
-          <div class="p-3 border-bottom">
-            <h6 class="mb-0 fw-bold">Contacts</h6>
-          </div>
-          <div id="chatList" class="list-group list-group-flush overflow-auto flex-grow-1">
+  <div class="chat-container">
+    <!-- Sidebar -->
+    <div class="chat-sidebar" id="chatSidebar">
+      <div class="sidebar-header">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="m-0 fw-bold">Messages</h5>
+          <button class="btn btn-link p-0" id="newChatBtn" title="New Chat" onclick="openNewChatModal()">
+            <i class="bi bi-pencil-square fs-5"></i>
+          </button>
+        </div>
+        
+        <!-- New Chat Modal -->
+        <div class="modal fade" id="newChatModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">New Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="search-wrapper mb-3">
+                  <i class="bi bi-search search-icon"></i>
+                  <input type="text" id="modalSearchInput" class="search-input" placeholder="Search users...">
+                </div>
+                <div id="usersList" class="users-list">
+                  <div class="text-center text-muted py-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="search-wrapper">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search conversations...">
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="unread">Unread</button>
+        </div>
+      </div>
+      
+      <!-- Chat List -->
+      <div id="chatList" class="chat-list">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
         </div>
       </div>
     </div>
-    <div class="col-md-8">
-      <div class="card shadow-lg rounded-4 h-100">
-        <div class="card-body d-flex flex-column">
-          <div class="d-flex align-items-center mb-3 border-bottom pb-3">
-            <img id="chatProfileImage" src="/static/images/default.png" class="rounded-circle me-3" width="50" height="50" alt="Profile">
-            <div>
-              <h6 id="chatTitle" class="mb-0">Select a chat</h6>
-              <small id="chatStatus" class="text-muted"></small> </div>
+    
+    <!-- Main Chat Area -->
+    <div class="chat-main" id="chatMain">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="bi bi-chat-dots"></i>
+        </div>
+        <h4>Select a conversation</h4>
+        <p>Choose a contact from the sidebar to start messaging</p>
+      </div>
+      
+      <!-- Chat Header (Hidden initially) -->
+      <div class="chat-header" id="chatHeader" style="display: none;">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-link p-0 me-3 d-md-none" id="backBtn">
+            <i class="bi bi-arrow-left fs-4"></i>
+          </button>
+          <div class="chat-avatar-wrapper">
+            <img id="chatProfileImage" src="/static/images/default.jpg" class="chat-avatar" alt="Profile">
+            <span class="status-indicator" id="statusIndicator"></span>
           </div>
-          <div id="chatMessages" class="chat-messages flex-grow-1 overflow-auto mb-3">
-            <div class="text-center text-muted p-5">Select a contact to start chatting.</div>
+          <div class="flex-grow-1">
+            <h6 id="chatTitle" class="mb-0 fw-bold">Contact Name</h6>
+            <small id="chatStatus" class="text-muted"></small>
           </div>
-          <div class="input-group">
-            <input id="messageInput" type="text" class="form-control rounded-pill" placeholder="Type a message...">
-            <button class="btn btn-primary rounded-pill animate-hover ms-2" onclick="sendMessage()">Send</button>
-          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="btn btn-link p-0 me-2" title="Search in chat">
+            <i class="bi bi-search"></i>
+          </button>
+          <button class="btn btn-link p-0" title="More options">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Messages Container (Hidden initially) -->
+      <div id="chatMessages" class="chat-messages" style="display: none;">
+      </div>
+      
+      <!-- Message Input (Hidden initially) -->
+      <div class="message-input-wrapper" id="messageInputWrapper" style="display: none;">
+        <div class="message-input-container">
+          <button class="btn btn-link p-0 me-2" title="Attach file">
+            <i class="bi bi-paperclip fs-5"></i>
+          </button>
+          <input id="messageInput" type="text" class="message-input" placeholder="Type a message...">
+          <button class="send-button" onclick="sendMessage()" id="sendBtn">
+            <i class="bi bi-send-fill"></i>
+          </button>
         </div>
       </div>
     </div>
   </div>
 </section>
-{% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
-<script>
-let currentChatId = null;
-const currentUserId = {{ user_id }};
-
-// Function to fetch and display chats list
-function fetchChats() {
-  fetch('/athlete/chats', {
-    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      const chatList = document.getElementById('chatList');
-      chatList.innerHTML = ''; // Clear existing list
-      data.forEach(chat => {
-        const item = document.createElement('a');
-        item.href = '#';
-        item.classList.add('list-group-item', 'list-group-item-action');
-        item.innerHTML = `
-          <div class="d-flex align-items-center">
-            <img src="${chat.profile_image}" class="rounded-circle me-3" width="40" height="40" alt="Profile">
-            <div class="flex-grow-1">
-              <h6 class="mb-0">${chat.name}</h6>
-              <small class="text-muted">${chat.last_message || 'Start a conversation'}</small>
-            </div>
-            <small class="text-muted">${chat.last_message_time || ''}</small>
-          </div>
-        `;
-        item.onclick = (e) => {
-          e.preventDefault();
-          selectChat(chat.id, chat.name, chat.profile_image, chat.is_online);
-        };
-        chatList.appendChild(item);
-      });
-    })
-    .catch(error => console.error('Error fetching chats:', error));
-}
-
-// Function to select a chat and load messages
-function selectChat(chatId, chatName, chatImage, isOnline) {
-  currentChatId = chatId;
-  document.getElementById('chatTitle').textContent = chatName;
-  document.getElementById('chatProfileImage').src = chatImage;
-  document.getElementById('chatMessages').innerHTML = ''; // Clear messages
-  
-  // Set online status based on data
-  const statusElement = document.getElementById('chatStatus');
-  if (isOnline) {
-    statusElement.textContent = 'Online';
-    statusElement.classList.remove('text-muted');
-    statusElement.classList.add('text-success');
-  } else {
-    statusElement.textContent = ''; // Or 'Offline', as you prefer
-    statusElement.classList.remove('text-success');
-    statusElement.classList.add('text-muted');
-  }
-
-  fetch(`/athlete/messages/${chatId}`, {
-    headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
-  })
-    .then(response => response.json())
-    .then(data => {
-      const messagesContainer = document.getElementById('chatMessages');
-      messagesContainer.innerHTML = '';
-      data.forEach(msg => {
-        const messageClass = msg.sender_id === currentUserId ? 'sent-message' : 'received-message';
-        messagesContainer.innerHTML += `
-          <div class="${messageClass}">
-            <p>${msg.content}</p>
-            <small class="text-muted">${new Date(msg.sent_at).toLocaleTimeString()}</small>
-          </div>
-        `;
-      });
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    })
-    .catch(error => console.error('Error fetching messages:', error));
-}
-
-// Function to send a message
-function sendMessage() {
-  const msgInput = document.getElementById('messageInput');
-  const msgContent = msgInput.value;
-  if (!msgContent || !currentChatId) {
-    return;
-  }
-  
-  fetch('/athlete/send_message', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-    },
-    body: JSON.stringify({
-      receiver_id: currentChatId,
-      content: msgContent
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.msg === 'Message sent successfully') {
-      const messagesContainer = document.getElementById('chatMessages');
-      messagesContainer.innerHTML += `
-        <div class="sent-message">
-          <p>${msgContent}</p>
-          <small class="text-muted">${new Date().toLocaleTimeString()}</small>
-        </div>
-      `;
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      msgInput.value = '';
-    }
-  })
-  .catch(error => console.error('Error sending message:', error));
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  fetchChats();
-});
-</script>
 <style>
+:root {
+  --primary-color: #0d6efd;
+  --primary-hover: #0b5ed7;
+  --bg-main: #f8f9fa;
+  --bg-sidebar: #ffffff;
+  --bg-chat: #ffffff;
+  --bg-sent: #0d6efd;
+  --bg-received: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-light: #adb5bd;
+  --border-color: #dee2e6;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
+  --radius: 16px;
+  --radius-lg: 20px;
+}
+
+.chat-container {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 0;
+  height: calc(100vh - 180px);
+  min-height: 600px;
+  background: var(--bg-main);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* Sidebar Styles */
+.chat-sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  font-size: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.3s;
+  background: var(--bg-main);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-tab {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-tab.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.filter-tab:hover:not(.active) {
+  background: var(--bg-main);
+}
+
+/* Chat List */
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.chat-item:hover {
+  background: var(--bg-main);
+}
+
+.chat-item.active {
+  background: var(--bg-main);
+}
+
+.chat-item-avatar-wrapper {
+  position: relative;
+  margin-right: 12px;
+}
+
+.chat-item-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #28a745;
+  border: 2px solid white;
+}
+
+.status-dot.offline {
+  background: var(--text-light);
+}
+
+.chat-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.chat-item-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-item-time {
+  font-size: 12px;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+.chat-item-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
+.chat-item-message i {
+  margin-right: 4px;
+  font-size: 12px;
+}
+
+.unread-badge {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  background: var(--primary-color);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Main Chat Area */
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-chat);
+  height: 100%;
+  position: relative;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-light);
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.empty-state h4 {
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Chat Header */
+.chat-header {
+  padding: 20px 24px;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-avatar-wrapper {
+  position: relative;
+  margin-right: 12px;
+}
+
+.chat-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-indicator.online {
+  background: #28a745;
+}
+
+.status-indicator.offline {
+  background: var(--text-light);
+}
+
+.chat-actions button {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.chat-actions button:hover {
+  color: var(--text-primary);
+}
+
+/* Messages */
 .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
 }
-.sent-message, .received-message {
-  padding: 8px 12px;
-  border-radius: 15px;
-  margin-bottom: 10px;
+
+.date-divider {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.date-divider span {
+  background: var(--bg-chat);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.message-bubble {
+  display: flex;
+  margin-bottom: 16px;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-bubble.sent {
+  justify-content: flex-end;
+}
+
+.message-bubble.received {
+  justify-content: flex-start;
+}
+
+.message-content {
   max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  position: relative;
   word-wrap: break-word;
 }
-.sent-message {
-  background-color: #007bff;
+
+.message-bubble.sent .message-content {
+  background: var(--bg-sent);
   color: white;
-  align-self: flex-end;
+  border-bottom-right-radius: 4px;
 }
-.received-message {
-  background-color: #e9ecef;
-  color: black;
-  align-self: flex-start;
+
+.message-bubble.received .message-content {
+  background: white;
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.message-text {
+  font-size: 15px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.message-time {
+  font-size: 11px;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.message-bubble.sent .message-time {
+  justify-content: flex-end;
+}
+
+/* Message Input */
+.message-input-wrapper {
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid var(--border-color);
+}
+
+.message-input-container {
+  display: flex;
+  align-items: center;
+  background: var(--bg-main);
+  border-radius: 24px;
+  padding: 8px 8px 8px 16px;
+  transition: all 0.3s;
+}
+
+.message-input-container:focus-within {
+  background: white;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+}
+
+.message-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 15px;
+  outline: none;
+}
+
+.send-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.send-button:hover {
+  background: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.send-button:active {
+  transform: scale(0.95);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Scrollbar Styles */
+.chat-list::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-list::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-list::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+.chat-list::-webkit-scrollbar-thumb:hover,
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-container {
+    grid-template-columns: 1fr;
+    height: calc(100vh - 120px);
+  }
+  
+  .chat-sidebar {
+    display: none;
+  }
+  
+  .chat-sidebar.mobile-show {
+    display: flex;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 1000;
+  }
+  
+  .message-content {
+    max-width: 85%;
+  }
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  max-width: fit-content;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-light);
+  margin: 0 2px;
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* New Chat Modal Styles */
+.users-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 4px;
+}
+
+.user-item:hover {
+  background: var(--bg-main);
+}
+
+.user-item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.user-item-info {
+  flex: 1;
+}
+
+.user-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.user-item-role {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: var(--shadow-hover);
+}
+
+.modal-header {
+  padding: 20px 24px;
+}
+
+.modal-body {
+  padding: 0 24px 24px;
 }
 </style>
+
+<script>
+let currentChatId = null;
+let currentUserId = {{ user_id }};
+let allChats = [];
+let currentFilter = 'all';
+let refreshInterval = null;
+
+// Fetch and display chats
+async function fetchChats(searchQuery = '') {
+  try {
+    const url = searchQuery ? `/athlete/chats?search=${encodeURIComponent(searchQuery)}` : '/athlete/chats';
+    const response = await fetch(url, {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch chats');
+    
+    const data = await response.json();
+    allChats = data;
+    displayChats(data);
+  } catch (error) {
+    console.error('Error fetching chats:', error);
+    document.getElementById('chatList').innerHTML = '<div class="text-center p-4 text-muted">Failed to load conversations</div>';
+  }
+}
+
+function displayChats(chats) {
+  const chatList = document.getElementById('chatList');
+  
+  // Filter chats based on current filter
+  let filteredChats = chats;
+  if (currentFilter === 'unread') {
+    filteredChats = chats.filter(chat => chat.unread_count > 0);
+  }
+  
+  if (filteredChats.length === 0) {
+    chatList.innerHTML = '<div class="text-center p-4 text-muted">No conversations found</div>';
+    return;
+  }
+  
+  chatList.innerHTML = filteredChats.map(chat => `
+    <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="selectChat(${chat.id}, '${escapeHtml(chat.name)}', '${chat.profile_image}', ${chat.is_online}, '${chat.last_seen}')">
+      <div class="chat-item-avatar-wrapper">
+        <img src="${chat.profile_image}" class="chat-item-avatar" alt="${escapeHtml(chat.name)}">
+        <span class="status-dot ${chat.is_online ? 'online' : 'offline'}"></span>
+      </div>
+      <div class="chat-item-content">
+        <div class="chat-item-header">
+          <span class="chat-item-name">${escapeHtml(chat.name)}</span>
+          <span class="chat-item-time">${chat.last_message_time}</span>
+        </div>
+        <div class="chat-item-message">
+          ${chat.is_sender ? '<i class="bi bi-check2-all"></i>' : ''}
+          ${truncate(chat.last_message, 35)}
+        </div>
+      </div>
+      ${chat.unread_count > 0 ? `<span class="unread-badge">${chat.unread_count}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function selectChat(chatId, chatName, chatImage, isOnline, lastSeen) {
+  currentChatId = chatId;
+  
+  // Update header
+  document.getElementById('chatTitle').textContent = chatName;
+  document.getElementById('chatProfileImage').src = chatImage;
+  
+  const statusElement = document.getElementById('chatStatus');
+  const statusIndicator = document.getElementById('statusIndicator');
+  
+  if (isOnline) {
+    statusElement.textContent = 'Online';
+    statusElement.className = 'text-success';
+    statusIndicator.className = 'status-indicator online';
+  } else {
+    statusElement.textContent = lastSeen || 'Offline';
+    statusElement.className = 'text-muted';
+    statusIndicator.className = 'status-indicator offline';
+  }
+  
+  // Show chat interface
+  document.querySelector('.empty-state').style.display = 'none';
+  document.getElementById('chatHeader').style.display = 'flex';
+  document.getElementById('chatMessages').style.display = 'flex';
+  document.getElementById('messageInputWrapper').style.display = 'block';
+  
+  // Update active state in sidebar
+  document.querySelectorAll('.chat-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  event.currentTarget?.classList.add('active');
+  
+  // Load messages
+  loadMessages(chatId);
+  
+  // Mobile: hide sidebar when chat selected
+  if (window.innerWidth <= 768) {
+    document.getElementById('chatSidebar').classList.remove('mobile-show');
+  }
+}
+
+async function loadMessages(chatId) {
+  const messagesContainer = document.getElementById('chatMessages');
+  messagesContainer.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  
+  try {
+    const response = await fetch(`/athlete/messages/${chatId}`, {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load messages');
+    
+    const messages = await response.json();
+    displayMessages(messages);
+    
+    // Refresh chat list to update unread count
+    fetchChats();
+  } catch (error) {
+    console.error('Error loading messages:', error);
+    messagesContainer.innerHTML = '<div class="text-center p-4 text-muted">Failed to load messages</div>';
+  }
+}
+
+function displayMessages(messages) {
+  const messagesContainer = document.getElementById('chatMessages');
+  
+  if (messages.length === 0) {
+    messagesContainer.innerHTML = '<div class="text-center text-muted p-4">No messages yet. Start the conversation!</div>';
+    return;
+  }
+  
+  let html = '';
+  let currentDate = '';
+  
+  messages.forEach((msg, index) => {
+    const msgDate = new Date(msg.sent_at);
+    const dateStr = formatDate(msgDate);
+    
+    // Add date divider if date changed
+    if (dateStr !== currentDate) {
+      html += `<div class="date-divider"><span>${dateStr}</span></div>`;
+      currentDate = dateStr;
+    }
+    
+    const isSent = msg.sender_id === currentUserId;
+    const timeStr = msgDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    html += `
+      <div class="message-bubble ${isSent ? 'sent' : 'received'}">
+        <div class="message-content">
+          <div class="message-text">${escapeHtml(msg.content)}</div>
+          <div class="message-time">
+            ${timeStr}
+            ${isSent && msg.is_read ? '<i class="bi bi-check2-all"></i>' : ''}
+            ${isSent && !msg.is_read ? '<i class="bi bi-check2"></i>' : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  messagesContainer.innerHTML = html;
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+async function sendMessage() {
+  const msgInput = document.getElementById('messageInput');
+  const msgContent = msgInput.value.trim();
+  
+  if (!msgContent || !currentChatId) return;
+  
+  // Disable send button
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  
+  try {
+    const response = await fetch('/athlete/send_message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+      },
+      body: JSON.stringify({
+        receiver_id: currentChatId,
+        content: msgContent
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to send message');
+    
+    const data = await response.json();
+    
+    // Add message to UI
+    const messagesContainer = document.getElementById('chatMessages');
+    const msgDate = new Date(data.message.sent_at);
+    const timeStr = msgDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    const messageHTML = `
+      <div class="message-bubble sent">
+        <div class="message-content">
+          <div class="message-text">${escapeHtml(msgContent)}</div>
+          <div class="message-time">
+            ${timeStr}
+            <i class="bi bi-check2"></i>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Clear input
+    msgInput.value = '';
+    
+    // Refresh chat list
+    fetchChats();
+  } catch (error) {
+    console.error('Error sending message:', error);
+    alert('Failed to send message. Please try again.');
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+// Utility functions
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function truncate(text, length) {
+  return text.length > length ? text.substring(0, length) + '...' : text;
+}
+
+function formatDate(date) {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  } else if (today - date < 7 * 24 * 60 * 60 * 1000) {
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  fetchChats();
+  
+  // Search functionality
+  const searchInput = document.getElementById('searchInput');
+  let searchTimeout;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      fetchChats(e.target.value);
+    }, 300);
+  });
+  
+  // Filter tabs
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+      currentFilter = e.target.dataset.filter;
+      displayChats(allChats);
+    });
+  });
+  
+  // Message input - send on Enter
+  document.getElementById('messageInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  
+  // Back button (mobile)
+  document.getElementById('backBtn')?.addEventListener('click', () => {
+    document.querySelector('.empty-state').style.display = 'flex';
+    document.getElementById('chatHeader').style.display = 'none';
+    document.getElementById('chatMessages').style.display = 'none';
+    document.getElementById('messageInputWrapper').style.display = 'none';
+    document.getElementById('chatSidebar').classList.add('mobile-show');
+  });
+  
+  // Auto-refresh chats every 30 seconds
+  refreshInterval = setInterval(() => {
+    if (!document.hidden) {
+      fetchChats();
+      if (currentChatId) {
+        loadMessages(currentChatId);
+      }
+    }
+  }, 30000);
+});
+
+// Clean up interval on page unload
+window.addEventListener('beforeunload', () => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+});
+
+// New Chat Modal Functions
+let allUsers = [];
+
+let lastFocusedElement = null;
+
+function openNewChatModal() {
+  // Store the element that was focused right before the modal opened
+  lastFocusedElement = document.activeElement;
+  
+  const modal = new bootstrap.Modal(document.getElementById('newChatModal'));
+  modal.show();
+  
+  // Load all available users
+  loadAllUsers();
+}
+
+// Event listener for the modal closing
+document.addEventListener('DOMContentLoaded', () => {
+    // ...
+    const newChatModal = document.getElementById('newChatModal');
+    newChatModal.addEventListener('hidden.bs.modal', function () {
+      if (lastFocusedElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+      }
+    });
+});
+
+async function loadAllUsers(searchQuery = '') {
+  const usersList = document.getElementById('usersList');
+  usersList.innerHTML = '<div class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm" role="status"></div></div>';
+  
+  try {
+    const url = searchQuery ? `/athlete/chats?all_users=true&search=${encodeURIComponent(searchQuery)}` : `/athlete/chats?all_users=true`;
+    const response = await fetch(url, {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load users');
+    
+    const users = await response.json();
+    
+    if (users.length === 0) {
+      usersList.innerHTML = '<div class="text-center text-muted py-4">No users found</div>';
+      return;
+    }
+    
+    // Check if the current user ID is not in the list (as a failsafe)
+    const filteredUsers = users.filter(user => user.id !== currentUserId);
+
+    usersList.innerHTML = filteredUsers.map(user => `
+      <div class="user-item" onclick="startNewChat(${user.id}, '${escapeHtml(user.name)}', '${user.profile_image}', ${user.is_online}, '${user.last_seen}')">
+        <img src="${user.profile_image}" class="user-item-avatar" alt="${escapeHtml(user.name)}">
+        <div class="user-item-info">
+          <div class="user-item-name">${escapeHtml(user.name)}</div>
+          <div class="user-item-role">${user.role}</div>
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('Error loading users:', error);
+    usersList.innerHTML = '<div class="text-center text-muted py-4">Failed to load users</div>';
+  }
+}
+
+function startNewChat(userId, userName, userImage, isOnline, lastSeen) {
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('newChatModal'));
+  modal.hide();
+
+  // Load messages for the new chat
+  selectChat(userId, userName, userImage, isOnline, lastSeen);
+
+  // Refresh the chat list after a short delay to ensure the new chat appears
+  setTimeout(() => {
+    fetchChats();
+  }, 500);
+}
+
+function selectChat(chatId, chatName, chatImage, isOnline, lastSeen, event) {
+  currentChatId = chatId;
+
+  // Update header
+  document.getElementById('chatTitle').textContent = chatName;
+  document.getElementById('chatProfileImage').src = chatImage;
+
+  const statusElement = document.getElementById('chatStatus');
+  const statusIndicator = document.getElementById('statusIndicator'); // Correct ID
+
+  if (isOnline) {
+    statusElement.textContent = 'Online';
+    statusElement.className = 'text-success';
+    statusIndicator.className = 'status-indicator online';
+  } else {
+    statusElement.textContent = lastSeen || 'Offline';
+    statusElement.className = 'text-muted';
+    statusIndicator.className = 'status-indicator offline';
+  }
+
+  // Show chat interface
+  document.querySelector('.empty-state').style.display = 'none';
+  document.getElementById('chatHeader').style.display = 'flex';
+  document.getElementById('chatMessages').style.display = 'flex';
+  document.getElementById('messageInputWrapper').style.display = 'block';
+
+  // Update active state in sidebar
+  document.querySelectorAll('.chat-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Check if a chat item for this user already exists in the sidebar.
+  // If it does, make it active.
+  const existingChatItem = document.querySelector(`.chat-item[onclick*="selectChat(${chatId}"]`);
+  if (existingChatItem) {
+    existingChatItem.classList.add('active');
+  }
+
+  // Load messages
+  loadMessages(chatId);
+
+  // Mobile: hide sidebar when chat selected
+  if (window.innerWidth <= 768) {
+    document.getElementById('chatSidebar').classList.remove('mobile-show');
+  }
+}
+
+// Modal search functionality
+document.addEventListener('DOMContentLoaded', () => {
+  const modalSearchInput = document.getElementById('modalSearchInput');
+  if (modalSearchInput) {
+    let modalSearchTimeout;
+    modalSearchInput.addEventListener('input', (e) => {
+      clearTimeout(modalSearchTimeout);
+      modalSearchTimeout = setTimeout(() => {
+        loadAllUsers(e.target.value);
+      }, 300);
+    });
+  }
+});
+
+</script>
 {% endblock %}

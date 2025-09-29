@@ -1,144 +1,341 @@
 from flask import Blueprint, request, jsonify, render_template, url_for
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import db
 from app.models import User, CoachAthlete, Message
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from . import athlete_bp
 
-# ... (دالة is_athlete)
 def is_athlete(user_id):
+    """Check if user is an athlete"""
     user = User.query.get(user_id)
     return user and user.is_athlete
 
-# Route to get the chats list for the athlete
+def is_user_online(user):
+    """Check if user was active in the last 5 minutes"""
+    if not user.last_active:
+        return False
+    return datetime.utcnow() - user.last_active < timedelta(minutes=5)
+
+# In athlete_bp.py
+
 @athlete_bp.route("/chats", methods=["GET"])
 @jwt_required()
 def get_chats():
-    identity = get_jwt_identity()
-    user = User.query.get(identity)
-    
-    if not user or not user.is_athlete:
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    # Fetch all coaches linked to the current athlete
-    linked_coaches = (
-        db.session.query(User)
-        .join(CoachAthlete, CoachAthlete.coach_id == User.id)
-        .filter(CoachAthlete.athlete_id == identity, CoachAthlete.is_active == True)
-        .all()
-    )
-
-    # Fetch all athletes linked to the current coach (if user is a coach)
-    # Note: this part is for a coach's view, we'll keep it for symmetry, but for an athlete it will be empty
-    linked_athletes = (
-        db.session.query(User)
-        .join(CoachAthlete, CoachAthlete.athlete_id == User.id)
-        .filter(CoachAthlete.coach_id == identity, CoachAthlete.is_active == True)
-        .all()
-    )
-
-    # Combine all unique contacts
-    contacts = list(set(linked_coaches + linked_athletes))
-
-    # A more robust way to get all contacts:
-    # Get all users who have chatted with the current user, or are linked to them.
-    all_contacts_ids = db.session.query(Message.sender_id).filter(Message.receiver_id == identity).union(
-        db.session.query(Message.receiver_id).filter(Message.sender_id == identity)
-    )
-    all_contacts_ids = [row[0] for row in all_contacts_ids.all()]
-
-    coaches_ids = [c.coach_id for c in CoachAthlete.query.filter_by(athlete_id=identity).all()]
-    all_ids_to_fetch = set(all_contacts_ids + coaches_ids)
-    
-    # Exclude the current user from the list
-    all_ids_to_fetch.discard(identity)
-    
-    contacts = User.query.filter(User.id.in_(all_ids_to_fetch)).all()
-    
-    chats = []
-    for contact in contacts:
-        last_message = Message.query.filter(
-            or_(
-                (Message.sender_id == identity and Message.receiver_id == contact.id),
-                (Message.sender_id == contact.id and Message.receiver_id == identity)
-            )
-        ).order_by(Message.sent_at.desc()).first()
+    """
+    Get list of all chats/contacts for the current user
+    or all potential chat partners if 'all_users' is true.
+    """
+    try:
+        identity = get_jwt_identity()
+        user = User.query.get(identity)
         
-        # Determine online status - for now, this is a placeholder
-        # You would need a real-time system (like WebSockets) to get this data
-        is_online = False # Placeholder for now
+        if not user:
+            return jsonify({"msg": "User not found"}), 404
 
-        chats.append({
-            "id": contact.id,
-            "name": contact.name,
-            "profile_image": url_for('static', filename=f'uploads/{contact.profile_image}' if contact.profile_image else 'default.jpg'),
-            "last_message": last_message.content if last_message else "No messages yet.",
-            "last_message_time": last_message.sent_at.strftime("%I:%M %p") if last_message else "",
-            "is_online": is_online
-        })
-    
-    # Sort chats by the last message time
-    chats.sort(key=lambda x: x['last_message_time'], reverse=True)
-    
-    return jsonify(chats)
+        # Update user's last_active timestamp
+        user.last_active = datetime.utcnow()
+        db.session.commit()
 
-# Route to get messages for a specific chat
+        # Check for the 'all_users' query parameter
+        all_users_mode = request.args.get('all_users', 'false').lower() == 'true'
+        search_query = request.args.get('search', '').strip().lower()
+
+        if all_users_mode:
+            # Fetch all active users for the 'New Chat' modal
+            contacts_query = User.query.filter(
+                User.id != identity,
+                User.is_deleted == False,
+                User.status == 'active'
+            )
+            
+            # Apply search filter
+            if search_query:
+                contacts_query = contacts_query.filter(
+                    or_(
+                        User.name.ilike(f'%{search_query}%'),
+                        User.email.ilike(f'%{search_query}%')
+                    )
+                )
+            
+            contacts = contacts_query.all()
+            
+            users_list = []
+            for contact in contacts:
+                is_online = is_user_online(contact)
+                last_seen = ""
+                if not is_online and contact.last_active:
+                    time_diff = datetime.utcnow() - contact.last_active
+                    if time_diff.days > 0:
+                        last_seen = f"{time_diff.days}d ago"
+                    elif time_diff.seconds >= 3600:
+                        last_seen = f"{time_diff.seconds // 3600}h ago"
+                    elif time_diff.seconds >= 60:
+                        last_seen = f"{time_diff.seconds // 60}m ago"
+                    else:
+                        last_seen = "Just now"
+                
+                profile_image_url = url_for('static', filename=f'uploads/{contact.profile_image}') if contact.profile_image and contact.profile_image != 'default.jpg' else url_for('static', filename='images/default.jpg')
+
+                users_list.append({
+                    "id": contact.id,
+                    "name": contact.name,
+                    "email": contact.email,
+                    "role": contact.role,
+                    "profile_image": profile_image_url,
+                    "is_online": is_online,
+                    "last_seen": last_seen,
+                })
+
+            return jsonify(users_list)
+        
+        # Original logic for existing chats remains the same below this line
+        # ... (rest of the original get_chats function)
+        linked_athletes_ids = []
+        if user.is_coach:
+            linked_athletes_ids = [
+                ca.athlete_id for ca in CoachAthlete.query.filter_by(
+                    coach_id=identity, 
+                    is_active=True
+                ).all()
+            ]
+        
+        linked_coaches_ids = []
+        if user.is_athlete:
+            linked_coaches_ids = [
+                ca.coach_id for ca in CoachAthlete.query.filter_by(
+                    athlete_id=identity, 
+                    is_active=True
+                ).all()
+            ]
+        
+        message_contacts_subquery = db.session.query(Message.sender_id).filter(
+            Message.receiver_id == identity
+        ).union(
+            db.session.query(Message.receiver_id).filter(
+                Message.sender_id == identity
+            )
+        )
+        message_contacts_ids = [row[0] for row in message_contacts_subquery.all()]
+        
+        all_contact_ids = set(linked_athletes_ids + linked_coaches_ids + message_contacts_ids)
+        all_contact_ids.discard(identity)
+        
+        if not all_contact_ids:
+            return jsonify([])
+        
+        contacts_query = User.query.filter(
+            User.id.in_(all_contact_ids),
+            User.is_deleted == False,
+            User.status == 'active'
+        )
+        
+        if search_query:
+            contacts_query = contacts_query.filter(
+                or_(
+                    User.name.ilike(f'%{search_query}%'),
+                    User.email.ilike(f'%{search_query}%')
+                )
+            )
+        
+        contacts = contacts_query.all()
+        
+        chats = []
+        for contact in contacts:
+            last_message = Message.query.filter(
+                or_(
+                    and_(Message.sender_id == identity, Message.receiver_id == contact.id),
+                    and_(Message.sender_id == contact.id, Message.receiver_id == identity)
+                )
+            ).order_by(Message.sent_at.desc()).first()
+            
+            unread_count = Message.query.filter(
+                Message.sender_id == contact.id,
+                Message.receiver_id == identity,
+                Message.is_read == False
+            ).count()
+            
+            is_online = is_user_online(contact)
+            
+            last_seen = ""
+            if not is_online and contact.last_active:
+                time_diff = datetime.utcnow() - contact.last_active
+                if time_diff.days > 0:
+                    last_seen = f"{time_diff.days}d ago"
+                elif time_diff.seconds >= 3600:
+                    last_seen = f"{time_diff.seconds // 3600}h ago"
+                elif time_diff.seconds >= 60:
+                    last_seen = f"{time_diff.seconds // 60}m ago"
+                else:
+                    last_seen = "Just now"
+            
+            profile_image_url = url_for('static', filename=f'uploads/{contact.profile_image}') if contact.profile_image and contact.profile_image != 'default.jpg' else url_for('static', filename='images/default.jpg')
+            
+            chats.append({
+                "id": contact.id,
+                "name": contact.name,
+                "email": contact.email,
+                "role": contact.role,
+                "profile_image": profile_image_url,
+                "last_message": last_message.content if last_message else "No messages yet",
+                "last_message_time": last_message.sent_at.strftime("%I:%M %p") if last_message else "",
+                "last_message_date": last_message.sent_at.isoformat() if last_message else None,
+                "is_online": is_online,
+                "last_seen": last_seen,
+                "unread_count": unread_count,
+                "is_sender": last_message.sender_id == identity if last_message else False
+            })
+        
+        chats.sort(key=lambda x: x['last_message_date'] if x['last_message_date'] else '', reverse=True)
+        
+        return jsonify(chats)
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in get_chats: {str(e)}")
+        return jsonify({"msg": "Internal server error"}), 500
+
 @athlete_bp.route("/messages/<int:contact_id>", methods=["GET"])
 @jwt_required()
 def get_messages(contact_id):
-    identity = get_jwt_identity()
-    
-    messages = Message.query.filter(
-        or_(
-            (Message.sender_id == identity and Message.receiver_id == contact_id),
-            (Message.sender_id == contact_id and Message.receiver_id == identity)
-        )
-    ).order_by(Message.sent_at.asc()).all()
-    
-    return jsonify([
-        {
-            "sender_id": msg.sender_id,
-            "content": msg.content,
-            "sent_at": msg.sent_at.isoformat()
-        }
-        for msg in messages
-    ])
+    """Get all messages between current user and contact"""
+    try:
+        identity = get_jwt_identity()
+        
+        # Verify contact exists
+        contact = User.query.get(contact_id)
+        if not contact:
+            return jsonify({"msg": "Contact not found"}), 404
+        
+        # Mark messages as read
+        unread_messages = Message.query.filter(
+            Message.sender_id == contact_id,
+            Message.receiver_id == identity,
+            Message.is_read == False
+        ).all()
+        
+        for msg in unread_messages:
+            msg.is_read = True
+        
+        if unread_messages:
+            db.session.commit()
+        
+        # Fetch all messages
+        messages = Message.query.filter(
+            or_(
+                and_(Message.sender_id == identity, Message.receiver_id == contact_id),
+                and_(Message.sender_id == contact_id, Message.receiver_id == identity)
+            )
+        ).order_by(Message.sent_at.asc()).all()
+        
+        return jsonify([
+            {
+                "id": msg.id,
+                "sender_id": msg.sender_id,
+                "content": msg.content,
+                "sent_at": msg.sent_at.isoformat(),
+                "is_read": msg.is_read
+            }
+            for msg in messages
+        ])
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in get_messages: {str(e)}")
+        return jsonify({"msg": "Internal server error"}), 500
 
-# Route to send a message
 @athlete_bp.route("/send_message", methods=["POST"])
 @jwt_required()
 def send_message():
-    identity = get_jwt_identity()
-    data = request.json
-    receiver_id = data.get("receiver_id")
-    content = data.get("content")
-
-    if not receiver_id or not content:
-        return jsonify({"msg": "Receiver ID and content are required"}), 400
-
+    """Send a new message"""
     try:
+        identity = get_jwt_identity()
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"msg": "No data provided"}), 400
+        
+        receiver_id = data.get("receiver_id")
+        content = data.get("content", "").strip()
+
+        if not receiver_id or not content:
+            return jsonify({"msg": "Receiver ID and content are required"}), 400
+
+        # Verify receiver exists
+        receiver = User.query.get(receiver_id)
+        if not receiver or receiver.is_deleted or receiver.status != 'active':
+            return jsonify({"msg": "Receiver not found or inactive"}), 404
+
+        # Create message
         new_message = Message(
             sender_id=identity,
             receiver_id=receiver_id,
             content=content,
-            sent_at=datetime.utcnow()
+            sent_at=datetime.utcnow(),
+            is_read=False
         )
+        
         db.session.add(new_message)
         db.session.commit()
-        return jsonify({"msg": "Message sent successfully"}), 201
+        
+        return jsonify({
+            "msg": "Message sent successfully",
+            "message": {
+                "id": new_message.id,
+                "sender_id": new_message.sender_id,
+                "content": new_message.content,
+                "sent_at": new_message.sent_at.isoformat(),
+                "is_read": new_message.is_read
+            }
+        }), 201
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": f"Error: {str(e)}"}), 500
+        print(f"Error in send_message: {str(e)}")
+        return jsonify({"msg": "Internal server error"}), 500
 
-# Main communication route (just renders the template)
+@athlete_bp.route("/mark_as_read/<int:message_id>", methods=["POST"])
+@jwt_required()
+def mark_as_read(message_id):
+    """Mark a specific message as read"""
+    try:
+        identity = get_jwt_identity()
+        
+        message = Message.query.get(message_id)
+        if not message:
+            return jsonify({"msg": "Message not found"}), 404
+        
+        if message.receiver_id != identity:
+            return jsonify({"msg": "Unauthorized"}), 403
+        
+        message.is_read = True
+        db.session.commit()
+        
+        return jsonify({"msg": "Message marked as read"}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in mark_as_read: {str(e)}")
+        return jsonify({"msg": "Internal server error"}), 500
+
 @athlete_bp.route("/communication", methods=["GET"])
 @jwt_required()
 def communication():
-    identity = get_jwt_identity()
-    if not is_athlete(identity):
-        return jsonify({"msg": "Unauthorized"}), 403
-    
-    # Pass the user's ID to the template
-    return render_template("athlete/communication.html", user_id=identity)
+    """Render the communication page"""
+    try:
+        identity = get_jwt_identity()
+        user = User.query.get(identity)
+        
+        if not user:
+            return jsonify({"msg": "User not found"}), 404
+        
+        return render_template(
+            "athlete/communication.html", 
+            user_id=identity, 
+            user_name=user.name
+        )
+        
+    except Exception as e:
+        print(f"Error in communication: {str(e)}")
+        return jsonify({"msg": "Internal server error"}), 500

@@ -2,127 +2,542 @@
 
 {% block content %}
 <section class="section dashboard">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h5 class="m-0 fw-bold text-primary">Book Sessions</h5>
-    <button class="btn btn-primary rounded-pill animate-pulse" data-bs-toggle="modal" data-bs-target="#sessionModal">
-      <i class="bi bi-plus-lg me-2"></i> New Session
-    </button>
+  <!-- Header with gradient background -->
+  <div class="position-relative mb-5 p-4 rounded-4 bg-gradient-primary-subtle overflow-hidden">
+    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10">
+      <div class="floating-shapes"></div>
+    </div>
+    <div class="position-relative z-1 d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="fw-bold text-primary mb-2">📅 Book Your Sessions</h2>
+        <p class="text-muted mb-0">Schedule training sessions with your coaches</p>
+      </div>
+      <button class="btn btn-primary btn-lg rounded-pill shadow-lg hover-lift" data-bs-toggle="modal" data-bs-target="#sessionModal">
+        <i class="bi bi-plus-circle me-2"></i> New Session
+      </button>
+    </div>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card shadow-lg">
-        <div class="card-body">
-          <div id="calendar"></div>
+  <!-- Quick Stats Cards -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm hover-lift h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-calendar-check fs-3 text-primary"></i>
+          </div>
+          <h3 class="fw-bold mb-1" id="upcomingSessions">0</h3>
+          <p class="text-muted small mb-0">Upcoming Sessions</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm hover-lift h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-clock-history fs-3 text-success"></i>
+          </div>
+          <h3 class="fw-bold mb-1" id="totalHours">0</h3>
+          <p class="text-muted small mb-0">Total Hours</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm hover-lift h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-people fs-3 text-warning"></i>
+          </div>
+          <h3 class="fw-bold mb-1">{{ coaches|length }}</h3>
+          <p class="text-muted small mb-0">Active Coaches</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm hover-lift h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-calendar-event fs-3 text-info"></i>
+          </div>
+          <h3 class="fw-bold mb-1" id="thisWeek">0</h3>
+          <p class="text-muted small mb-0">This Week</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="sessionsList" class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3"></div>
+  <!-- View Toggle -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="btn-group shadow-sm" role="group">
+      <input type="radio" class="btn-check" name="viewMode" id="calendarView" checked>
+      <label class="btn btn-outline-primary" for="calendarView">
+        <i class="bi bi-calendar3 me-2"></i>Calendar View
+      </label>
+      <input type="radio" class="btn-check" name="viewMode" id="listView">
+      <label class="btn btn-outline-primary" for="listView">
+        <i class="bi bi-list-ul me-2"></i>List View
+      </label>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" id="filterCoach" style="width: auto;">
+        <option value="">All Coaches</option>
+        {% for coach in coaches %}
+        <option value="{{ coach.id }}">{{ coach.name }}</option>
+        {% endfor %}
+      </select>
+      <select class="form-select form-select-sm" id="filterStatus" style="width: auto;">
+        <option value="">All Status</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+  </div>
 
-  <div id="sessionsEmpty" class="text-center py-5 d-none">
-    <img src="/static/images/empty-calendar.png" alt="No sessions" class="img-fluid mb-3" style="max-width: 150px;">
-    <p class="mt-2 text-muted fs-5">No sessions booked yet. Schedule one now!</p>
-    <button class="btn btn-outline-primary rounded-pill mt-3 animate-hover" data-bs-toggle="modal" data-bs-target="#sessionModal">Book Session</button>
+  <!-- Calendar View -->
+  <div id="calendarSection" class="mb-5">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="card-body p-4">
+        <div id="calendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- List View -->
+  <div id="listSection" class="d-none">
+    <div class="card border-0 shadow-lg rounded-4">
+      <div class="card-body p-4">
+        <div id="sessionsList"></div>
+        <div id="sessionsEmpty" class="text-center py-5 d-none">
+          <div class="mb-4">
+            <i class="bi bi-calendar-x display-1 text-muted opacity-50"></i>
+          </div>
+          <h4 class="text-muted mb-3">No sessions found</h4>
+          <p class="text-muted mb-4">Start by booking your first training session!</p>
+          <button class="btn btn-primary btn-lg rounded-pill shadow hover-lift" data-bs-toggle="modal" data-bs-target="#sessionModal">
+            <i class="bi bi-plus-circle me-2"></i> Book First Session
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- Enhanced Session Modal -->
 <div class="modal fade" id="sessionModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form id="sessionForm" class="modal-content shadow-lg">
-      <div class="modal-header bg-light">
-        <h5 class="modal-title">New Session</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <form id="sessionForm" class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 bg-gradient-primary text-white">
+        <div>
+          <h4 class="modal-title mb-1">
+            <i class="bi bi-calendar-plus me-2"></i>
+            <span id="modalTitle">Book New Session</span>
+          </h4>
+          <p class="small mb-0 opacity-75">Schedule a training session with your coach</p>
+        </div>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-4">
         <input type="hidden" id="sessionId">
-        <div class="mb-3">
-          <label class="form-label">Title</label>
-          <input id="sessionTitle" type="text" class="form-control rounded" required placeholder="e.g., Cardio Session">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Coach</label>
-          <select id="coachSelect" class="form-select rounded" required>
-            <option value="" disabled selected>Select a coach</option>
-            {% for coach in coaches %}
-            <option value="{{ coach.id }}">{{ coach.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
         
-        <div class="mb-3">
-          <label class="form-label">Session Type</label>
-          <select id="sessionType" class="form-select rounded" required>
-            <option value="virtual">Virtual</option>
-            <option value="in_person">In Person</option>
-          </select>
+        <div class="row g-4">
+          <!-- Session Title -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-pencil text-primary me-2"></i>Session Title
+            </label>
+            <input id="sessionTitle" type="text" class="form-control form-control-lg rounded-3 shadow-sm" required placeholder="e.g., Cardio Training, Strength Session">
+          </div>
+
+          <!-- Coach Selection with Avatar -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-person-badge text-primary me-2"></i>Select Coach
+            </label>
+            <select id="coachSelect" class="form-select form-select-lg rounded-3 shadow-sm" required>
+              <option value="" disabled selected>Choose your coach</option>
+              {% for coach in coaches %}
+              <option value="{{ coach.id }}" data-name="{{ coach.name }}">{{ coach.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Session Type -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-geo-alt text-primary me-2"></i>Session Type
+            </label>
+            <select id="sessionType" class="form-select form-select-lg rounded-3 shadow-sm" required>
+              <option value="virtual">🌐 Virtual Session</option>
+              <option value="in_person">🏋️ In-Person Training</option>
+            </select>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-calendar-date text-primary me-2"></i>Date & Time
+            </label>
+            <input id="sessionDate" type="datetime-local" class="form-control form-control-lg rounded-3 shadow-sm" required>
+          </div>
+
+          <!-- Duration -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-clock text-primary me-2"></i>Duration
+            </label>
+            <div class="input-group input-group-lg">
+              <input id="sessionDuration" type="number" min="15" step="15" class="form-control rounded-3 shadow-sm" value="60" required>
+              <span class="input-group-text bg-light border-0 rounded-3">minutes</span>
+            </div>
+          </div>
+
+          <!-- Notes (Optional) -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-chat-left-text text-primary me-2"></i>Notes (Optional)
+            </label>
+            <textarea id="sessionNotes" class="form-control rounded-3 shadow-sm" rows="3" placeholder="Add any special requirements or notes..."></textarea>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Date & Time</label>
-          <input id="sessionDate" type="datetime-local" class="form-control rounded" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Duration (min)</label>
-          <input id="sessionDuration" type="number" min="15" class="form-control rounded" value="60" required>
+        <!-- Summary Card -->
+        <div class="card bg-light border-0 mt-4 d-none" id="sessionSummary">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3">📋 Session Summary</h6>
+            <div class="row g-3 small">
+              <div class="col-6">
+                <strong>Coach:</strong>
+                <p class="mb-0 text-muted" id="summaryCoach">-</p>
+              </div>
+              <div class="col-6">
+                <strong>Date:</strong>
+                <p class="mb-0 text-muted" id="summaryDate">-</p>
+              </div>
+              <div class="col-6">
+                <strong>Duration:</strong>
+                <p class="mb-0 text-muted" id="summaryDuration">-</p>
+              </div>
+              <div class="col-6">
+                <strong>Type:</strong>
+                <p class="mb-0 text-muted" id="summaryType">-</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="modal-footer bg-light">
-        <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary rounded-pill animate-hover" type="submit">Book</button>
+      <div class="modal-footer border-0 bg-light">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-2"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow hover-lift">
+          <i class="bi bi-check-circle me-2"></i>Book Session
+        </button>
       </div>
     </form>
   </div>
 </div>
+
+<!-- Session Details Modal -->
+<div class="modal fade" id="sessionDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 bg-primary text-white">
+        <h5 class="modal-title">Session Details</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="sessionDetailsBody">
+        <!-- Content will be populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.bg-gradient-primary-subtle {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 202, 240, 0.1) 100%);
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+}
+
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.floating-shapes {
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(13, 110, 253, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(13, 202, 240, 0.1) 0%, transparent 50%);
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.fc-event {
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.fc-event:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+.fc-daygrid-day:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  cursor: pointer;
+}
+
+.session-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.session-card:hover {
+  border-left-color: #0d6efd;
+  transform: translateX(5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.badge-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* Form enhancements */
+.form-control:focus, .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.modal-content {
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  let allSessions = [];
+  let calendar;
+
+  // Initialize Calendar
   const calendarEl = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(calendarEl, {
+  calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
     },
+    buttonText: {
+      today: 'Today',
+      month: 'Month',
+      week: 'Week',
+      day: 'Day',
+      list: 'Agenda'
+    },
+    height: 'auto',
     dateClick: function(info) {
-      document.getElementById('sessionDate').value = info.dateStr;
+      const dateInput = document.getElementById('sessionDate');
+      dateInput.value = info.dateStr + 'T09:00';
       new bootstrap.Modal(document.getElementById('sessionModal')).show();
     },
+    eventClick: function(info) {
+      showSessionDetails(info.event);
+    },
     events: function(fetchInfo, successCallback, failureCallback) {
-      fetch('/athlete/api/sessions', {
-        headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
-      })
-      .then(response => response.json())
-      .then(data => {
-        const events = data.map(session => ({
-          title: session.title,
-          start: session.start,
-          end: session.end,
-          color: session.color,
-          extendedProps: {
-            is_athlete_session: session.is_athlete_session,
-            coach_id: session.coach_id
-          }
-        }));
-        successCallback(events);
-      })
-      .catch(error => {
-        console.error('Error fetching sessions:', error);
-        failureCallback(error);
-      });
+      loadSessions(successCallback, failureCallback);
     }
   });
   calendar.render();
 
+  // Load Sessions
+  function loadSessions(successCallback, failureCallback) {
+    fetch('/athlete/api/sessions', {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("access_token") }
+    })
+    .then(response => response.json())
+    .then(data => {
+      allSessions = data;
+      updateStats(data);
+      renderListView(data);
+      
+      const events = data.map(session => ({
+        id: session.id,
+        title: session.title,
+        start: session.start,
+        end: session.end,
+        color: session.color,
+        extendedProps: session
+      }));
+      
+      if (successCallback) successCallback(events);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      if (failureCallback) failureCallback(error);
+    });
+  }
+
+  // Update Statistics
+  function updateStats(sessions) {
+    const now = new Date();
+    const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const upcoming = sessions.filter(s => new Date(s.start) > new Date()).length;
+    const thisWeek = sessions.filter(s => {
+      const d = new Date(s.start);
+      return d >= weekStart && d <= weekEnd;
+    }).length;
+    
+    const totalMinutes = sessions.reduce((sum, s) => {
+      const start = new Date(s.start);
+      const end = new Date(s.end);
+      return sum + (end - start) / 60000;
+    }, 0);
+    const totalHours = Math.round(totalMinutes / 60);
+
+    document.getElementById('upcomingSessions').textContent = upcoming;
+    document.getElementById('thisWeek').textContent = thisWeek;
+    document.getElementById('totalHours').textContent = totalHours + 'h';
+  }
+
+  // Render List View
+  function renderListView(sessions) {
+    const container = document.getElementById('sessionsList');
+    const empty = document.getElementById('sessionsEmpty');
+    
+    if (!sessions || sessions.length === 0) {
+      container.innerHTML = '';
+      empty.classList.remove('d-none');
+      return;
+    }
+
+    empty.classList.add('d-none');
+    
+    // Sort by date
+    sessions.sort((a, b) => new Date(a.start) - new Date(b.start));
+    
+    let html = '<div class="list-group">';
+    sessions.forEach(session => {
+      const start = new Date(session.start);
+      const end = new Date(session.end);
+      const duration = Math.round((end - start) / 60000);
+      const isPast = start < new Date();
+      
+      html += `
+        <div class="list-group-item list-group-item-action session-card border-0 mb-3 rounded-3 shadow-sm">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center mb-2">
+                <h5 class="mb-0 me-3">${session.title}</h5>
+                <span class="badge ${isPast ? 'bg-secondary' : 'bg-primary'} badge-status">
+                  ${isPast ? 'Completed' : 'Upcoming'}
+                </span>
+              </div>
+              <div class="d-flex flex-wrap gap-3 small text-muted">
+                <span><i class="bi bi-calendar3 me-1"></i>${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span><i class="bi bi-clock me-1"></i>${start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                <span><i class="bi bi-hourglass-split me-1"></i>${duration} min</span>
+                <span><i class="bi bi-person me-1"></i>Coach</span>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="viewSessionDetails('${session.id}')">
+              <i class="bi bi-eye"></i> View
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+  }
+
+  // View Toggle
+  document.querySelectorAll('input[name="viewMode"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const calendarSection = document.getElementById('calendarSection');
+      const listSection = document.getElementById('listSection');
+      
+      if (this.id === 'calendarView') {
+        calendarSection.classList.remove('d-none');
+        listSection.classList.add('d-none');
+        setTimeout(() => calendar.updateSize(), 100);
+      } else {
+        calendarSection.classList.add('d-none');
+        listSection.classList.remove('d-none');
+      }
+    });
+  });
+
+  // Form Summary Update
+  ['coachSelect', 'sessionDate', 'sessionDuration', 'sessionType'].forEach(id => {
+    document.getElementById(id).addEventListener('change', updateFormSummary);
+  });
+
+  function updateFormSummary() {
+    const coach = document.getElementById('coachSelect');
+    const date = document.getElementById('sessionDate');
+    const duration = document.getElementById('sessionDuration');
+    const type = document.getElementById('sessionType');
+    const summary = document.getElementById('sessionSummary');
+
+    if (coach.value && date.value) {
+      summary.classList.remove('d-none');
+      document.getElementById('summaryCoach').textContent = coach.options[coach.selectedIndex].text;
+      document.getElementById('summaryDate').textContent = new Date(date.value).toLocaleString();
+      document.getElementById('summaryDuration').textContent = duration.value + ' minutes';
+      document.getElementById('summaryType').textContent = type.options[type.selectedIndex].text;
+    }
+  }
+
+  // Form Submission
   document.getElementById('sessionForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Booking...';
     
     const payload = {
       title: document.getElementById('sessionTitle').value,
@@ -143,18 +558,93 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       if (data.msg === "Session booked successfully!") {
-        alert("Session booked successfully!");
-        document.getElementById('sessionModal').querySelector('.btn-close').click();
+        showSuccessAlert("Session booked successfully!");
+        bootstrap.Modal.getInstance(document.getElementById('sessionModal')).hide();
         calendar.refetchEvents();
+        this.reset();
+        document.getElementById('sessionSummary').classList.add('d-none');
       } else {
-        alert(`Error: ${data.msg}`);
+        showErrorAlert(data.msg);
       }
     })
     .catch(error => {
-      alert("An error occurred. Please try again.");
+      showErrorAlert("An error occurred. Please try again.");
       console.error('Error:', error);
+    })
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
     });
   });
+
+  // Success/Error Alerts
+  function showSuccessAlert(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg';
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+      <i class="bi bi-check-circle me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+  }
+
+  function showErrorAlert(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg';
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+      <i class="bi bi-exclamation-circle me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+  }
+
+  // Show Session Details
+  window.viewSessionDetails = function(sessionId) {
+    const session = allSessions.find(s => s.id == sessionId);
+    if (session) showSessionDetails({ extendedProps: session, ...session });
+  };
+
+  function showSessionDetails(event) {
+    const session = event.extendedProps || event;
+    const start = new Date(session.start || event.start);
+    const end = new Date(session.end || event.end);
+    const duration = Math.round((end - start) / 60000);
+
+    const html = `
+      <div class="p-2">
+        <h4 class="mb-4">${session.title}</h4>
+        <div class="row g-3">
+          <div class="col-6">
+            <p class="mb-2 small text-muted">Date</p>
+            <p class="fw-semibold">${start.toLocaleDateString()}</p>
+          </div>
+          <div class="col-6">
+            <p class="mb-2 small text-muted">Time</p>
+            <p class="fw-semibold">${start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+          <div class="col-6">
+            <p class="mb-2 small text-muted">Duration</p>
+            <p class="fw-semibold">${duration} minutes</p>
+          </div>
+          <div class="col-6">
+            <p class="mb-2 small text-muted">Status</p>
+            <p class="fw-semibold"><span class="badge bg-primary">Scheduled</span></p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('sessionDetailsBody').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('sessionDetailsModal')).show();
+  }
+
+  // Set minimum date to today
+  const today = new Date().toISOString().slice(0, 16);
+  document.getElementById('sessionDate').min = today;
 });
 </script>
 {% endblock %}

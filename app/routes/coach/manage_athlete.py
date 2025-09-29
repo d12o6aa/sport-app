@@ -24,7 +24,7 @@ def get_coach_athletes():
         return jsonify({"msg": "Unauthorized"}), 403
 
     athletes = (
-        db.session.query(User, AthleteProfile, func.max(ActivityLog.created_at), func.count(WorkoutLog.id), func.count(WorkoutLog.id).filter(WorkoutLog.compliance_status == "completed"))
+        db.session.query(User, AthleteProfile, func.max(ActivityLog.created_at), func.count(WorkoutLog.id), func.count(WorkoutLog.id).filter(WorkoutLog.completion_status == "completed"))
         .join(CoachAthlete, CoachAthlete.athlete_id == User.id)
         .outerjoin(AthleteProfile, AthleteProfile.user_id == User.id)
         .outerjoin(ActivityLog, ActivityLog.user_id == User.id)
