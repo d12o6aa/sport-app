@@ -4,14 +4,12 @@
 <style>
   :root {
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --warning-gradient: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
     --danger-gradient: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
     --glass-bg: rgba(255, 255, 255, 0.15);
     --glass-border: rgba(255, 255, 255, 0.2);
     --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.37);
-    --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.4);
   }
 
   body {
@@ -19,358 +17,434 @@
     min-height: 100vh;
   }
 
-  .glass-card {
+  .health-card {
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     box-shadow: var(--shadow-soft);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
   }
 
-  .glass-card:hover {
+  .health-card:hover {
     transform: translateY(-5px);
-    box-shadow: var(--shadow-hover);
-  }
-
-  .chart-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 20px;
-    padding: 1.5rem;
-    transition: all 0.4s ease;
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-  }
-
-  .chart-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
   }
 
   .metric-card {
     background: linear-gradient(145deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 20px;
-    padding: 2rem;
+    border-radius: 15px;
+    padding: 1.5rem;
     text-align: center;
-    transition: all 0.4s ease;
-    position: relative;
+    transition: all 0.3s ease;
     height: 100%;
   }
 
-  .metric-value {
-    font-size: 3rem;
+  .vital-sign {
+    font-size: 2rem;
     font-weight: 700;
     color: white;
-    margin: 1rem 0;
+    margin: 0.5rem 0;
   }
 
-  .metric-label {
+  .vital-label {
     color: rgba(255, 255, 255, 0.8);
-    font-weight: 600;
+    font-size: 0.9rem;
     margin-bottom: 0.5rem;
-    font-size: 1.1rem;
   }
 
-  .progress-circle {
-    width: 120px;
-    height: 120px;
+  .status-indicator {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    position: relative;
-    margin: 0 auto 1rem;
-    background: conic-gradient(from 0deg, var(--color-start) 0deg, var(--color-end) var(--progress-angle), rgba(255,255,255,0.2) var(--progress-angle));
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
+    margin-left: 0.5rem;
   }
 
-  .progress-circle::before {
-    content: '';
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 50%;
-    backdrop-filter: blur(10px);
+  .status-normal { background: #4caf50; }
+  .status-warning { background: #ff9800; }
+  .status-critical { background: #f44336; }
+
+  .trend-chart {
+    height: 60px;
+    margin-top: 0.5rem;
   }
 
-  .progress-circle-text {
-    position: relative;
-    z-index: 2;
-    font-weight: 700;
-    font-size: 1.4rem;
-    color: #333;
-    text-align: center;
+  .alert-banner {
+    background: var(--warning-gradient);
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: white;
+    display: none;
+  }
+
+  .alert-banner.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+  }
+
+  .recommendation-card {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    color: white;
+  }
+
+  .recommendation-card.warning {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: rgba(255, 152, 0, 0.3);
+  }
+
+  .health-tip {
+    background: rgba(33, 150, 243, 0.1);
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 10px 10px 0;
+    color: white;
+  }
+
+  .quick-action-btn {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin: 0.25rem;
+  }
+
+  .quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  .progress-bar {
+    background: var(--success-gradient);
+    border-radius: 10px;
+    transition: width 0.8s ease;
   }
 
   .chart-container {
     height: 300px;
-    position: relative;
-  }
-
-  .chart-container.small {
-    height: 200px;
-  }
-
-  .chart-container.large {
-    height: 400px;
-  }
-
-  .header-section {
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
-    backdrop-filter: blur(20px);
-    border-radius: 25px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(255,255,255,0.2);
-  }
-
-  .btn {
-    border-radius: 15px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    margin: 1rem 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 1rem;
   }
 
   .btn-outline-secondary {
     border: 2px solid rgba(255, 255, 255, 0.3);
     color: white;
     backdrop-filter: blur(10px);
+    border-radius: 10px;
   }
 
   .btn-outline-secondary:hover {
     background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    color: white;
-    transform: translateY(-2px);
-  }
-
-  .status-indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 0.5rem;
-  }
-
-  .status-excellent {
-    background: #4caf50;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-  }
-
-  .status-good {
-    background: #2196f3;
-    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
-  }
-
-  .status-warning {
-    background: #ff9800;
-    box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
-  }
-
-  .status-danger {
-    background: #f44336;
-    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .slide-in {
-    animation: slideIn 0.6s ease-out;
-  }
-
-  .text-white {
-    color: white !important;
-  }
-
-  .text-white-50 {
-    color: rgba(255, 255, 255, 0.5) !important;
-  }
-
-  h2, h3, h4, h5, h6 {
     color: white;
   }
 
-  .loading-skeleton {
-    background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
-    height: 20px;
-    margin: 0.5rem 0;
-  }
-
-  @keyframes loading {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
-
-  .trend-up {
+  .sync-status {
+    background: rgba(76, 175, 80, 0.2);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
     color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
   }
 
-  .trend-down {
-    color: #f44336;
-  }
-
-  .trend-stable {
+  .sync-status.syncing {
+    background: rgba(255, 152, 0, 0.2);
     color: #ff9800;
+    border-color: rgba(255, 152, 0, 0.3);
   }
+
+  .health-score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #4facfe 0deg, #00f2fe var(--score-angle), rgba(255,255,255,0.2) var(--score-angle));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .health-score-circle::before {
+    content: '';
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+  }
+
+  .score-text {
+    position: relative;
+    z-index: 2;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #333;
+    text-align: center;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .text-white { color: white !important; }
+  .text-white-50 { color: rgba(255, 255, 255, 0.5) !important; }
+  h5, h6 { color: white; }
 </style>
 {% endblock %}
 
 {% block content %}
 <section class="section dashboard">
-  <!-- Header -->
-  <div class="header-section">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h2 class="m-0 text-white fw-bold">Health Analytics</h2>
-        <p class="text-white-50 mb-0">Data-driven insights</p>
-      </div>
-      <button id="refreshHealth" class="btn btn-outline-secondary">
+  <!-- Header with Sync Status -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h5 class="m-0 text-white">Health Monitor</h5>
+      <p class="text-white-50 mb-0">Real-time health tracking</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <span class="sync-status me-3" id="syncStatus">Synced 2 min ago</span>
+      <button class="btn btn-outline-secondary" id="refreshHealth">
         <i class="bi bi-arrow-repeat me-1"></i> Refresh
       </button>
     </div>
   </div>
 
-  <!-- Main Metrics -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-3">
-      <div class="metric-card slide-in">
-        <div class="progress-circle" id="healthScoreCircle" style="--color-start: #4facfe; --color-end: #00f2fe; --progress-angle: 306deg;">
-          <div class="progress-circle-text">
+  <!-- Health Alerts -->
+  <div class="alert-banner" id="healthAlert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Health Notice:</strong> <span id="alertMessage"></span>
+  </div>
+
+  <!-- Key Health Metrics -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-2">
+      <div class="metric-card">
+        <div class="vital-label">Heart Rate</div>
+        <div class="vital-sign" id="currentHR">--</div>
+        <small class="text-white-50">
+          <span id="hrStatus">Normal</span>
+          <span class="status-indicator status-normal" id="hrIndicator"></span>
+        </small>
+        <canvas class="trend-chart" id="hrTrendChart"></canvas>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="metric-card">
+        <div class="vital-label">Blood Pressure</div>
+        <div class="vital-sign" id="currentBP">--/--</div>
+        <small class="text-white-50">
+          <span id="bpStatus">Normal</span>
+          <span class="status-indicator status-normal" id="bpIndicator"></span>
+        </small>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="metric-card">
+        <div class="vital-label">Sleep Score</div>
+        <div class="vital-sign" id="sleepScore">--</div>
+        <small class="text-white-50">
+          Last night: <span id="sleepHours">--</span>h
+        </small>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="metric-card">
+        <div class="vital-label">Steps Today</div>
+        <div class="vital-sign" id="todaySteps">--</div>
+        <small class="text-white-50">
+          Goal: <span id="stepGoal">10,000</span>
+        </small>
+        <div class="progress mt-2">
+          <div class="progress-bar" id="stepProgress" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="metric-card">
+        <div class="vital-label">Hydration</div>
+        <div class="vital-sign" id="hydrationLevel">--</div>
+        <small class="text-white-50">
+          Goal: <span id="hydrationGoal">2.5L</span>
+        </small>
+        <div class="progress mt-2">
+          <div class="progress-bar" id="hydrationProgress" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="metric-card">
+        <div class="vital-label">Overall</div>
+        <div class="health-score-circle" id="healthScoreCircle" style="--score-angle: 270deg;">
+          <div class="score-text">
             <div id="overallScore">85</div>
-            <small>Score</small>
+            <small>Good</small>
           </div>
         </div>
-        <div class="status-indicator status-excellent"></div>
-        <span class="text-white">Overall Health</span>
-      </div>
-    </div>
-    
-    <div class="col-md-3">
-      <div class="metric-card slide-in" style="animation-delay: 0.1s;">
-        <div class="metric-value" id="restingHR">58</div>
-        <div class="metric-label">Resting HR</div>
-        <div class="status-indicator status-excellent"></div>
-        <span class="text-white trend-down">
-          <i class="bi bi-arrow-down"></i> -2 bpm
-        </span>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <div class="metric-card slide-in" style="animation-delay: 0.2s;">
-        <div class="metric-value" id="sleepScore">8.2</div>
-        <div class="metric-label">Sleep Quality</div>
-        <div class="status-indicator status-good"></div>
-        <span class="text-white trend-up">
-          <i class="bi bi-arrow-up"></i> +0.3
-        </span>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <div class="metric-card slide-in" style="animation-delay: 0.3s;">
-        <div class="metric-value" id="recoveryScore">92</div>
-        <div class="metric-label">Recovery %</div>
-        <div class="status-indicator status-excellent"></div>
-        <span class="text-white trend-stable">
-          <i class="bi bi-dash"></i> Stable
-        </span>
       </div>
     </div>
   </div>
 
-  <!-- Primary Charts -->
-  <div class="row g-4 mb-4">
-    <div class="col-lg-8">
-      <div class="chart-card slide-in">
-        <h6 class="text-white fw-bold mb-3">Performance Prediction</h6>
-        <div class="chart-container">
-          <canvas id="predictionChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-4">
-      <div class="chart-card slide-in" style="animation-delay: 0.1s;">
-        <h6 class="text-white fw-bold mb-3">Risk Analysis</h6>
-        <div class="chart-container small">
-          <canvas id="riskChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Secondary Charts -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-4">
-      <div class="chart-card slide-in">
-        <h6 class="text-white fw-bold mb-3">Heart Rate Trend</h6>
-        <div class="chart-container small">
-          <canvas id="hrChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="chart-card slide-in" style="animation-delay: 0.1s;">
-        <h6 class="text-white fw-bold mb-3">Sleep Pattern</h6>
-        <div class="chart-container small">
-          <canvas id="sleepChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="chart-card slide-in" style="animation-delay: 0.2s;">
-        <h6 class="text-white fw-bold mb-3">HRV Analysis</h6>
-        <div class="chart-container small">
-          <canvas id="hrvChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Activity Charts -->
+  <!-- Main Dashboard -->
   <div class="row g-4">
-    <div class="col-md-6">
-      <div class="chart-card slide-in">
-        <h6 class="text-white fw-bold mb-3">Weekly Activity</h6>
-        <div class="chart-container">
-          <canvas id="activityChart"></canvas>
+    <!-- Health Trends Chart -->
+    <div class="col-lg-8">
+      <div class="health-card">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-white mb-0">Health Trends</h6>
+            <select class="form-select form-select-sm" id="trendPeriod" style="width: auto; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">
+              <option value="7d">Last 7 days</option>
+              <option value="1m">Last month</option>
+              <option value="3m">Last 3 months</option>
+            </select>
+          </div>
+          <div class="chart-container">
+            <canvas id="healthTrendsChart"></canvas>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-6">
-      <div class="chart-card slide-in" style="animation-delay: 0.1s;">
-        <h6 class="text-white fw-bold mb-3">Body Composition</h6>
-        <div class="chart-container">
-          <canvas id="bodyChart"></canvas>
+    <!-- Quick Actions & Recommendations -->
+    <div class="col-lg-4">
+      <div class="health-card h-100">
+        <div class="card-body p-4">
+          <h6 class="text-white mb-3">Smart Recommendations</h6>
+          
+          <!-- Quick Actions -->
+          <div class="mb-4">
+            <h6 class="text-white-50 mb-2">Quick Actions</h6>
+            <button class="quick-action-btn" onclick="logWaterIntake()">
+              <i class="bi bi-droplet me-1"></i> Log Water
+            </button>
+            <button class="quick-action-btn" onclick="recordWeight()">
+              <i class="bi bi-speedometer2 me-1"></i> Log Weight
+            </button>
+            <button class="quick-action-btn" onclick="logMood()">
+              <i class="bi bi-emoji-smile me-1"></i> Log Mood
+            </button>
+          </div>
+
+          <!-- AI Recommendations -->
+          <div id="recommendations">
+            <div class="recommendation-card">
+              <strong>Hydration Alert</strong><br>
+              <small>You're 500ml behind your daily water goal</small>
+            </div>
+            <div class="recommendation-card">
+              <strong>Sleep Optimization</strong><br>
+              <small>Consider going to bed 30min earlier tonight</small>
+            </div>
+            <div class="recommendation-card warning">
+              <strong>Activity Reminder</strong><br>
+              <small>You've been inactive for 2 hours</small>
+            </div>
+          </div>
+
+          <!-- Health Tip -->
+          <div class="health-tip">
+            <strong>Health Tip:</strong> Your heart rate variability is improving. This suggests better recovery - perfect time for strength training.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary Metrics -->
+  <div class="row g-4 mt-2">
+    <div class="col-md-3">
+      <div class="health-card">
+        <div class="card-body p-3">
+          <h6 class="text-white mb-3">Recovery Status</h6>
+          <div class="chart-container" style="height: 200px;">
+            <canvas id="recoveryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="health-card">
+        <div class="card-body p-3">
+          <h6 class="text-white mb-3">Activity Summary</h6>
+          <div class="chart-container" style="height: 200px;">
+            <canvas id="activityChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="health-card">
+        <div class="card-body p-3">
+          <h6 class="text-white mb-3">Nutrition Balance</h6>
+          <div class="chart-container" style="height: 200px;">
+            <canvas id="nutritionChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="health-card">
+        <div class="card-body p-3">
+          <h6 class="text-white mb-3">Body Metrics</h6>
+          <div class="text-center">
+            <div class="mb-2">
+              <span class="text-white-50">Weight</span><br>
+              <span class="text-white h5" id="currentWeight">73.2 kg</span>
+            </div>
+            <div class="mb-2">
+              <span class="text-white-50">BMI</span><br>
+              <span class="text-white h5" id="currentBMI">22.4</span>
+            </div>
+            <div class="mb-2">
+              <span class="text-white-50">Body Fat</span><br>
+              <span class="text-white h5" id="bodyFat">14.2%</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Quick Log Modals -->
+<div class="modal fade" id="quickLogModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="quickLogTitle">Quick Log</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="quickLogBody">
+        <!-- Dynamic content -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveQuickLog">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -378,211 +452,83 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
 
 <script>
-// Alert function
-function alertShow(message, type = "info") {
-  const container = document.getElementById("alert-container") || document.body;
-  const wrapper = document.createElement("div");
-  const icon = type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle';
-  wrapper.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-lg" role="alert" style="z-index:1055; border-radius: 15px; backdrop-filter: blur(10px);">
-      <i class="bi bi-${icon} me-2"></i>
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`;
-  container.appendChild(wrapper);
-  setTimeout(() => wrapper.remove(), 4000);
-}
-
-let charts = {};
+let healthCharts = {};
 let healthData = {};
 
-// Chart configurations
-const chartConfig = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: true,
-      labels: { color: 'white', font: { size: 11 } }
-    },
-    tooltip: {
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      titleColor: 'white',
-      bodyColor: 'white'
-    }
-  },
-  scales: {
-    y: {
-      grid: { color: 'rgba(255,255,255,0.1)' },
-      ticks: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } }
-    },
-    x: {
-      grid: { color: 'rgba(255,255,255,0.1)' },
-      ticks: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } }
-    }
-  }
-};
+// Quick action functions
+function logWaterIntake() {
+  showQuickLogModal('Water Intake', `
+    <div class="mb-3">
+      <label class="form-label">Amount (ml)</label>
+      <input type="number" class="form-control" id="waterAmount" value="250" step="50">
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" onclick="document.getElementById('waterAmount').value=250">250ml</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="document.getElementById('waterAmount').value=500">500ml</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="document.getElementById('waterAmount').value=750">750ml</button>
+    </div>
+  `);
+}
 
-// Initialize all charts
-function initCharts() {
-  // Performance Prediction Chart
-  charts.prediction = new Chart(document.getElementById('predictionChart'), {
+function recordWeight() {
+  showQuickLogModal('Weight Entry', `
+    <div class="mb-3">
+      <label class="form-label">Weight (kg)</label>
+      <input type="number" class="form-control" id="weightValue" step="0.1">
+    </div>
+  `);
+}
+
+function logMood() {
+  showQuickLogModal('Mood Check', `
+    <div class="mb-3">
+      <label class="form-label">How are you feeling?</label>
+      <div class="btn-group-vertical w-100" role="group">
+        <input type="radio" class="btn-check" name="mood" id="mood5" value="5">
+        <label class="btn btn-outline-success" for="mood5">Excellent 😄</label>
+        
+        <input type="radio" class="btn-check" name="mood" id="mood4" value="4">
+        <label class="btn btn-outline-primary" for="mood4">Good 😊</label>
+        
+        <input type="radio" class="btn-check" name="mood" id="mood3" value="3" checked>
+        <label class="btn btn-outline-secondary" for="mood3">Okay 😐</label>
+        
+        <input type="radio" class="btn-check" name="mood" id="mood2" value="2">
+        <label class="btn btn-outline-warning" for="mood2">Poor 😕</label>
+        
+        <input type="radio" class="btn-check" name="mood" id="mood1" value="1">
+        <label class="btn btn-outline-danger" for="mood1">Bad 😢</label>
+      </div>
+    </div>
+  `);
+}
+
+function showQuickLogModal(title, content) {
+  document.getElementById('quickLogTitle').textContent = title;
+  document.getElementById('quickLogBody').innerHTML = content;
+  new bootstrap.Modal(document.getElementById('quickLogModal')).show();
+}
+
+// Initialize charts
+function initHealthCharts() {
+  // Health Trends Chart
+  healthCharts.trends = new Chart(document.getElementById('healthTrendsChart'), {
     type: 'line',
     data: {
       labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
       datasets: [
         {
-          label: 'Performance',
-          data: [78, 85, 82, 89, 76, 83, 87],
+          label: 'Heart Rate',
+          data: [58, 62, 59, 61, 57, 60, 58],
           borderColor: '#4facfe',
-          backgroundColor: 'rgba(79, 172, 254, 0.1)',
-          fill: true,
           tension: 0.4,
-          borderWidth: 3
-        },
-        {
-          label: 'Recovery',
-          data: [85, 70, 75, 65, 88, 82, 78],
-          borderColor: '#00f2fe',
-          backgroundColor: 'rgba(0, 242, 254, 0.1)',
-          fill: true,
-          tension: 0.4,
-          borderWidth: 2
-        }
-      ]
-    },
-    options: chartConfig
-  });
-
-  // Risk Analysis Chart
-  charts.risk = new Chart(document.getElementById('riskChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Low Risk', 'Medium', 'High Risk'],
-      datasets: [{
-        data: [75, 20, 5],
-        backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: 'white', font: { size: 10 } }
-        }
-      }
-    }
-  });
-
-  // Heart Rate Chart
-  charts.hr = new Chart(document.getElementById('hrChart'), {
-    type: 'line',
-    data: {
-      labels: ['6AM', '12PM', '6PM', '12AM'],
-      datasets: [{
-        label: 'HR',
-        data: [58, 72, 68, 62],
-        borderColor: '#f093fb',
-        backgroundColor: 'rgba(240, 147, 251, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      ...chartConfig,
-      scales: {
-        ...chartConfig.scales,
-        y: { ...chartConfig.scales.y, beginAtZero: false, min: 50, max: 80 }
-      }
-    }
-  });
-
-  // Sleep Chart
-  charts.sleep = new Chart(document.getElementById('sleepChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [{
-        label: 'Sleep Hours',
-        data: [7.5, 8.2, 7.8, 8.5, 7.2, 9.1, 8.8],
-        backgroundColor: 'rgba(79, 172, 254, 0.7)',
-        borderColor: '#4facfe',
-        borderWidth: 2,
-        borderRadius: 8
-      }]
-    },
-    options: chartConfig
-  });
-
-  // HRV Chart
-  charts.hrv = new Chart(document.getElementById('hrvChart'), {
-    type: 'line',
-    data: {
-      labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
-      datasets: [{
-        label: 'HRV (ms)',
-        data: [42, 45, 38, 48, 52, 44, 46],
-        borderColor: '#ffa726',
-        backgroundColor: 'rgba(255, 167, 38, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: chartConfig
-  });
-
-  // Activity Chart
-  charts.activity = new Chart(document.getElementById('activityChart'), {
-    type: 'radar',
-    data: {
-      labels: ['Cardio', 'Strength', 'Flexibility', 'Balance', 'Endurance', 'Recovery'],
-      datasets: [{
-        label: 'This Week',
-        data: [85, 78, 65, 72, 88, 92],
-        borderColor: '#4facfe',
-        backgroundColor: 'rgba(79, 172, 254, 0.2)',
-        pointBackgroundColor: '#4facfe',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: 'white', font: { size: 11 } }
-        }
-      },
-      scales: {
-        r: {
-          grid: { color: 'rgba(255,255,255,0.1)' },
-          angleLines: { color: 'rgba(255,255,255,0.1)' },
-          ticks: { color: 'rgba(255,255,255,0.7)', backdropColor: 'transparent' }
-        }
-      }
-    }
-  });
-
-  // Body Composition Chart
-  charts.body = new Chart(document.getElementById('bodyChart'), {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [
-        {
-          label: 'Weight (kg)',
-          data: [75, 74.5, 74, 73.8, 73.5, 73.2],
-          borderColor: '#4facfe',
           yAxisID: 'y'
         },
         {
-          label: 'Body Fat %',
-          data: [15.5, 15.2, 14.8, 14.5, 14.2, 14.0],
-          borderColor: '#f093fb',
+          label: 'Sleep Score',
+          data: [8.2, 7.5, 8.8, 7.9, 8.1, 9.2, 8.5],
+          borderColor: '#00f2fe',
+          tension: 0.4,
           yAxisID: 'y1'
         }
       ]
@@ -591,128 +537,206 @@ function initCharts() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          labels: { color: 'white', font: { size: 11 } }
-        }
+        legend: { labels: { color: 'white' } }
       },
       scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,0.1)' },
-          ticks: { color: 'rgba(255,255,255,0.7)' }
-        },
-        y: {
+        x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        y: { 
           type: 'linear',
           display: true,
           position: 'left',
-          grid: { color: 'rgba(255,255,255,0.1)' },
-          ticks: { color: 'rgba(255,255,255,0.7)' }
+          ticks: { color: 'white' },
+          grid: { color: 'rgba(255,255,255,0.1)' }
         },
         y1: {
           type: 'linear',
           display: true,
           position: 'right',
-          grid: { drawOnChartArea: false },
-          ticks: { color: 'rgba(255,255,255,0.7)' }
+          ticks: { color: 'white' },
+          grid: { drawOnChartArea: false }
         }
       }
     }
   });
+
+  // Recovery Chart
+  healthCharts.recovery = new Chart(document.getElementById('recoveryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Recovered', 'Recovery Needed'],
+      datasets: [{
+        data: [85, 15],
+        backgroundColor: ['#4caf50', '#ffcdd2'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: 'white', font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Activity Chart
+  healthCharts.activity = new Chart(document.getElementById('activityChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Steps', 'Active Min', 'Calories'],
+      datasets: [{
+        data: [8500, 45, 320],
+        backgroundColor: ['#4facfe', '#00f2fe', '#ffa726'],
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: 'white' } },
+        y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+      }
+    }
+  });
+
+  // Nutrition Chart
+  healthCharts.nutrition = new Chart(document.getElementById('nutritionChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Protein', 'Carbs', 'Fats'],
+      datasets: [{
+        data: [30, 45, 25],
+        backgroundColor: ['#4caf50', '#2196f3', '#ff9800']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: 'white', font: { size: 10 } } }
+      }
+    }
+  });
 }
 
-// Fetch and update data
-async function fetchHealthAnalytics() {
+// Fetch and update health data
+async function fetchHealthData() {
   try {
-    showLoadingState();
+    document.getElementById('syncStatus').textContent = 'Syncing...';
+    document.getElementById('syncStatus').className = 'sync-status syncing';
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Mock data from user's stored health records
-    const response = {
-      overall_score: 85 + Math.floor(Math.random() * 10) - 5,
-      resting_hr: 58 + Math.floor(Math.random() * 6) - 3,
-      sleep_quality: 8.2 + (Math.random() * 1 - 0.5),
-      recovery_score: 92 + Math.floor(Math.random() * 8) - 4,
-      hrv_trend: [42, 45, 38, 48, 52, 44, 46].map(v => v + Math.random() * 4 - 2),
-      performance_prediction: [78, 85, 82, 89, 76, 83, 87].map(v => v + Math.random() * 6 - 3)
+    // Mock real-time data
+    const data = {
+      heart_rate: 58 + Math.floor(Math.random() * 10),
+      blood_pressure: { systolic: 118 + Math.floor(Math.random() * 8), diastolic: 78 + Math.floor(Math.random() * 6) },
+      sleep_score: 8.2 + (Math.random() * 1 - 0.5),
+      sleep_hours: 7.5 + (Math.random() * 1),
+      steps: 8500 + Math.floor(Math.random() * 3000),
+      hydration: 1.8 + (Math.random() * 0.8),
+      overall_score: 85 + Math.floor(Math.random() * 10) - 5
     };
     
-    updateDashboard(response);
-    updateCharts(response);
-    hideLoadingState();
+    updateHealthMetrics(data);
+    checkHealthAlerts(data);
+    
+    document.getElementById('syncStatus').textContent = 'Synced now';
+    document.getElementById('syncStatus').className = 'sync-status';
     
   } catch (error) {
-    console.error('Failed to fetch health analytics:', error);
-    alertShow('Failed to load analytics', 'danger');
-    hideLoadingState();
+    console.error('Health data fetch failed:', error);
+    document.getElementById('syncStatus').textContent = 'Sync failed';
+    document.getElementById('syncStatus').className = 'sync-status syncing';
   }
 }
 
-function showLoadingState() {
-  document.getElementById('overallScore').innerHTML = '<div class="loading-skeleton"></div>';
-  document.getElementById('restingHR').innerHTML = '<div class="loading-skeleton"></div>';
-  document.getElementById('sleepScore').innerHTML = '<div class="loading-skeleton"></div>';
-  document.getElementById('recoveryScore').innerHTML = '<div class="loading-skeleton"></div>';
-}
-
-function hideLoadingState() {
-  // Values will be updated by updateDashboard
-}
-
-function updateDashboard(data) {
+function updateHealthMetrics(data) {
+  // Update vital signs
+  document.getElementById('currentHR').textContent = data.heart_rate;
+  document.getElementById('currentBP').textContent = `${data.blood_pressure.systolic}/${data.blood_pressure.diastolic}`;
+  document.getElementById('sleepScore').textContent = data.sleep_score.toFixed(1);
+  document.getElementById('sleepHours').textContent = data.sleep_hours.toFixed(1);
+  document.getElementById('todaySteps').textContent = data.steps.toLocaleString();
+  document.getElementById('hydrationLevel').textContent = data.hydration.toFixed(1) + 'L';
   document.getElementById('overallScore').textContent = data.overall_score;
-  document.getElementById('restingHR').textContent = data.resting_hr;
-  document.getElementById('sleepScore').textContent = data.sleep_quality.toFixed(1);
-  document.getElementById('recoveryScore').textContent = data.recovery_score;
   
-  // Update progress circle
+  // Update progress bars
+  document.getElementById('stepProgress').style.width = Math.min((data.steps / 10000) * 100, 100) + '%';
+  document.getElementById('hydrationProgress').style.width = Math.min((data.hydration / 2.5) * 100, 100) + '%';
+  
+  // Update health score circle
   const scoreAngle = (data.overall_score / 100) * 360;
-  document.getElementById('healthScoreCircle').style.setProperty('--progress-angle', scoreAngle + 'deg');
+  document.getElementById('healthScoreCircle').style.setProperty('--score-angle', scoreAngle + 'deg');
+  
+  // Update status indicators
+  updateStatusIndicator('hrIndicator', 'hrStatus', data.heart_rate, 60, 100);
+  updateStatusIndicator('bpIndicator', 'bpStatus', data.blood_pressure.systolic, 90, 140);
 }
 
-function updateCharts(data) {
-  // Update HRV chart with real data
-  if (charts.hrv && data.hrv_trend) {
-    charts.hrv.data.datasets[0].data = data.hrv_trend;
-    charts.hrv.update('none');
+function updateStatusIndicator(indicatorId, statusId, value, normalMin, normalMax) {
+  const indicator = document.getElementById(indicatorId);
+  const status = document.getElementById(statusId);
+  
+  if (value >= normalMin && value <= normalMax) {
+    indicator.className = 'status-indicator status-normal';
+    status.textContent = 'Normal';
+  } else if (value < normalMin * 0.8 || value > normalMax * 1.2) {
+    indicator.className = 'status-indicator status-critical';
+    status.textContent = 'Critical';
+  } else {
+    indicator.className = 'status-indicator status-warning';
+    status.textContent = 'Warning';
+  }
+}
+
+function checkHealthAlerts(data) {
+  const alerts = [];
+  
+  if (data.hydration < 2.0) {
+    alerts.push('Low hydration detected - drink more water');
   }
   
-  // Update performance prediction with real data
-  if (charts.prediction && data.performance_prediction) {
-    charts.prediction.data.datasets[0].data = data.performance_prediction;
-    charts.prediction.update('none');
+  if (data.steps < 5000) {
+    alerts.push('Activity goal not met - consider a walk');
+  }
+  
+  if (data.sleep_hours < 7.0) {
+    alerts.push('Insufficient sleep - aim for 7-9 hours');
+  }
+  
+  if (alerts.length > 0) {
+    document.getElementById('alertMessage').textContent = alerts[0];
+    document.getElementById('healthAlert').classList.add('show');
+  } else {
+    document.getElementById('healthAlert').classList.remove('show');
   }
 }
 
 // Event handlers
-document.getElementById('refreshHealth').addEventListener('click', () => {
-  alertShow('Refreshing analytics...', 'info');
-  fetchHealthAnalytics();
+document.getElementById('refreshHealth').addEventListener('click', fetchHealthData);
+document.getElementById('trendPeriod').addEventListener('change', function() {
+  // Update chart based on selected period
+  fetchHealthData();
+});
+
+// Save quick log
+document.getElementById('saveQuickLog').addEventListener('click', function() {
+  // Implementation for saving quick logs
+  bootstrap.Modal.getInstance(document.getElementById('quickLogModal')).hide();
+  fetchHealthData(); // Refresh data after logging
 });
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  initCharts();
-  fetchHealthAnalytics();
+document.addEventListener('DOMContentLoaded', function() {
+  initHealthCharts();
+  fetchHealthData();
   
   // Auto-refresh every 5 minutes
-  setInterval(fetchHealthAnalytics, 300000);
+  setInterval(fetchHealthData, 300000);
 });
-
-// Real-time updates simulation
-setInterval(() => {
-  const elements = ['restingHR', 'sleepScore', 'recoveryScore'];
-  elements.forEach(id => {
-    const element = document.getElementById(id);
-    if (element && !element.innerHTML.includes('loading')) {
-      const currentValue = parseFloat(element.textContent);
-      if (!isNaN(currentValue)) {
-        const variation = id === 'restingHR' ? 1 : 0.1;
-        const newValue = currentValue + (Math.random() * variation * 2 - variation);
-        element.textContent = id === 'restingHR' ? Math.round(newValue) : newValue.toFixed(1);
-      }
-    }
-  });
-}, 30000);
 </script>
 {% endblock %}
