@@ -2,180 +2,162 @@ from flask import Blueprint, request, jsonify, render_template, flash, redirect,
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 from app import db
-from app.models import User, CoachAthlete, Notification, SessionSchedule, Message
-from sqlalchemy import or_, and_
+from app.models import User, Message
+from sqlalchemy import func, and_, or_, case, distinct
+from app import socketio
 
 from . import coach_bp
 
-def is_user_online(user):
-    """Check if user was active in the last 5 minutes"""
-    if not user.last_active:
-        return False
-    return datetime.utcnow() - user.last_active < timedelta(minutes=5)
+
 
 @coach_bp.route("/chats", methods=["GET"])
 @jwt_required()
 def get_chats():
-    # This will be the coach-specific logic
     try:
         identity = get_jwt_identity()
-        user = User.query.get(identity)
-        
-        if not user:
-            return jsonify({"msg": "User not found"}), 404
-        
-        user.last_active = datetime.utcnow()
-        db.session.commit()
-
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        search_query = request.args.get('search', '').strip()
         all_users_mode = request.args.get('all_users', 'false').lower() == 'true'
-        search_query = request.args.get('search', '').strip().lower()
 
         if all_users_mode:
-            # For the coach, you might want to show all linked athletes and other coaches
-            linked_athletes_ids = [ca.athlete_id for ca in CoachAthlete.query.filter_by(coach_id=identity, is_active=True).all()]
-            other_coaches_ids = [u.id for u in User.query.filter(User.role == 'coach', User.id != identity, User.is_deleted == False).all()]
-            
-            contact_ids = set(linked_athletes_ids + other_coaches_ids)
-
-            contacts_query = User.query.filter(
-                User.id.in_(contact_ids),
-                User.is_deleted == False,
+            users_query = User.query.filter(
+                User.id != identity,
+                User.is_deleted.is_(False),
                 User.status == 'active'
             )
-            
             if search_query:
-                contacts_query = contacts_query.filter(
+                users_query = users_query.filter(
                     or_(
                         User.name.ilike(f'%{search_query}%'),
                         User.email.ilike(f'%{search_query}%')
                     )
                 )
+            users = users_query.all()
+            users_data = [
+                {
+                    'id': user.id,
+                    'name': user.name,
+                    'profile_image': user.profile_image or '/static/images/default.jpg',
+                    'is_online': user.status == 'active' and user.last_active > func.now() - func.interval('15 minutes'),
+                    'last_seen': user.last_active.isoformat() if user.last_active else None
+                } for user in users
+            ]
+            return jsonify({'users': users_data})
 
-            contacts = contacts_query.all()
-            
-            users_list = []
-            for contact in contacts:
-                is_online = is_user_online(contact)
-                last_seen = ""
-                if not is_online and contact.last_active:
-                    time_diff = datetime.utcnow() - contact.last_active
-                    if time_diff.days > 0:
-                        last_seen = f"{time_diff.days}d ago"
-                    elif time_diff.seconds >= 3600:
-                        last_seen = f"{time_diff.seconds // 3600}h ago"
-                    elif time_diff.seconds >= 60:
-                        last_seen = f"{time_diff.seconds // 60}m ago"
-                    else:
-                        last_seen = "Just now"
-
-                profile_image_url = url_for('static', filename=f'uploads/{contact.profile_image}') if contact.profile_image and contact.profile_image != 'default.jpg' else url_for('static', filename='images/default.jpg')
-
-                users_list.append({
-                    "id": contact.id,
-                    "name": contact.name,
-                    "email": contact.email,
-                    "role": contact.role,
-                    "profile_image": profile_image_url,
-                    "is_online": is_online,
-                    "last_seen": last_seen,
-                })
-
-            return jsonify(users_list)
-
-        # Original logic for existing chats
-        linked_athletes_ids = [
-            ca.athlete_id for ca in CoachAthlete.query.filter_by(
-                coach_id=identity, 
-                is_active=True
-            ).all()
-        ]
-        
-        message_contacts_subquery = db.session.query(Message.sender_id).filter(
-            Message.receiver_id == identity
-        ).union(
-            db.session.query(Message.receiver_id).filter(
-                Message.sender_id == identity
+        # Subquery for latest message per user
+        latest_message_subquery = db.session.query(
+            Message,
+            func.row_number().over(
+                partition_by=case(
+                    [(Message.sender_id != identity, Message.sender_id)],
+                    else_=Message.receiver_id
+                ),
+                order_by=Message.sent_at.desc()
+            ).label('rn')
+        ).filter(
+            or_(
+                Message.sender_id == identity,
+                Message.receiver_id == identity
             )
+        ).subquery()
+
+        # Main query
+        query = db.session.query(
+            User,
+            latest_message_subquery.c.id.label('message_id'),
+            latest_message_subquery.c.content.label('last_message'),
+            latest_message_subquery.c.sent_at.label('last_message_time'),
+            latest_message_subquery.c.sender_id.label('message_sender_id'),
+            func.count(
+                func.distinct(
+                    case(
+                        [(and_(Message.is_read.is_(False), Message.receiver_id == identity, Message.sender_id == User.id), Message.id)],
+                        else_=None
+                    )
+                )
+            ).label('unread_count')
+        ).join(
+            latest_message_subquery,
+            or_(
+                and_(
+                    User.id == latest_message_subquery.c.sender_id,
+                    User.id != identity
+                ),
+                and_(
+                    User.id == latest_message_subquery.c.receiver_id,
+                    User.id != identity
+                )
+            )
+        ).outerjoin(
+            Message,
+            and_(
+                Message.sender_id == User.id,
+                Message.receiver_id == identity
+            )
+        ).filter(
+            User.is_deleted.is_(False),
+            User.status == 'active',
+            or_(
+                latest_message_subquery.c.sender_id == identity,
+                latest_message_subquery.c.receiver_id == identity
+            )
+        ).group_by(
+            User.id,
+            latest_message_subquery.c.id,
+            latest_message_subquery.c.content,
+            latest_message_subquery.c.sent_at,
+            latest_message_subquery.c.sender_id
+        ).order_by(
+            latest_message_subquery.c.sent_at.desc()
         )
-        message_contacts_ids = [row[0] for row in message_contacts_subquery.all()]
-        
-        all_contact_ids = set(linked_athletes_ids + message_contacts_ids)
-        all_contact_ids.discard(identity)
-        
-        if not all_contact_ids:
-            return jsonify([])
-        
-        contacts_query = User.query.filter(
-            User.id.in_(all_contact_ids),
-            User.is_deleted == False,
-            User.status == 'active'
-        )
-        
+
         if search_query:
-            contacts_query = contacts_query.filter(
+            query = query.filter(
                 or_(
                     User.name.ilike(f'%{search_query}%'),
                     User.email.ilike(f'%{search_query}%')
                 )
             )
-        
-        contacts = contacts_query.all()
-        
+
+        messages = query.paginate(page=page, per_page=per_page, error_out=False)
+
         chats = []
-        for contact in contacts:
-            last_message = Message.query.filter(
-                or_(
-                    and_(Message.sender_id == identity, Message.receiver_id == contact.id),
-                    and_(Message.sender_id == contact.id, Message.receiver_id == identity)
-                )
-            ).order_by(Message.sent_at.desc()).first()
-            
-            unread_count = Message.query.filter(
-                Message.sender_id == contact.id,
-                Message.receiver_id == identity,
-                Message.is_read == False
-            ).count()
-            
-            is_online = is_user_online(contact)
-            
-            last_seen = ""
-            if not is_online and contact.last_active:
-                time_diff = datetime.utcnow() - contact.last_active
-                if time_diff.days > 0:
-                    last_seen = f"{time_diff.days}d ago"
-                elif time_diff.seconds >= 3600:
-                    last_seen = f"{time_diff.seconds // 3600}h ago"
-                elif time_diff.seconds >= 60:
-                    last_seen = f"{time_diff.seconds // 60}m ago"
-                else:
-                    last_seen = "Just now"
-            
-            profile_image_url = url_for('static', filename=f'uploads/{contact.profile_image}') if contact.profile_image and contact.profile_image != 'default.jpg' else url_for('static', filename='images/default.jpg')
-            
+        for user, message_id, last_message, last_message_time, message_sender_id, unread_count in messages.items:
             chats.append({
-                "id": contact.id,
-                "name": contact.name,
-                "email": contact.email,
-                "role": contact.role,
-                "profile_image": profile_image_url,
-                "last_message": last_message.content if last_message else "No messages yet",
-                "last_message_time": last_message.sent_at.strftime("%I:%M %p") if last_message else "",
-                "last_message_date": last_message.sent_at.isoformat() if last_message else None,
-                "is_online": is_online,
-                "last_seen": last_seen,
-                "unread_count": unread_count,
-                "is_sender": last_message.sender_id == identity if last_message else False
+                'id': user.id,
+                'name': user.name,
+                'profile_image': user.profile_image or '/static/images/default.jpg',
+                'last_message': last_message or '',
+                'last_message_time': last_message_time.isoformat() if last_message_time else '',
+                'is_online': user.status == 'active' and user.last_active > func.now() - func.interval('15 minutes'),
+                'last_seen': user.last_active.isoformat() if user.last_active else None,
+                'unread_count': unread_count,
+                'is_sender': message_sender_id == identity if message_id else False
             })
-        
-        chats.sort(key=lambda x: x['last_message_date'] if x['last_message_date'] else '', reverse=True)
-        
-        return jsonify(chats)
-        
+
+        return jsonify({
+            'chats': chats,
+            'total': messages.total,
+            'pages': messages.pages,
+            'page': page
+        })
     except Exception as e:
         db.session.rollback()
-        print(f"Error in coach get_chats: {str(e)}")
+        print(f"Error in get_chats: {str(e)}")
         return jsonify({"msg": "Internal server error"}), 500
 
+def format_last_seen(last_active):
+    if not last_active:
+        return ""
+    time_diff = datetime.utcnow() - last_active
+    if time_diff.days > 0:
+        return f"{time_diff.days}d ago"
+    elif time_diff.seconds >= 3600:
+        return f"{time_diff.seconds // 3600}h ago"
+    elif time_diff.seconds >= 60:
+        return f"{time_diff.seconds // 60}m ago"
+    return "Just now"
 
 @coach_bp.route("/messages/<int:contact_id>", methods=["GET"])
 @jwt_required()
@@ -230,52 +212,48 @@ def get_messages(contact_id):
 @coach_bp.route("/send_message", methods=["POST"])
 @jwt_required()
 def send_message():
-    """Send a new message"""
-    try:
-        identity = get_jwt_identity()
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({"msg": "No data provided"}), 400
-        
-        receiver_id = data.get("receiver_id")
-        content = data.get("content", "").strip()
+    data = request.get_json()
+    if not data:
+        return jsonify({"msg": "No data provided"}), 400
+    
+    receiver_id = data.get("receiver_id")
+    content = data.get("content", "").strip()
 
-        if not receiver_id or not content:
-            return jsonify({"msg": "Receiver ID and content are required"}), 400
+    if not receiver_id or not content:
+        return jsonify({"msg": "Receiver ID and content are required"}), 400
 
-        # Verify receiver exists
-        receiver = User.query.get(receiver_id)
-        if not receiver or receiver.is_deleted or receiver.status != 'active':
-            return jsonify({"msg": "Receiver not found or inactive"}), 404
+    receiver = User.query.get(receiver_id)
+    if not receiver or receiver.is_deleted or receiver.status != 'active':
+        return jsonify({"msg": "Receiver not found or inactive"}), 404
 
-        # Create message
-        new_message = Message(
-            sender_id=identity,
-            receiver_id=receiver_id,
-            content=content,
-            sent_at=datetime.utcnow(),
-            is_read=False
-        )
-        
-        db.session.add(new_message)
-        db.session.commit()
-        
-        return jsonify({
-            "msg": "Message sent successfully",
-            "message": {
-                "id": new_message.id,
-                "sender_id": new_message.sender_id,
-                "content": new_message.content,
-                "sent_at": new_message.sent_at.isoformat(),
-                "is_read": new_message.is_read
-            }
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error in send_message: {str(e)}")
-        return jsonify({"msg": "Internal server error"}), 500
+    new_message = Message(
+        sender_id=get_jwt_identity(),
+        receiver_id=receiver_id,
+        content=content,
+        sent_at=datetime.utcnow(),
+        is_read=False
+    )
+    db.session.add(new_message)
+    db.session.commit()
+
+    socketio.emit('new_message', {
+        'id': new_message.id,
+        'sender_id': new_message.sender_id,
+        'content': new_message.content,
+        'sent_at': new_message.sent_at.isoformat(),
+        'is_read': new_message.is_read
+    }, broadcast=True)
+
+    return jsonify({
+        "msg": "Message sent successfully",
+        "message": {
+            "id": new_message.id,
+            "sender_id": new_message.sender_id,
+            "content": new_message.content,
+            "sent_at": new_message.sent_at.isoformat(),
+            "is_read": new_message.is_read
+        }
+    }), 201
 
 @coach_bp.route("/communication", methods=["GET"])
 @jwt_required()

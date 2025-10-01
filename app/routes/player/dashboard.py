@@ -1,6 +1,5 @@
 # app/routes/player/dashboard.py
 from flask import jsonify, request, render_template
-import requests
 
 from datetime import date
 from app import db

@@ -1,7 +1,11 @@
 # app/__init__.py
+import eventlet
+
+eventlet.monkey_patch()
+
 from flask import Flask
 from flask_cors import CORS
-from app.extensions import db, ma, jwt, migrate
+from app.extensions import db, ma, jwt, migrate,socketio
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from app.models import User, Subscription, WorkoutFile
 from app.filters import register_filters
@@ -32,7 +36,8 @@ def create_app():
         "allow_headers": ["Content-Type", "Authorization"],
         "methods": ["GET", "POST", "OPTIONS"]
     }})
-
+    socketio.init_app(app, async_mode='eventlet')
+    
     # context processor
     @app.context_processor
     def inject_user():
@@ -73,3 +78,4 @@ def create_app():
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
     return User.query.get(identity)
+

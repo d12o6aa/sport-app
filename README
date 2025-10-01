@@ -8,3 +8,7 @@ flask db upgrade
 sudo -u postgres psql
 
 flask db init
+
+psql -U myapp_user -d myapp_dev
+
+psql -U myapp_user -h localhost -d myapp_dev
