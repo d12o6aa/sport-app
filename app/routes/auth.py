@@ -1,91 +1,188 @@
-from flask import Blueprint, request, jsonify, session, redirect, url_for, render_template, abort, send_file
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity,JWTManager,get_jwt,set_access_cookies
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
+from flask import Blueprint, request, jsonify, redirect, url_for, render_template, abort, send_file
+from flask_jwt_extended import (
+    create_access_token, 
+    jwt_required, 
+    get_jwt_identity,
+    set_access_cookies,
+    unset_jwt_cookies
+)
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash
-import io, csv
-from app.models.activity_log import ActivityLog
-
+import io
+import csv
+import re
+from datetime import datetime, timedelta
 
 from app import db
 from app.models.user import User
+from app.models.activity_log import ActivityLog
 from app.schemas.user import UserSchema
 
 auth_bp = Blueprint("auth", __name__)
-
 user_schema = UserSchema()
+
+# Rate limiter - يجب إضافة هذا في __init__.py
+# limiter = Limiter(key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
+
+def validate_password(password):
+    """التحقق من قوة كلمة المرور"""
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters"
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number"
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False, "Password must contain at least one special character"
+    return True, "Password is valid"
+
+def log_activity(user_id, action, details=None):
+    """تسجيل النشاطات الأمنية"""
+    try:
+        log = ActivityLog(
+            user_id=user_id,
+            action=action,
+            details=details,
+            timestamp=datetime.utcnow()
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        print(f"Failed to log activity: {e}")
 
 @auth_bp.route("/register", methods=["GET"])
 def register_page():
     return render_template("auth/register.html")
 
 @auth_bp.route("/register", methods=["POST"])
+# @limiter.limit("5 per hour")  # تفعيل بعد إضافة limiter
 def register():
     data = request.get_json()
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
-    role = 'athlete'
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
     
-    status = "pending"
+    # التحقق من البيانات
+    if not name or not email or not password:
+        return jsonify({"msg": "All fields are required"}), 400
+    
+    if len(name) < 2:
+        return jsonify({"msg": "Name must be at least 2 characters"}), 400
+    
+    # التحقق من صحة الإيميل
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, email):
+        return jsonify({"msg": "Invalid email format"}), 400
+    
+    # التحقق من قوة كلمة المرور
+    is_valid, msg = validate_password(password)
+    if not is_valid:
+        return jsonify({"msg": msg}), 400
 
+    # التحقق من وجود الإيميل
     if User.query.filter_by(email=email).first():
-        return jsonify({"msg": "Email already exists"}), 400
+        log_activity(None, "failed_registration", f"Email already exists: {email}")
+        return jsonify({"msg": "Registration failed"}), 400
 
-    new_user = User(email=email, role=role, name=name, status=status)
+    # إنشاء المستخدم
+    new_user = User(
+        email=email, 
+        role='athlete', 
+        name=name, 
+        status="pending"
+    )
     new_user.set_password(password)
 
     db.session.add(new_user)
     db.session.commit()
+    
+    log_activity(new_user.id, "user_registered", f"New user: {email}")
 
-    return jsonify({"msg": "Registered successfully. Please wait for admin approval."}), 201
+    return jsonify({
+        "msg": "Registered successfully. Please wait for admin approval."
+    }), 201
 
 @auth_bp.route("/register-pending")
 def register_pending():
     return render_template("auth/register-pending.html")
 
-
 @auth_bp.route("/login", methods=["GET"])
 def login_page():
-    return render_template("auth/login.html")  
-
+    return render_template("auth/login.html")
 
 @auth_bp.route("/login", methods=["POST"])
+# @limiter.limit("10 per 15 minutes")  # تفعيل بعد إضافة limiter
 def login_post():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON"}), 400
 
     data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+
+    if not email or not password:
+        return jsonify({"msg": "Email and password are required"}), 400
 
     user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        return jsonify({"msg": "Invalid email or password"}), 401
     
+    # استخدام رسالة عامة لعدم الكشف عن معلومات
+    if not user or not user.check_password(password):
+        log_activity(None, "failed_login", f"Failed login attempt for: {email}")
+        return jsonify({"msg": "Invalid credentials"}), 401
+    
+    # التحقق من حالة الحساب
     if user.status == "pending":
+        log_activity(user.id, "login_attempt_pending", "Pending account tried to login")
         return jsonify({"msg": "Account is pending approval"}), 403
+    
     if user.status == "suspended":
-        return jsonify({"msg": "Account is suspended"}), 403    
-    if not isinstance(user.id, (int, str)):
-        print("Invalid user ID type:", type(user.id))
-        return jsonify({"msg": "Internal server error: Invalid user ID"}), 500
-    access_token = create_access_token(identity=str(user.id), additional_claims={"role": user.role})
-    session["access_token"] = access_token
-    session["user_id"] = user.id
-    session["role"] = user.role
-    response = jsonify({"login": True})
+        log_activity(user.id, "login_attempt_suspended", "Suspended account tried to login")
+        return jsonify({"msg": "Account is suspended"}), 403
+
+    # إنشاء التوكن مع مدة صلاحية
+    access_token = create_access_token(
+        identity=str(user.id),
+        additional_claims={"role": user.role},
+        expires_delta=timedelta(hours=24)
+    )
+    
+    log_activity(user.id, "user_login", f"Successful login from IP: {request.remote_addr}")
+    
+    # استخدام httpOnly cookies فقط
+    response = jsonify({
+        "msg": "Login successful",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "role": user.role
+        }
+    })
+    
+    # تعيين الكوكيز بشكل آمن
     set_access_cookies(response, access_token)
-
-    return response
-
+    
+    return response, 200
 
 @auth_bp.route("/<int:user_id>", methods=["GET"])
 @jwt_required()
 def get_user_with_profile(user_id):
+    identity = get_jwt_identity()
+    current_user = User.query.get(identity)
+    
+    if not current_user:
+        return jsonify({"msg": "Unauthorized"}), 401
+    
+    # التحقق من الصلاحيات
+    if current_user.role != "admin" and str(current_user.id) != str(user_id):
+        log_activity(current_user.id, "unauthorized_access_attempt", 
+                    f"Tried to access user {user_id}")
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     user = User.query.get_or_404(user_id)
-
-    # بناء الداتا الأساسية
+    
     user_data = {
         "id": user.id,
         "name": user.name,
@@ -95,7 +192,6 @@ def get_user_with_profile(user_id):
         "created_at": user.created_at.strftime("%Y-%m-%d") if user.created_at else None
     }
 
-    # إضافة بيانات البروفايل حسب الدور
     if user.role == "admin" and user.admin_profile:
         user_data["profile"] = {
             "permissions": user.admin_profile.permissions,
@@ -116,48 +212,45 @@ def get_user_with_profile(user_id):
 
     return jsonify(user_data), 200
 
-
-
 @auth_bp.route("/", methods=["GET"])
-@auth_bp.route("/<int:user_id>", methods=["GET"])
 @jwt_required()
-def get_users(user_id=None):
+def get_users():
     identity = get_jwt_identity()
     current_user = User.query.get(identity)
 
-    # السماح فقط للـ Admin يشوف الكل
     if not current_user or current_user.role != "admin":
         return jsonify({"msg": "Unauthorized"}), 403
 
-    if user_id:  # جلب يوزر واحد
-        user = User.query.get_or_404(user_id)
-        return jsonify(serialize_user_with_profile(user)), 200
-
-    # فلترة
-    role = request.args.get("role")  # admin / coach / athlete
-    search = request.args.get("search")
+    # الفلترة
+    role = request.args.get("role")
+    search = request.args.get("search", "").strip()
     sort_by = request.args.get("sort_by", "created_at")
     order = request.args.get("order", "desc")
 
     # Pagination
     page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 10))
+    per_page = min(int(request.args.get("per_page", 10)), 100)  # حد أقصى 100
 
     query = User.query
-    if role:
+    
+    if role and role in ["admin", "coach", "athlete"]:
         query = query.filter_by(role=role)
+    
     if search:
-        search = f"%{search}%"
-        query = query.filter((User.name.ilike(search)) | (User.email.ilike(search)))
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            (User.name.ilike(search_pattern)) | 
+            (User.email.ilike(search_pattern))
+        )
 
-    # فرز
-    if hasattr(User, sort_by):
+    # الفرز الآمن
+    allowed_sort_fields = ["created_at", "name", "email", "role", "status"]
+    if sort_by in allowed_sort_fields:
         sort_column = getattr(User, sort_by)
         if order.lower() == "desc":
             sort_column = sort_column.desc()
         query = query.order_by(sort_column)
 
-    # تنفيذ مع pagination
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({
@@ -167,9 +260,8 @@ def get_users(user_id=None):
         "pages": pagination.pages
     }), 200
 
-
 def serialize_user_with_profile(user):
-    """تحويل اليوزر ل JSON مع البروفايل"""
+    """تحويل المستخدم إلى JSON مع البروفايل"""
     data = {
         "id": user.id,
         "name": user.name,
@@ -199,7 +291,6 @@ def serialize_user_with_profile(user):
 
     return data
 
-
 @auth_bp.route("/reset_password/<int:user_id>", methods=["POST"])
 @jwt_required()
 def reset_password(user_id):
@@ -210,16 +301,21 @@ def reset_password(user_id):
         return jsonify({"msg": "Unauthorized"}), 403
 
     data = request.get_json()
-    new_password = data.get("new_password")
+    new_password = data.get("new_password", "")
 
-    if not new_password or len(new_password) < 6:
-        return jsonify({"msg": "Password must be at least 6 characters"}), 400
+    # التحقق من قوة كلمة المرور
+    is_valid, msg = validate_password(new_password)
+    if not is_valid:
+        return jsonify({"msg": msg}), 400
 
     user = User.query.get_or_404(user_id)
-    user.password_hash = generate_password_hash(new_password)
+    user.set_password(new_password)
     db.session.commit()
+    
+    log_activity(current_user.id, "password_reset", 
+                f"Admin reset password for user: {user.email}")
 
-    return jsonify({"msg": f"Password for {user.name} reset successfully"}), 200
+    return jsonify({"msg": f"Password reset successfully"}), 200
 
 @auth_bp.route("/export_logs", methods=["GET"])
 @jwt_required()
@@ -230,7 +326,7 @@ def export_logs():
     if not current_user or current_user.role != "admin":
         return jsonify({"msg": "Unauthorized"}), 403
 
-    logs = ActivityLog.query.order_by(ActivityLog.timestamp.desc()).all()
+    logs = ActivityLog.query.order_by(ActivityLog.timestamp.desc()).limit(10000).all()
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -238,26 +334,30 @@ def export_logs():
 
     for log in logs:
         writer.writerow([
-            log.user_id,
-            log.user.name if log.user else "N/A",
+            log.user_id or "N/A",
+            log.user.name if log.user else "System",
             log.action,
             log.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
             log.details or ""
         ])
 
     output.seek(0)
+    
+    log_activity(current_user.id, "logs_exported", "Activity logs exported")
 
     return send_file(
         io.BytesIO(output.getvalue().encode()),
         mimetype="text/csv",
         as_attachment=True,
-        download_name="activity_logs.csv"
+        download_name=f"activity_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     )
 
-
-##### logout #####
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 @jwt_required()
 def logout():
-    session.clear()
-    return redirect(url_for("auth.login"))
+    identity = get_jwt_identity()
+    log_activity(identity, "user_logout", "User logged out")
+    
+    response = jsonify({"msg": "Logout successful"})
+    unset_jwt_cookies(response)
+    return response, 200

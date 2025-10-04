@@ -1,4 +1,3 @@
-# app/views/athlete/subscriptions.py
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
@@ -19,7 +18,6 @@ import os
 
 from . import athlete_bp
 
-# ============= Configuration =============
 PAYMOB_API_KEY = os.getenv('PAYMOB_API_KEY', 'your_paymob_api_key')
 PAYMOB_INTEGRATION_ID_CARD = os.getenv('PAYMOB_INTEGRATION_ID_CARD', 'your_card_integration_id')
 PAYMOB_IFRAME_ID = os.getenv('PAYMOB_IFRAME_ID', 'your_iframe_id')
@@ -27,20 +25,18 @@ PAYMOB_HMAC_SECRET = os.getenv('PAYMOB_HMAC_SECRET', 'your_hmac_secret')
 
 PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID', 'your_paypal_client_id')
 PAYPAL_SECRET = os.getenv('PAYPAL_SECRET', 'your_paypal_secret')
-PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')  # sandbox or live
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 PAYPAL_API_BASE = 'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
 
 APP_BASE_URL = os.getenv('APP_BASE_URL', 'http://localhost:5000')
 
 
 def is_athlete_or_coach(identity):
-    """Check if the user is athlete or coach"""
     user = User.query.filter_by(id=identity).first()
     return user and user.role in ['athlete', 'coach']
 
 
 def get_subscription_metrics(user_id):
-    """Generate subscription metrics for athlete/coach"""
     try:
         now = datetime.now(tz=timezone.utc)
         thirty_days_ago = now - timedelta(days=30)
@@ -91,13 +87,9 @@ def get_subscription_metrics(user_id):
         }
 
 
-# ============= PAYMOB Integration =============
 class PaymobGateway:
-    """Paymob Payment Gateway Integration"""
-    
     @staticmethod
     def get_auth_token():
-        """Get authentication token from Paymob"""
         try:
             response = requests.post(
                 "https://accept.paymob.com/api/auth/tokens",
@@ -112,7 +104,6 @@ class PaymobGateway:
     
     @staticmethod
     def create_order(auth_token, amount, currency, items):
-        """Create payment order"""
         try:
             response = requests.post(
                 "https://accept.paymob.com/api/ecommerce/orders",
@@ -133,7 +124,6 @@ class PaymobGateway:
     
     @staticmethod
     def get_payment_key(auth_token, amount, currency, order_id, billing_data, integration_id):
-        """Generate payment key for iframe"""
         try:
             response = requests.post(
                 "https://accept.paymob.com/api/acceptance/payment_keys",
@@ -157,14 +147,11 @@ class PaymobGateway:
     
     @staticmethod
     def initiate_payment(payment, user):
-        """Complete Paymob payment flow"""
         try:
-            # Step 1: Get auth token
             auth_token = PaymobGateway.get_auth_token()
             if not auth_token:
                 return {"success": False, "error": "Failed to authenticate with payment gateway"}
             
-            # Step 2: Create order
             order_data = PaymobGateway.create_order(
                 auth_token=auth_token,
                 amount=payment.amount,
@@ -182,7 +169,6 @@ class PaymobGateway:
             
             order_id = order_data.get("id")
             
-            # Step 3: Generate payment key
             billing_data = {
                 "apartment": "NA",
                 "email": user.email,
@@ -211,7 +197,6 @@ class PaymobGateway:
             if not payment_key:
                 return {"success": False, "error": "Failed to generate payment key"}
             
-            # Update payment with order details
             payment.provider_transaction_id = f"ord_{order_id}"
             payment.extra_data = payment.extra_data or {}
             payment.extra_data.update({
@@ -231,13 +216,9 @@ class PaymobGateway:
             return {"success": False, "error": str(e)}
 
 
-# ============= PayPal Integration =============
 class PayPalGateway:
-    """PayPal Payment Gateway Integration"""
-    
     @staticmethod
     def get_access_token():
-        """Get PayPal access token"""
         try:
             response = requests.post(
                 f"{PAYPAL_API_BASE}/v1/oauth2/token",
@@ -254,7 +235,6 @@ class PayPalGateway:
     
     @staticmethod
     def create_order(access_token, payment, user):
-        """Create PayPal order"""
         try:
             response = requests.post(
                 f"{PAYPAL_API_BASE}/v2/checkout/orders",
@@ -289,14 +269,11 @@ class PayPalGateway:
     
     @staticmethod
     def initiate_payment(payment, user):
-        """Complete PayPal payment flow"""
         try:
-            # Get access token
             access_token = PayPalGateway.get_access_token()
             if not access_token:
                 return {"success": False, "error": "Failed to authenticate with PayPal"}
             
-            # Create order
             order_data = PayPalGateway.create_order(access_token, payment, user)
             if not order_data:
                 return {"success": False, "error": "Failed to create PayPal order"}
@@ -307,7 +284,6 @@ class PayPalGateway:
             if not approve_link:
                 return {"success": False, "error": "Failed to get PayPal approval link"}
             
-            # Update payment with order details
             payment.provider_transaction_id = order_id
             payment.extra_data = payment.extra_data or {}
             payment.extra_data.update({
@@ -326,11 +302,9 @@ class PayPalGateway:
             return {"success": False, "error": str(e)}
 
 
-# ============= Main Routes =============
 @athlete_bp.route('/subscriptions', methods=['GET'])
 @jwt_required()
 def subscriptions():
-    """Render subscription management page"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
@@ -386,28 +360,36 @@ def subscriptions():
 @athlete_bp.route('/api/subscribe', methods=['POST'])
 @jwt_required()
 def create_subscription():
-    """Create subscription and redirect to payment gateway"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
 
     try:
-        data = request.get_json()
+        logging.info(f"Subscribe request for user {identity}")
+        logging.info(f"Request headers: {dict(request.headers)}")
+        logging.info(f"Request data: {request.get_data(as_text=True)}")
+        
+        data = request.get_json(force=True)
         if not data:
+            logging.error("No JSON data received")
             return jsonify({"success": False, "error": "No data provided"}), 400
 
+        logging.info(f"Parsed data: {data}")
+
         plan_id = data.get('plan_id')
+        if not plan_id:
+            logging.error("Missing plan_id")
+            return jsonify({"success": False, "error": "Plan ID is required"}), 400
+
         billing_cycle = data.get('billing_cycle', 'monthly')
-        payment_method = data.get('payment_method', 'card')  # 'card' or 'paypal'
+        payment_method = data.get('payment_method', 'card')
         auto_renew = data.get('auto_renew', True)
         trial_enabled = data.get('trial_enabled', False)
 
-        if not plan_id:
-            return jsonify({"success": False, "error": "Plan ID is required"}), 400
-
         user = User.query.get(identity)
-        
-        # Check existing subscription
+        if not user:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
         existing_subscription = Subscription.query.filter(
             Subscription.user_id == identity,
             Subscription.status.in_(['active', 'trial'])
@@ -419,12 +401,11 @@ def create_subscription():
                 "error": "You already have an active subscription"
             }), 400
 
-        # Get plan
         plan = SubscriptionPlan.query.get(plan_id)
         if not plan or not plan.is_active:
+            logging.error(f"Invalid plan {plan_id}")
             return jsonify({"success": False, "error": "Invalid plan"}), 404
 
-        # Calculate pricing
         base_price = float(plan.price)
         final_price = base_price
         duration_days = 30 * plan.duration_months
@@ -441,7 +422,6 @@ def create_subscription():
         trial_end_date = start_date + timedelta(days=14) if trial_enabled else None
         status = 'trial' if trial_enabled else 'pending'
 
-        # Create subscription
         subscription = Subscription(
             user_id=identity,
             plan_id=plan_id,
@@ -459,7 +439,6 @@ def create_subscription():
         db.session.add(subscription)
         db.session.flush()
 
-        # Handle trial or payment
         if trial_enabled:
             subscription.status = 'trial'
             create_usage_records(subscription)
@@ -473,7 +452,6 @@ def create_subscription():
                 "redirect_url": url_for('athlete.subscriptions')
             })
         
-        # Create payment record
         payment = Payment(
             subscription_id=subscription.id,
             amount=final_price,
@@ -489,7 +467,6 @@ def create_subscription():
         db.session.add(payment)
         db.session.flush()
 
-        # Initiate payment gateway
         if payment_method == 'card':
             payment_result = PaymobGateway.initiate_payment(payment, user)
         elif payment_method == 'paypal':
@@ -497,7 +474,9 @@ def create_subscription():
         else:
             return jsonify({"success": False, "error": "Invalid payment method"}), 400
 
-        if payment_result['success']:
+        logging.info(f"Payment result: {payment_result}")
+
+        if payment_result and payment_result.get('success'):
             db.session.commit()
             
             return jsonify({
@@ -507,24 +486,20 @@ def create_subscription():
                 "subscription_id": subscription.id
             })
         else:
-            subscription.status = 'canceled'
-            payment.status = 'failed'
-            payment.failure_reason = payment_result.get('error')
-            db.session.commit()
-            
+            db.session.rollback()
+            logging.error(f"Payment initiation failed: {payment_result}")
             return jsonify({
                 "success": False,
-                "error": payment_result.get('error')
+                "error": payment_result.get('error', 'Payment initiation failed')
             }), 400
 
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Error creating subscription: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        logging.error(f"Exception in create_subscription: {str(e)}", exc_info=True)
+        return jsonify({"success": False, "error": f"Internal error: {str(e)}"}), 500
 
 
 def create_usage_records(subscription):
-    """Create usage tracking records"""
     try:
         plan = subscription.plan
         usage_records = [
@@ -559,26 +534,21 @@ def create_usage_records(subscription):
         raise
 
 
-# ============= Webhook Handlers =============
 @athlete_bp.route('/webhook/paymob', methods=['POST'])
 def paymob_webhook():
-    """Handle Paymob payment callbacks"""
     try:
         data = request.json
         
-        # Verify HMAC
         received_hmac = request.args.get('hmac')
         if received_hmac and not verify_paymob_hmac(data, received_hmac):
             logging.error("Invalid Paymob HMAC signature")
             return jsonify({"error": "Invalid signature"}), 403
         
-        # Extract data
         transaction_id = data.get('id')
         order_id = data.get('order', {}).get('id') if isinstance(data.get('order'), dict) else data.get('order')
         success = data.get('success') == 'true' or data.get('success') is True
         amount_cents = int(data.get('amount_cents', 0))
         
-        # Find payment
         payment = Payment.query.filter(
             Payment.extra_data.contains({'order_id': order_id})
         ).first()
@@ -587,11 +557,9 @@ def paymob_webhook():
             logging.error(f"Payment not found for order {order_id}")
             return jsonify({"error": "Payment not found"}), 404
         
-        # Verify amount
         expected_amount_cents = int(float(payment.amount) * 100)
         
         if success and amount_cents == expected_amount_cents:
-            # Payment successful
             payment.status = 'completed'
             payment.processed_at = datetime.now(timezone.utc)
             payment.provider_transaction_id = str(transaction_id)
@@ -606,7 +574,6 @@ def paymob_webhook():
             
             logging.info(f"Payment {payment.id} completed successfully")
         else:
-            # Payment failed
             payment.status = 'failed'
             payment.failure_reason = data.get('data', {}).get('message', 'Payment verification failed')
             
@@ -626,7 +593,6 @@ def paymob_webhook():
 
 @athlete_bp.route('/webhook/paypal', methods=['POST'])
 def paypal_webhook():
-    """Handle PayPal payment webhooks"""
     try:
         data = request.json
         event_type = data.get('event_type')
@@ -634,7 +600,6 @@ def paypal_webhook():
         
         order_id = resource.get('id')
         
-        # Find payment
         payment = Payment.query.filter(
             Payment.provider_transaction_id == order_id
         ).first()
@@ -643,9 +608,7 @@ def paypal_webhook():
             logging.error(f"Payment not found for PayPal order {order_id}")
             return jsonify({"error": "Payment not found"}), 404
         
-        # Handle different event types
         if event_type == 'CHECKOUT.ORDER.APPROVED':
-            # Order approved - now capture it
             access_token = PayPalGateway.get_access_token()
             if access_token:
                 capture_response = requests.post(
@@ -698,16 +661,11 @@ def paypal_webhook():
         return jsonify({"error": "Internal error"}), 500
 
 
-# ============= Payment Success/Cancel Handlers =============
 @athlete_bp.route('/payment/paypal/success', methods=['GET'])
 @jwt_required()
 def paypal_success():
-    """Handle PayPal return after successful payment"""
     try:
         token = request.args.get('token')
-        
-        # The actual payment capture is handled by webhook
-        # Just redirect user to subscriptions page
         
         return redirect(url_for('athlete.subscriptions'))
         
@@ -719,11 +677,9 @@ def paypal_success():
 @athlete_bp.route('/payment/paypal/cancel', methods=['GET'])
 @jwt_required()
 def paypal_cancel():
-    """Handle PayPal cancellation"""
     try:
         token = request.args.get('token')
         
-        # Find and cancel the payment
         payment = Payment.query.filter(
             Payment.extra_data.contains({'paypal_order_id': token}),
             Payment.status == 'pending'
@@ -742,9 +698,7 @@ def paypal_cancel():
 
 
 def verify_paymob_hmac(data, received_hmac):
-    """Verify Paymob HMAC signature"""
     try:
-        # Construct string to hash (based on Paymob documentation)
         concatenated_string = (
             f"{data.get('amount_cents')}"
             f"{data.get('created_at')}"
@@ -781,11 +735,9 @@ def verify_paymob_hmac(data, received_hmac):
         return False
 
 
-# ============= Additional API Endpoints =============
 @athlete_bp.route('/api/payment_status/<int:payment_id>', methods=['GET'])
 @jwt_required()
 def check_payment_status(payment_id):
-    """Check payment status"""
     identity = get_jwt_identity()
     
     try:
@@ -819,7 +771,6 @@ def check_payment_status(payment_id):
 @athlete_bp.route('/api/cancel_subscription', methods=['POST'])
 @jwt_required()
 def cancel_subscription():
-    """Cancel current subscription"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
@@ -838,7 +789,12 @@ def cancel_subscription():
         if not subscription:
             return jsonify({"success": False, "error": "No active subscription found"}), 404
 
-        subscription.cancel_subscription(reason=reason, immediate=immediate)
+        subscription.status = 'canceled' if immediate else 'cancelled_at_period_end'
+        subscription.auto_renew = False
+        subscription.next_billing_date = None if immediate else subscription.end_date
+        subscription.updated_at = datetime.now(timezone.utc)
+        subscription.cancellation_reason = reason
+
         db.session.commit()
 
         message = "Subscription cancelled immediately" if immediate else "Subscription will be cancelled at the end of current period"
@@ -857,7 +813,6 @@ def cancel_subscription():
 @athlete_bp.route('/api/payment_history', methods=['GET'])
 @jwt_required()
 def get_payment_history():
-    """Get user's payment history"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
@@ -906,7 +861,6 @@ def get_payment_history():
 @athlete_bp.route('/api/upgrade_plan', methods=['POST'])
 @jwt_required()
 def upgrade_plan():
-    """Upgrade subscription to higher plan"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
@@ -935,13 +889,11 @@ def upgrade_plan():
         if new_plan.price <= current_subscription.plan.price:
             return jsonify({"success": False, "error": "Can only upgrade to higher-tier plans"}), 400
 
-        # Calculate prorated amount
         days_remaining = current_subscription.days_remaining
         daily_rate_old = float(current_subscription.plan.price) / 30
         daily_rate_new = float(new_plan.price) / 30
         prorated_amount = (daily_rate_new - daily_rate_old) * days_remaining
 
-        # Create payment
         payment = Payment(
             subscription_id=current_subscription.id,
             amount=prorated_amount,
@@ -959,14 +911,12 @@ def upgrade_plan():
         db.session.add(payment)
         db.session.flush()
 
-        # Initiate payment
         if payment_method == 'card':
             payment_result = PaymobGateway.initiate_payment(payment, user)
         else:
             payment_result = PayPalGateway.initiate_payment(payment, user)
 
-        if payment_result['success']:
-            # Update subscription plan (will be activated after payment)
+        if payment_result and payment_result.get('success'):
             payment.extra_data['new_plan_id'] = new_plan_id
             db.session.commit()
 
@@ -990,7 +940,6 @@ def upgrade_plan():
 @athlete_bp.route('/api/convert_trial', methods=['POST'])
 @jwt_required()
 def convert_trial():
-    """Convert trial to paid subscription"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
@@ -1027,7 +976,7 @@ def convert_trial():
         else:
             payment_result = PayPalGateway.initiate_payment(payment, user)
 
-        if payment_result['success']:
+        if payment_result and payment_result.get('success'):
             db.session.commit()
             return jsonify({
                 "success": True,
@@ -1048,7 +997,6 @@ def convert_trial():
 @athlete_bp.route('/api/update_auto_renew', methods=['POST'])
 @jwt_required()
 def update_auto_renew():
-    """Update auto-renewal setting"""
     identity = get_jwt_identity()
     if not is_athlete_or_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
@@ -1080,4 +1028,51 @@ def update_auto_renew():
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error updating auto-renew: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@athlete_bp.route('/api/available_plans', methods=['GET'])
+@jwt_required()
+def get_available_plans():
+    identity = get_jwt_identity()
+    if not is_athlete_or_coach(identity):
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    try:
+        plans = SubscriptionPlan.query.filter_by(
+            is_active=True
+        ).order_by(SubscriptionPlan.sort_order, SubscriptionPlan.price).all()
+        
+        current_subscription = Subscription.query.filter(
+            Subscription.user_id == identity,
+            Subscription.status.in_(['active', 'trial'])
+        ).first()
+        
+        current_plan_id = current_subscription.plan_id if current_subscription else None
+        current_price = float(current_subscription.plan.price) if current_subscription and current_subscription.plan else 0
+        
+        plan_data = []
+        for plan in plans:
+            plan_data.append({
+                'id': plan.id,
+                'name': plan.name,
+                'description': plan.description,
+                'price': float(plan.price),
+                'duration_months': plan.duration_months,
+                'features': plan.features or [],
+                'max_athletes': plan.max_athletes,
+                'max_workouts': plan.max_workouts,
+                'storage_gb': plan.storage_gb,
+                'is_current': plan.id == current_plan_id,
+                'can_upgrade': plan.price > current_price if current_subscription else False
+            })
+        
+        return jsonify({
+            "success": True,
+            "plans": plan_data,
+            "current_plan_id": current_plan_id
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting available plans: {e}")
         return jsonify({"success": False, "error": str(e)}), 500

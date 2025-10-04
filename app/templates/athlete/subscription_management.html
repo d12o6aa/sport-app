@@ -12,7 +12,6 @@
 </div>
 
 <section class="section">
-    <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-xxl-3 col-md-6">
             <div class="card info-card subscription-card">
@@ -82,7 +81,6 @@
         </div>
     </div>
 
-    <!-- Current Subscription Card -->
     {% if current_subscription %}
     <div class="row mb-4">
         <div class="col-12">
@@ -189,7 +187,6 @@
     </div>
     {% endif %}
 
-    <!-- Available Plans -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -279,7 +276,6 @@
         </div>
     </div>
 
-    <!-- Payment History -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -317,7 +313,6 @@
     </div>
 </section>
 
-<!-- Subscribe Modal -->
 <div class="modal fade" id="subscribeModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -327,9 +322,6 @@
             </div>
             <div class="modal-body">
                 <form id="subscribeForm">
-                    {% if csrf_token %}
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    {% endif %}
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Selected Plan</label>
@@ -425,7 +417,6 @@
     </div>
 </div>
 
-<!-- Upgrade Modal -->
 <div class="modal fade" id="upgradeModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -435,9 +426,6 @@
             </div>
             <div class="modal-body">
                 <form id="upgradeForm">
-                    {% if csrf_token %}
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    {% endif %}
                     <div class="upgrade-comparison mb-4">
                         <div class="row">
                             <div class="col-md-6">
@@ -498,7 +486,6 @@
     </div>
 </div>
 
-<!-- Convert Trial Modal -->
 <div class="modal fade" id="convertTrialModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -515,9 +502,6 @@
                 </div>
                 
                 <form id="convertTrialForm">
-                    {% if csrf_token %}
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    {% endif %}
                     <div class="payment-method-options">
                         <div class="form-check payment-option mb-2">
                             <input class="form-check-input" type="radio" name="convert_payment_method" value="card" checked>
@@ -544,7 +528,6 @@
     </div>
 </div>
 
-<!-- Cancel Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -560,9 +543,6 @@
                 </div>
                 
                 <form id="cancelForm">
-                    {% if csrf_token %}
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    {% endif %}
                     <div class="mb-3">
                         <label class="form-label">Reason (optional)</label>
                         <select name="reason" class="form-select mb-2">
@@ -581,7 +561,7 @@
                             <input class="form-check-input" type="radio" name="cancel_type" value="end_of_period" checked>
                             <label class="form-check-label">
                                 <strong>Cancel at period end</strong><br>
-                                <small class="text-muted">Access until {{ current_subscription.end_date.strftime('%b %d, %Y') if current_subscription else 'N/A' }}</small>
+                                <small class="text-muted">Access until {{ current_subscription.end_date.strftime('%b %d, %Y') | e if current_subscription else 'N/A' }}</small>
                             </label>
                         </div>
                         <div class="form-check">
@@ -604,7 +584,6 @@
     </div>
 </div>
 
-<!-- Payment Processing Modal -->
 <div class="modal fade" id="paymentProcessingModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -621,16 +600,11 @@
 
 {% endblock %}
 
-{% block scripts %}
+{% block styles %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="https://cdn.datatables.net/2.0.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
-
 <style>
-    /* Card Icons */
     .subscription-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
     .days-card .card-icon { background: linear-gradient(90deg, #ffc107, #fd7e14); }
     .spending-card .card-icon { background: linear-gradient(90deg, #28a745, #20c997); }
@@ -638,7 +612,6 @@
     
     .card-icon { width: 48px; height: 48px; color: white; }
 
-    /* Status Badges */
     .status-badge {
         padding: 0.4rem 0.8rem;
         border-radius: 20px;
@@ -655,7 +628,6 @@
     .status-completed { background: rgba(39, 174, 96, 0.15); color: #27ae60; }
     .status-failed { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
 
-    /* Plan Cards */
     .plan-card {
         transition: all 0.3s ease;
         border: 2px solid #e9ecef;
@@ -669,7 +641,6 @@
         background: linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%);
     }
 
-    /* Payment Options */
     .payment-option {
         padding: 0.75rem 1rem;
         border: 2px solid #e9ecef;
@@ -686,7 +657,6 @@
         font-weight: 500;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         .subscription-actions {
             width: 100%;
@@ -704,521 +674,478 @@
         }
     }
 </style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/2.0.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        // Initialize DataTables
-        $('#paymentHistoryTable').DataTable({
-            responsive: true,
-            pageLength: 10,
-            order: [[0, 'desc']],
-            language: {
-                emptyTable: "No payments yet"
-            }
-        });
+$(document).ready(function() {
+    if (typeof $.fn.DataTable === 'undefined') {
+        console.error('DataTables not loaded');
+        $('#paymentHistoryBody').html('<tr><td colspan="6" class="text-center text-muted">Table library not loaded. Please refresh.</td></tr>');
+        return;
+    }
 
-        // Load payment history
-        loadPaymentHistory();
-
-        // Billing cycle change
-        $('select[name="billing_cycle"]').change(function() {
-            updatePricing();
-        });
-
-        // Trial toggle
-        $('#trialEnabled').change(function() {
-            updatePricing();
-        });
+    const table = $('#paymentHistoryTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        order: [[0, 'desc']],
+        language: {
+            emptyTable: "No payments yet"
+        },
+        destroy: true
     });
 
-    let currentPlanId = null;
-    let currentPlanPrice = 0;
+    loadPaymentHistory();
 
-    // Utility function for price formatting
-    function formatPrice(amount) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(amount);
-    }
-
-    // Get authentication token with validation
-    function getAuthToken() {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            showAlert('Please log in to continue.', 'danger');
-            setTimeout(() => window.location.href = '/login', 2000);
-            throw new Error('No authentication token found');
-        }
-        return token;
-    }
-
-    // Get CSRF token if available
-    function getCsrfToken() {
-        return $('input[name="csrf_token"]').val() || null;
-    }
-
-    // Show alert
-    function showAlert(message, type) {
-        const alert = $(`
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position:fixed;top:20px;right:20px;z-index:9999;min-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `);
-        $('body').append(alert);
-        setTimeout(() => alert.alert('close'), 5000);
-    }
-
-    // Subscribe to Plan
-    function subscribeToPlan(planId, planName) {
-        currentPlanId = planId;
-        const planCard = $(`.plan-card:has(button[onclick*="subscribeToPlan(${planId}"])`);
-        const planPrice = parseFloat(planCard.find('.price h2').text().replace(',', ''));
-        
-        $('#selectedPlanName').text(planName);
-        $('#selectedPlanPrice').text(formatPrice(planPrice));
-        $('#subscriptionPlanId').val(planId);
-        currentPlanPrice = planPrice;
-        
+    $('select[name="billing_cycle"]').change(function() {
         updatePricing();
-        $('#subscribeModal').modal('show');
-    }
-
-    // Update Pricing
-    function updatePricing() {
-        const billingCycle = $('select[name="billing_cycle"]').val();
-        const isTrialEnabled = $('#trialEnabled').is(':checked');
-        
-        let price = currentPlanPrice;
-        let discount = 0;
-        
-        if (billingCycle === 'quarterly') {
-            price = currentPlanPrice * 3 * 0.9;
-            discount = currentPlanPrice * 3 * 0.1;
-        } else if (billingCycle === 'yearly') {
-            price = currentPlanPrice * 12 * 0.8;
-            discount = currentPlanPrice * 12 * 0.2;
-        }
-        
-        const subtotal = isTrialEnabled ? 0 : price;
-        
-        $('#subtotalAmount').text(isTrialEnabled ? '$0.00 (Trial)' : formatPrice(price));
-        $('#discountAmount').text(formatPrice(-discount));
-        $('#totalAmount').text(formatPrice(subtotal));
-    }
-
-    // Submit Subscribe Form
-    $('#subscribeForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
-        }
-        
-        fetch('/athlete/api/subscribe', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                plan_id: parseInt($('#subscriptionPlanId').val()),
-                billing_cycle: $('select[name="billing_cycle"]').val(),
-                payment_method: $('input[name="payment_method"]:checked').val(),
-                auto_renew: $('#autoRenew').is(':checked'),
-                trial_enabled: $('#trialEnabled').is(':checked')
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                if (data.payment_url) {
-                    $('#subscribeModal').modal('hide');
-                    $('#paymentProcessingModal').modal('show');
-                    setTimeout(() => window.location.href = data.payment_url, 1500);
-                } else {
-                    showAlert(data.message, 'success');
-                    setTimeout(() => location.reload(), 2000);
-                }
-            } else {
-                showAlert(data.error || 'Subscription failed', 'danger');
-                submitBtn.prop('disabled', false).html(originalText);
-            }
-        })
-        .catch(error => {
-            showAlert(`Error: ${error.message}`, 'danger');
-            submitBtn.prop('disabled', false).html(originalText);
-        });
     });
-
-    // Upgrade Plan
-    function upgradeToPlan(planId, planName) {
-        const planCard = $(`.plan-card:has(button[onclick*="upgradeToPlan(${planId}"])`);
-        const planPrice = parseFloat(planCard.find('.price h2').text().replace(',', ''));
-        
-        $('#newPlanName').text(planName);
-        $('#newPlanPrice').text(formatPrice(planPrice));
-        $('#upgradePlanId').val(planId);
-        
-        const currentPrice = parseFloat($('#currentPlanPrice').data('price') || 0);
-        const daysRemaining = parseInt($('#daysRemaining').text() || 0);
-        let prorated = 0;
-        if (daysRemaining > 0 && planPrice > currentPrice) {
-            prorated = ((planPrice - currentPrice) / 30) * daysRemaining;
-        }
-        
-        $('#proratedAmount').text(formatPrice(Math.max(0, prorated)));
-        $('#upgradeModal').modal('show');
-    }
-
-    function showUpgradeModal() {
-        $('#upgradeModal').modal('show');
-    }
-
-    $('#upgradeForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
-        }
-        
-        fetch('/athlete/api/upgrade_plan', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                plan_id: parseInt($('#upgradePlanId').val()),
-                payment_method: $('input[name="upgrade_payment_method"]:checked').val()
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                if (data.payment_url) {
-                    $('#upgradeModal').modal('hide');
-                    $('#paymentProcessingModal').modal('show');
-                    setTimeout(() => window.location.href = data.payment_url, 1500);
-                } else {
-                    showAlert(data.message, 'success');
-                    setTimeout(() => location.reload(), 2000);
-                }
-            } else {
-                showAlert(data.error || 'Upgrade failed', 'danger');
-                submitBtn.prop('disabled', false).html(originalText);
-            }
-        })
-        .catch(error => {
-            showAlert(`Error: ${error.message}`, 'danger');
-            submitBtn.prop('disabled', false).html(originalText);
-        });
+    $('#trialEnabled').change(function() {
+        updatePricing();
     });
+});
 
-    // Convert Trial
-    function convertTrial() {
-        $('#convertTrialModal').modal('show');
+let currentPlanId = null;
+let currentPlanPrice = 0;
+
+function formatPrice(amount) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+}
+
+function getAuthToken() {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        showAlert('Please log in to continue.', 'danger');
+        setTimeout(() => window.location.href = '/login', 2000);
+        throw new Error('No authentication token found');
     }
+    return token;
+}
 
-    $('#convertTrialForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
-        
-        const headers = {
+function showAlert(message, type) {
+    const alert = $(`
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" role="alert" style="top:20px;right:20px;z-index:9999;min-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+    $('body').append(alert);
+    setTimeout(() => alert.alert('close'), 5000);
+}
+
+function subscribeToPlan(planId, planName) {
+    currentPlanId = planId;
+    const planCard = $(`.plan-card:has(button[onclick*="subscribeToPlan(${planId}"])`);
+    const planPriceText = planCard.find('.price h2').text().replace(/[^\d.]/g, '');
+    const planPrice = parseFloat(planPriceText);
+    
+    $('#selectedPlanName').text(planName);
+    $('#selectedPlanPrice').text(formatPrice(planPrice));
+    $('#subscriptionPlanId').val(planId);
+    currentPlanPrice = planPrice;
+    
+    updatePricing();
+    $('#subscribeModal').modal('show');
+}
+
+function updatePricing() {
+    const billingCycle = $('select[name="billing_cycle"]').val();
+    const isTrialEnabled = $('#trialEnabled').is(':checked');
+    
+    let price = currentPlanPrice;
+    let discount = 0;
+    
+    if (billingCycle === 'quarterly') {
+        price = currentPlanPrice * 3 * 0.9;
+        discount = currentPlanPrice * 3 * 0.1;
+    } else if (billingCycle === 'yearly') {
+        price = currentPlanPrice * 12 * 0.8;
+        discount = currentPlanPrice * 12 * 0.2;
+    }
+    
+    const subtotal = isTrialEnabled ? 0 : price;
+    
+    $('#subtotalAmount').text(isTrialEnabled ? '$0.00 (Trial)' : formatPrice(price));
+    $('#discountAmount').text(formatPrice(-discount));
+    $('#totalAmount').text(formatPrice(subtotal));
+}
+
+$('#subscribeForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
+    const originalText = submitBtn.html();
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
+    
+    const payload = {
+        plan_id: parseInt($('#subscriptionPlanId').val()),
+        billing_cycle: $('select[name="billing_cycle"]').val(),
+        payment_method: $('input[name="payment_method"]:checked').val(),
+        auto_renew: $('#autoRenew').is(':checked'),
+        trial_enabled: $('#trialEnabled').is(':checked')
+    };
+    
+    fetch('/athlete/api/subscribe', {
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
         }
-        
-        fetch('/athlete/api/convert_trial', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                payment_method: $('input[name="convert_payment_method"]:checked').val()
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                if (data.payment_url) {
-                    $('#convertTrialModal').modal('hide');
-                    $('#paymentProcessingModal').modal('show');
-                    setTimeout(() => window.location.href = data.payment_url, 1500);
-                } else {
-                    showAlert(data.message, 'success');
-                    setTimeout(() => location.reload(), 2000);
-                }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            if (data.payment_url) {
+                $('#subscribeModal').modal('hide');
+                $('#paymentProcessingModal').modal('show');
+                setTimeout(() => window.location.href = data.payment_url, 1500);
             } else {
-                showAlert(data.error || 'Conversion failed', 'danger');
-                submitBtn.prop('disabled', false).html(originalText);
-            }
-        })
-        .catch(error => {
-            showAlert(`Error: ${error.message}`, 'danger');
-            submitBtn.prop('disabled', false).html(originalText);
-        });
-    });
-
-    // Cancel Subscription
-    function showCancelModal() {
-        $('#cancelModal').modal('show');
-    }
-
-    $('#cancelForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        if (!confirm('Are you sure you want to cancel your subscription?')) return;
-        
-        const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Canceling...');
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
-        }
-        
-        fetch('/athlete/api/cancel_subscription', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                reason: $('select[name="reason"]').val() || $('textarea[name="reason_details"]').val(),
-                cancel_type: $('input[name="cancel_type"]:checked').val()
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showAlert(data.message, 'success');
+                showAlert(data.message || 'Subscription successful', 'success');
                 setTimeout(() => location.reload(), 2000);
-            } else {
-                showAlert(data.error || 'Cancellation failed', 'danger');
-                submitBtn.prop('disabled', false).html(originalText);
             }
-        })
-        .catch(error => {
-            showAlert(`Error: ${error.message}`, 'danger');
+        } else {
+            showAlert(data.error || 'Subscription failed', 'danger');
             submitBtn.prop('disabled', false).html(originalText);
-        });
+        }
+    })
+    .catch(error => {
+        showAlert(`Error: ${error.message}`, 'danger');
+        submitBtn.prop('disabled', false).html(originalText);
     });
+});
 
-    // Toggle Auto-Renew
-    function toggleAutoRenew() {
-        const current = $('#autoRenewStatus').data('status') === 'true';
-        const newStatus = !current;
-        
-        if (!confirm(`${newStatus ? 'Enable' : 'Disable'} auto-renewal?`)) return;
-        
-        const headers = {
+function upgradeToPlan(planId, planName) {
+    const planCard = $(`.plan-card:has(button[onclick*="upgradeToPlan(${planId}"])`);
+    const planPriceText = planCard.find('.price h2').text().replace(/[^\d.]/g, '');
+    const planPrice = parseFloat(planPriceText);
+    
+    $('#newPlanName').text(planName);
+    $('#newPlanPrice').text(formatPrice(planPrice));
+    $('#upgradePlanId').val(planId);
+    
+    const currentPrice = parseFloat($('#currentPlanPrice').data('price') || 0);
+    const daysRemaining = parseInt($('#daysRemaining').text() || 0);
+    let prorated = 0;
+    if (daysRemaining > 0 && planPrice > currentPrice) {
+        prorated = ((planPrice - currentPrice) / 30) * daysRemaining;
+    }
+    
+    $('#proratedAmount').text(formatPrice(Math.max(0, prorated)));
+    $('#upgradeModal').modal('show');
+}
+
+function showUpgradeModal() {
+    $('#upgradeModal').modal('show');
+}
+
+$('#upgradeForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
+    const originalText = submitBtn.html();
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
+    
+    fetch('/athlete/api/upgrade_plan', {
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
+        },
+        body: JSON.stringify({
+            plan_id: parseInt($('#upgradePlanId').val()),
+            payment_method: $('input[name="upgrade_payment_method"]:checked').val()
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
         }
-        
-        fetch('/athlete/api/update_auto_renew', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ auto_renew: newStatus })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showAlert(data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            if (data.payment_url) {
+                $('#upgradeModal').modal('hide');
+                $('#paymentProcessingModal').modal('show');
+                setTimeout(() => window.location.href = data.payment_url, 1500);
             } else {
-                showAlert(data.error || 'Update failed', 'danger');
+                showAlert(data.message || 'Upgrade successful', 'success');
+                setTimeout(() => location.reload(), 2000);
             }
-        })
-        .catch(error => showAlert(`Error: ${error.message}`, 'danger'));
-    }
+        } else {
+            showAlert(data.error || 'Upgrade failed', 'danger');
+            submitBtn.prop('disabled', false).html(originalText);
+        }
+    })
+    .catch(error => {
+        showAlert(`Error: ${error.message}`, 'danger');
+        submitBtn.prop('disabled', false).html(originalText);
+    });
+});
 
-    // Load Payment History
-    function loadPaymentHistory() {
+function convertTrial() {
+    $('#convertTrialModal').modal('show');
+}
+
+$('#convertTrialForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
+    const originalText = submitBtn.html();
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
+    
+    fetch('/athlete/api/convert_trial', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({
+            payment_method: $('input[name="convert_payment_method"]:checked').val()
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            if (data.payment_url) {
+                $('#convertTrialModal').modal('hide');
+                $('#paymentProcessingModal').modal('show');
+                setTimeout(() => window.location.href = data.payment_url, 1500);
+            } else {
+                showAlert(data.message || 'Conversion successful', 'success');
+                setTimeout(() => location.reload(), 2000);
+            }
+        } else {
+            showAlert(data.error || 'Conversion failed', 'danger');
+            submitBtn.prop('disabled', false).html(originalText);
+        }
+    })
+    .catch(error => {
+        showAlert(`Error: ${error.message}`, 'danger');
+        submitBtn.prop('disabled', false).html(originalText);
+    });
+});
+
+function showCancelModal() {
+    $('#cancelModal').modal('show');
+}
+
+$('#cancelForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    if (!confirm('Are you sure you want to cancel your subscription?')) return;
+    
+    const submitBtn = $(this).closest('.modal').find('button[type="submit"]');
+    const originalText = submitBtn.html();
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Canceling...');
+    
+    fetch('/athlete/api/cancel_subscription', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({
+            reason: $('select[name="reason"]').val() || $('textarea[name="reason_details"]').val(),
+            cancel_type: $('input[name="cancel_type"]:checked').val()
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Cancellation successful', 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showAlert(data.error || 'Cancellation failed', 'danger');
+            submitBtn.prop('disabled', false).html(originalText);
+        }
+    })
+    .catch(error => {
+        showAlert(`Error: ${error.message}`, 'danger');
+        submitBtn.prop('disabled', false).html(originalText);
+    });
+});
+
+function toggleAutoRenew() {
+    const current = $('#autoRenewStatus').data('status') === 'true';
+    const newStatus = !current;
+    
+    if (!confirm(`${newStatus ? 'Enable' : 'Disable'} auto-renewal?`)) return;
+    
+    fetch('/athlete/api/update_auto_renew', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({ auto_renew: newStatus })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Auto-renew updated', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.error || 'Update failed', 'danger');
+        }
+    })
+    .catch(error => showAlert(`Error: ${error.message}`, 'danger'));
+});
+
+function loadPaymentHistory() {
+    const table = $('#paymentHistoryTable').DataTable();
+    table.clear().draw();
+    
+    fetch('/athlete/api/payment_history', {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        table.clear();
+        if (data.success && data.payments && data.payments.length > 0) {
+            data.payments.forEach(payment => {
+                const statusClass = payment.status === 'completed' ? 'success' : payment.status === 'failed' ? 'danger' : 'warning';
+                table.row.add([
+                    payment.date,
+                    `<span class="fw-bold text-${statusClass}">${formatPrice(payment.amount)}</span>`,
+                    payment.plan_name || 'N/A',
+                    `<span class="status-badge status-${payment.status}">${payment.status}</span>`,
+                    `<i class="bi bi-${payment.provider === 'paypal' ? 'paypal' : 'credit-card'} me-1"></i>${payment.provider || 'N/A'}`,
+                    `<small class="text-muted">${payment.provider_transaction_id || 'N/A'}</small>`
+                ]);
+            });
+        } else {
+            table.row.add(['<td colspan="6" class="text-center text-muted">No payments yet</td>']);
+        }
+        table.draw();
+    })
+    .catch(error => {
+        console.error('Load payments error:', error);
+        showAlert(`Error loading payments: ${error.message}`, 'danger');
         const table = $('#paymentHistoryTable').DataTable();
-        table.clear().draw();
-        table.row.add(['<td colspan="6" class="text-center text-muted">Loading...</td>']).draw();
-        
-        const headers = {
-            'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
-        }
-        
-        fetch('/athlete/api/payment_history', {
-            headers: headers
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            table.clear();
-            if (data.success) {
-                if (data.payments.length === 0) {
-                    table.row.add(['<td colspan="6" class="text-center text-muted">No payments yet</td>']).draw();
-                    return;
-                }
-                data.payments.forEach(payment => {
-                    const statusClass = payment.status === 'completed' ? 'success' : 
-                                    payment.status === 'failed' ? 'danger' : 'warning';
-                    table.row.add([
-                        payment.date,
-                        `<span class="fw-bold text-${statusClass}">${formatPrice(payment.amount)}</span>`,
-                        payment.plan_name,
-                        `<span class="status-badge status-${payment.status}">${payment.status}</span>`,
-                        `<i class="bi bi-${payment.provider === 'paypal' ? 'paypal' : 'credit-card'} me-1"></i>${payment.provider || 'N/A'}`,
-                        `<small class="text-muted">${payment.provider_transaction_id || 'N/A'}</small>`
-                    ]).draw();
-                });
-            } else {
-                showAlert(data.error || 'Failed to load payment history', 'danger');
-                table.row.add(['<td colspan="6" class="text-center text-muted">No payments yet</td>']).draw();
-            }
-        })
-        .catch(error => {
-            showAlert('Error loading payments: ' + error.message, 'danger');
-            table.clear().row.add(['<td colspan="6" class="text-center text-muted">Error loading payments</td>']).draw();
-        });
-    }
+        table.clear().row.add(['<td colspan="6" class="text-center text-muted">Error loading payments</td>']).draw();
+    });
+}
 
-    // Refresh Plans
-    function refreshPlans() {
-        const headers = {
-            'Authorization': `Bearer ${getAuthToken()}`
-        };
-        const csrfToken = getCsrfToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
+function refreshPlans() {
+    fetch('/athlete/api/available_plans', {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
         }
-        
-        fetch('/athlete/api/available_plans', {
-            headers: headers
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                const plansContainer = $('#plansContainer');
-                plansContainer.empty();
-                data.plans.forEach(plan => {
-                    const isCurrentPlan = {{ 'current_subscription.plan_id' if current_subscription else 'null' }} === plan.id;
-                    const buttonHtml = isCurrentPlan ? 
-                        `<button class="btn btn-outline-success w-100" disabled><i class="bi bi-check me-1"></i>Current Plan</button>` :
-                        ({{ 'current_subscription' if current_subscription else 'null' }} && plan.price > {{ 'current_subscription.plan.price' if current_subscription else '0' }}) ?
-                        `<button class="btn btn-primary w-100" onclick="upgradeToPlan(${plan.id}, '${plan.name}')"><i class="bi bi-arrow-up me-1"></i>Upgrade</button>` :
-                        (!{{ 'current_subscription' if current_subscription else 'null' }}) ?
-                        `<button class="btn btn-success w-100" onclick="subscribeToPlan(${plan.id}, '${plan.name}')"><i class="bi bi-plus me-1"></i>Subscribe</button>` :
-                        `<button class="btn btn-outline-secondary w-100" disabled><i class="bi bi-arrow-down me-1"></i>Lower Tier</button>`;
-                    const featuresHtml = plan.features.slice(0, 3).map(feature => `
-                        <div class="feature-item mb-1">
-                            <i class="bi bi-check text-success me-1"></i>
-                            <small>${feature}</small>
-                        </div>
-                    `).join('') + (plan.features.length > 3 ? `<small class="text-muted">+${plan.features.length - 3} more</small>` : '');
-                    plansContainer.append(`
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="card plan-card h-100 ${isCurrentPlan ? 'border-primary' : ''}">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="text-center mb-3">
-                                        <h5 class="card-title">${plan.name}</h5>
-                                        <div class="price">
-                                            <h2 class="text-primary">${formatPrice(plan.price)}</h2>
-                                            <span class="text-muted">/month</span>
-                                        </div>
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const plansContainer = $('#plansContainer');
+            plansContainer.empty();
+            data.plans.forEach(plan => {
+                const isCurrentPlan = current_subscription && current_subscription.plan_id === plan.id;
+                const buttonHtml = isCurrentPlan ? 
+                    `<button class="btn btn-outline-success w-100" disabled><i class="bi bi-check me-1"></i>Current Plan</button>` :
+                    (current_subscription && plan.price > current_subscription.plan.price) ?
+                    `<button class="btn btn-primary w-100" onclick="upgradeToPlan(${plan.id}, '${plan.name.replace(/'/g, "\\'")}')"><i class="bi bi-arrow-up me-1"></i>Upgrade</button>` :
+                    (!current_subscription) ?
+                    `<button class="btn btn-success w-100" onclick="subscribeToPlan(${plan.id}, '${plan.name.replace(/'/g, "\\'")}')"><i class="bi bi-plus me-1"></i>Subscribe</button>` :
+                    `<button class="btn btn-outline-secondary w-100" disabled><i class="bi bi-arrow-down me-1"></i>Lower Tier</button>`;
+                const featuresHtml = plan.features.slice(0, 3).map(feature => `
+                    <div class="feature-item mb-1">
+                        <i class="bi bi-check text-success me-1"></i>
+                        <small>${feature}</small>
+                    </div>
+                `).join('') + (plan.features.length > 3 ? `<small class="text-muted">+${plan.features.length - 3} more</small>` : '');
+                plansContainer.append(`
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card plan-card h-100 ${isCurrentPlan ? 'border-primary' : ''}">
+                            <div class="card-body d-flex flex-column">
+                                <div class="text-center mb-3">
+                                    <h5 class="card-title">${plan.name}</h5>
+                                    <div class="price">
+                                        <h2 class="text-primary">${formatPrice(plan.price)}</h2>
+                                        <span class="text-muted">/month</span>
                                     </div>
-                                    ${plan.description ? `<p class="card-text text-muted mb-3 small">${plan.description}</p>` : ''}
-                                    <div class="plan-specs mb-3">
-                                        <div class="spec-item mb-2">
-                                            <i class="bi bi-people me-2 text-primary"></i>
-                                            <small>${plan.max_athletes} Athletes</small>
-                                        </div>
-                                        <div class="spec-item mb-2">
-                                            <i class="bi bi-list-task me-2 text-primary"></i>
-                                            <small>${plan.max_workouts} Workouts</small>
-                                        </div>
-                                        <div class="spec-item mb-2">
-                                            <i class="bi bi-hdd me-2 text-primary"></i>
-                                            <small>${plan.storage_gb} GB Storage</small>
-                                        </div>
+                                </div>
+                                ${plan.description ? `<p class="card-text text-muted mb-3 small">${plan.description}</p>` : ''}
+                                <div class="plan-specs mb-3">
+                                    <div class="spec-item mb-2">
+                                        <i class="bi bi-people me-2 text-primary"></i>
+                                        <small>${plan.max_athletes} Athletes</small>
                                     </div>
-                                    <div class="plan-features mb-3">
-                                        <h6 class="text-muted mb-2 small">Features:</h6>
-                                        ${featuresHtml}
+                                    <div class="spec-item mb-2">
+                                        <i class="bi bi-list-task me-2 text-primary"></i>
+                                        <small>${plan.max_workouts} Workouts</small>
                                     </div>
-                                    <div class="mt-auto">
-                                        ${buttonHtml}
+                                    <div class="spec-item mb-2">
+                                        <i class="bi bi-hdd me-2 text-primary"></i>
+                                        <small>${plan.storage_gb} GB Storage</small>
                                     </div>
+                                </div>
+                                ${plan.features ? `
+                                <div class="plan-features mb-3">
+                                    <h6 class="text-muted mb-2 small">Features:</h6>
+                                    ${featuresHtml}
+                                </div>` : ''}
+                                <div class="mt-auto">
+                                    ${buttonHtml}
                                 </div>
                             </div>
                         </div>
-                    `);
-                });
-            } else {
-                showAlert(data.error || 'Failed to load plans', 'danger');
-            }
-        })
-        .catch(error => showAlert(`Error loading plans: ${error.message}`, 'danger'));
-    }
-
+                    </div>
+                `);
+            });
+        } else {
+            showAlert(data.error || 'Failed to load plans', 'danger');
+        }
+    })
+    .catch(error => showAlert(`Error loading plans: ${error.message}`, 'danger'));
+}
 </script>
-
 {% endblock %}
