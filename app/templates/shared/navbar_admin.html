@@ -9,12 +9,10 @@
         <i class="bi bi-list toggle-sidebar-btn"></i>
         </div><!-- End Logo -->
 
-        
+
         <nav class="header-nav ms-auto">
         <ul class="d-flex align-items-center">
 
-
-            
 
             <li class="nav-item dropdown pe-3">
  
@@ -27,7 +25,7 @@
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                 <li class="dropdown-header">
                 <h6>{{ user.name }}</h6>
-                <span>System Administrator</span>
+                <span>Admin</span>
                 </li>
                 <li>
                 <hr class="dropdown-divider">
@@ -53,18 +51,11 @@
                 <hr class="dropdown-divider">
                 </li>
 
-                <li>
-                <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
-                    <i class="bi bi-question-circle"></i>
-                    <span>Need Help?</span>
-                </a>
-                </li>
-                <li>
-                <hr class="dropdown-divider">
-                </li>
+                
+                
 
                 <li>
-                <a class="dropdown-item d-flex align-items-center" href="#">
+                <a class="dropdown-item d-flex align-items-center" href="#" onclick="logout(); return false;">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Sign Out</span>
                 </a>
@@ -80,4 +71,39 @@
 
 
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+    async function logout() {
+  const accessToken = localStorage.getItem('access_token');
+  
+  if (!accessToken) {
+    // If no token exists, the user is already logged out.
+    // Just redirect to the login page.
+    window.location.href = "/api/auth/login";
+    return;
+  }
+
+  try {
+    const response = await fetch('/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      console.log('Logout successful');
+    } else {
+      const errorData = await response.json();
+      console.error('Logout failed:', errorData.msg);
+    }
+  } catch (error) {
+    console.error('Network error during logout:', error);
+  } finally {
+    // Always clear the token and redirect, regardless of the API response.
+    localStorage.removeItem('access_token');
+    window.location.href = "/api/auth/login";
+  }
+}
+</script>
