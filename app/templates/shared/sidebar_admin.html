@@ -1,74 +1,66 @@
-<!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
+<aside id="sidebar" class="sidebar">
 
-        <ul class="sidebar-nav" id="sidebar-nav">
+    <ul class="sidebar-nav" id="sidebar-nav">
 
-            <li class="nav-item">
-                <a class="nav-link " href="admin-dashboard.html">
+        <li class="nav-item">
+            <a class="nav-link " href="{{ url_for('dashboard.dashboard') }}">
                 <i class="bi bi-grid"></i>
                 <span>Overview</span>
-                </a>
-            </li><!-- End Dashboard Nav -->
-
-            <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="{{ url_for('admin.manage_admins') }}">
-                <i class="bi bi-menu-button-wide"></i><span>User Management</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="workout-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            </a>
+        </li>{% if current_user.is_admin %}
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#user-management-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-person-lines-fill"></i><span>User Management</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="user-management-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                {% if current_user.admin_profile.is_superadmin or 'can_manage_admins' in current_user.admin_profile.permissions %}
                 <li>
                     <a href="{{ url_for('admin.manage_admins') }}">
-                    <i class="bi bi-circle"></i><span>Admins</span>
+                        <i class="bi bi-circle"></i><span>Admins</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if current_user.admin_profile.is_superadmin or 'can_manage_coaches' in current_user.admin_profile.permissions %}
                 <li>
                     <a href="{{ url_for('coach.manage_coachs') }}">
-                    <i class="bi bi-circle"></i><span>Coaches</span>
+                        <i class="bi bi-circle"></i><span>Coaches</span>
                     </a>
                 </li>
+                {% endif %}
+                {% if current_user.admin_profile.is_superadmin or 'can_manage_athletes' in current_user.admin_profile.permissions %}
                 <li>
                     <a href="{{ url_for('athlete.manage_athletes') }}">
-                    <i class="bi bi-circle"></i><span>Athletes</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('athlete.unassigned_athletes') }}">
-                    <i class="bi bi-circle text-primary"></i><span>Unassigned Users</span>
+                        <i class="bi bi-circle"></i><span>Athletes</span>
                     </a>
                 </li>
                 
-                </ul>
-            </li><!-- End Workout Nav -->
+                {% endif %}
+            </ul>
+        </li>{% endif %}
 
+        {% if current_user.is_admin %}
+            {% if current_user.admin_profile.is_superadmin or 'view_reports' in current_user.admin_profile.permissions %}
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="{{ url_for('admin.manage_admins') }}">
-                <i class="bi bi-menu-button-wide"></i><span>User Management</span><i class="bi bi-chevron-down ms-auto"></i>
+                <a class="nav-link collapsed" href="{{ url_for('admin.reports') }}">
+                    <i class="bi bi-bar-chart"></i><span>Reports</span>
                 </a>
-                <ul id="workout-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ url_for('admin.gym_management') }}">
-                    <i class="bi bi-circle"></i><span>gym_management</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('admin.reports') }}">
-                    <i class="bi bi-circle"></i><span>reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('admin.subscriptions') }}">
-                    <i class="bi bi-circle"></i><span>Subscriptions</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('admin.support_security') }}">
-                    <i class="bi bi-circle text-primary"></i><span>support_security Users</span>
-                    </a>
-                </li>
-                
-                </ul>
-            </li><!-- End Workout Nav -->
-        </ul>
-
-        <!-- Premium Membership Card -->
-        
-    </aside><!-- End Sidebar-->
+            </li>
+            {% endif %}
+            {% if current_user.admin_profile.is_superadmin or 'manage_gym' in current_user.admin_profile.permissions %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="{{ url_for('admin.gym_management') }}">
+                    <i class="bi bi-building"></i><span>Gym Management</span>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% if current_user.admin_profile.is_superadmin or 'manage_support' in current_user.admin_profile.permissions %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="{{ url_for('admin.support_security') }}">
+                    <i class="bi bi-shield-lock"></i><span>Support & Security</span>
+                </a>
+            </li>
+            {% endif %}
+        {% endif %}
+    </ul>
+</aside>```

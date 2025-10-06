@@ -2,523 +2,569 @@
 
 {% block content %}
 <main class="col-lg-10 bg-light min-vh-100 p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold">Manage Coaches</h4>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCoachModal">
-          <i class="bi bi-plus-lg me-1"></i> Add Coach
-        </button>
-      </div>
 
-      <!-- Stats Cards -->
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <div class="card text-center shadow-sm">
-          <div class="card-body">
-            <i class="bi bi-person-badge-fill fs-2 text-primary"></i>
-            <h5 class="card-title mt-2">{{ coach_count }}</h5>
-            <p class="card-text">Total Coachs</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center shadow-sm">
-          <div class="card-body">
-            <i class="bi bi-check-circle-fill fs-2 text-success"></i>
-            <h5 class="card-title mt-2">{{ active_count }}</h5>
-            <p class="card-text">Active</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center shadow-sm">
-          <div class="card-body">
-            <i class="bi bi-x-circle-fill fs-2 text-danger"></i>
-            <h5 class="card-title mt-2">{{ suspended_count }}</h5>
-            <p class="card-text">Suspended</p>
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Coach Management</h2>
+      <p class="text-muted mb-0">Manage coaches and their athlete assignments</p>
+    </div>
+    <button class="btn btn-primary btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#addCoachModal">
+      <i class="bi bi-plus-circle me-2"></i>Add New Coach
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-people-fill fs-2 text-primary"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Total Coaches</h6>
+              <h3 class="mb-0 fw-bold">{{ coach_count }}</h3>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-      <!-- Search and Filter -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email...">
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-success bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Active</h6>
+              <h3 class="mb-0 fw-bold text-success">{{ active_count }}</h3>
+            </div>
+          </div>
         </div>
-        <div class="col-md-3">
-          <select class="form-select" id="statusFilter">
-            <option value="">Filter by Status</option>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-danger bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-pause-circle-fill fs-2 text-danger"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Suspended</h6>
+              <h3 class="mb-0 fw-bold text-danger">{{ suspended_count }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-start-0 ps-0" 
+                   placeholder="Search by name or email...">
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <select id="statusFilter" class="form-select">
+            <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="suspended">Suspended</option>
           </select>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Bulk Actions -->
-        <div class="mb-3 d-flex gap-2">
-          <button class="btn btn-outline-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
+  <!-- Bulk Actions -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-muted me-2">Bulk Actions:</small>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+          <i class="bi bi-trash me-1"></i>Delete Selected
+        </button>
+        <select id="bulkRoleSelect" class="form-select form-select-sm" style="width: 180px;">
+          <option value="">Change Role...</option>
+          <option value="admin">Admin</option>
+          <option value="coach">Coach</option>
+          <option value="athlete">Athlete</option>
+        </select>
+        <button class="btn btn-sm btn-outline-primary" onclick="bulkChangeRole()">
+          <i class="bi bi-arrow-repeat me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
 
-          <select id="bulkRoleSelect" class="form-select form-select-sm" style="width: 150px; display:inline-block;">
-            <option value="">Change Role...</option>
-            <option value="admin">Admin</option>
-            <option value="coach">Coach</option>
-            <option value="athlete">Athlete</option>
-          </select>
-          <button class="btn btn-outline-secondary btn-sm" onclick="bulkChangeRole()">Apply</button>
-        </div>
-
-
-      <!-- Coach Table-->
-      <div class="card shadow-sm">
-        <table class="table table-hover"  id="coachTable">
-          <thead class="table-light">
+  <!-- Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="coachTable">
+          <thead class="bg-light">
             <tr>
-              <th><input type="checkbox" id="selectAll"></th>
-              <th>Profile</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Athletes</th>
-              <th>Actions</th>
+              <th class="px-4 py-3">
+                <input type="checkbox" id="selectAll" class="form-check-input">
+              </th>
+              <th class="py-3">Coach</th>
+              <th class="py-3">Email</th>
+              <th class="py-3">Status</th>
+              <th class="py-3">Athletes</th>
+              <th class="py-3 text-end pe-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for coach in coaches %}
             <tr>
-              <td><input type="checkbox" class="row-checkbox" value="{{ coach.id }}"></td>
-              <td class="d-flex align-items-center">
-                <img src="{{ url_for('static', filename='uploads/' ~ (coach.profile_image or 'default.jpg')) }}"
-                      alt="Profile" 
-                      class="rounded-circle me-2" width="40" height="40">
-                <span class="fw-semibold name">{{ coach.name }}</span>
+              <td class="px-4">
+                <input type="checkbox" class="row-checkbox form-check-input" value="{{ coach.id }}">
               </td>
-              <td class="email">{{ coach.email }}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <img src="{{ url_for('static', filename='uploads/' ~ (coach.profile_image or 'default.jpg')) }}"
+                       class="rounded-circle me-3" width="45" height="45" alt="Profile">
+                  <div>
+                    <div class="fw-semibold name">{{ coach.name }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="email text-muted">{{ coach.email }}</td>
               <td class="status" data-status="{{ coach.status }}">
                 {% if coach.status == 'active' %}
-                  <button class="btn btn-sm btn-outline-success" onclick="toggleStatus({{ coach.id }})">Active</button>
+                  <button class="btn btn-sm btn-success rounded-pill px-3" onclick="toggleStatus({{ coach.id }})">
+                    <i class="bi bi-check-circle me-1"></i>Active
+                  </button>
                 {% else %}
-                  <button class="btn btn-sm btn-outline-danger" onclick="toggleStatus({{ coach.id }})">Suspended</button>
+                  <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="toggleStatus({{ coach.id }})">
+                    <i class="bi bi-x-circle me-1"></i>Suspended
+                  </button>
                 {% endif %}
               </td>
               <td>
-                <button class="btn btn-link btn-sm text-primary p-0" onclick="viewAthletes('{{ coach.id }}')">
-                  {{ coach.athlete_links.count() }} Athletes
+                <button class="btn btn-sm btn-link text-primary p-0" onclick="viewAthletes('{{ coach.id }}')">
+                  <i class="bi bi-people me-1"></i>{{ coach.athlete_links.count() }} Athletes
                 </button>
               </td>
-              <td>
-                <button class="btn btn-sm btn-light" onclick="openEditModal('{{ coach.id }}')">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-light text-danger" onclick="confirmDelete('{{ coach.id }}')">
-                  <i class="bi bi-trash"></i>
-                </button>
-                
-                <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword('{{ coach.id }}')">
-                  Reset Password
-                </button>
+              <td class="text-end pe-4">
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-primary" onclick="openEditModal('{{ coach.id }}')" title="Edit">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('{{ coach.id }}')" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword('{{ coach.id }}')" title="Reset Password">
+                    <i class="bi bi-key"></i>
+                  </button>
+                </div>
               </td>
-              
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
 
-      <div class="modal fade" id="addCoachModal" tabindex="-1" aria-labelledby="addCoachModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form id="addCoachForm">
-              <div class="modal-header">
-                <h5 class="modal-title" id="addCoachModalLabel">Add New Coach</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
-                <div class="mb-3">
-                  <label class="form-label">Full Name</label>
-                  <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Email</label>
-                  <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Password</label>
-                  <input type="password" name="password" class="form-control" required>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" type="submit">Add Coach</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+  <!-- Pagination -->
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if pagination.has_prev %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('coach.manage_coachs', page=pagination.prev_num) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+        </li>
+      {% endif %}
 
-      <div class="modal fade" id="editCoachModal" tabindex="-1" aria-labelledby="editCoachModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <form id="editCoachForm" class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Edit Coach</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" id="editCoachId">
-              <div class="mb-3">
-                <label>Name</label>
-                <input type="text" id="editCoachName" class="form-control">
-              </div>
-              <div class="mb-3">
-                <label>Email</label>
-                <input type="email" id="editCoachEmail" class="form-control" disabled>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      
-      <div class="modal fade" id="athleteModal" tabindex="-1" aria-labelledby="athleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="athleteModalLabel">Athletes</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <div id="athleteList" class="list-group">
-                <!-- القائمة هتتعبّأ ديناميكيًا بالجافاسكريبت -->
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <nav aria-label="Page navigation example">
-      <ul class="pagination justify-content-center">
-        {% if pagination.has_prev %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('coach.manage_coachs', page=pagination.prev_num) }}" aria-label="Previous">
-              <i class="bi bi-chevron-double-left"></i>
-            </a>
-          </li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-left"></i></span></li>
-        {% endif %}
-
-        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-          {% if p %}
-            {% if p == pagination.page %}
-              <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-            {% else %}
-              <li class="page-item"><a class="page-link" href="{{ url_for('coach.manage_coachs', page=p) }}">{{ p }}</a></li>
-            {% endif %}
+      {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          {% if p == pagination.page %}
+            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
           {% else %}
-            <li class="page-item disabled"><span class="page-link">…</span></li>
+            <li class="page-item"><a class="page-link" href="{{ url_for('coach.manage_coachs', page=p) }}">{{ p }}</a></li>
           {% endif %}
-        {% endfor %}
-
-        {% if pagination.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('coach.manage_coachs', page=pagination.next_num) }}" aria-label="Next">
-              <i class="bi bi-chevron-double-right"></i>
-            </a>
-          </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-right"></i></span></li>
+          <li class="page-item disabled"><span class="page-link">…</span></li>
         {% endif %}
-      </ul>
-    </nav>
+      {% endfor %}
 
+      {% if pagination.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('coach.manage_coachs', page=pagination.next_num) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
 
 </main>
+
+<!-- Add Coach Modal -->
+<div class="modal fade" id="addCoachModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="addCoachForm" class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New Coach</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Full Name</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg me-2"></i>Add Coach
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Coach Modal -->
+<div class="modal fade" id="editCoachModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="editCoachForm" class="modal-content border-0 shadow">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Coach</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="editCoachId">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Name</label>
+          <input type="text" id="editCoachName" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" id="editCoachEmail" class="form-control" disabled>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-info text-white">
+          <i class="bi bi-check-lg me-2"></i>Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Athletes Modal -->
+<div class="modal fade" id="athleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title"><i class="bi bi-people me-2"></i>Assigned Athletes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="athleteList" class="list-group"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
+
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-  // ---- Add Coach ----
-  document.addEventListener("DOMContentLoaded", () => {
-    const addCoachForm = document.getElementById("addCoachForm");
-    if (addCoachForm) {
-      addCoachForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-
-        if (!formData.get("name") || !formData.get("email") || !formData.get("password")) {
-          showAlert("Please fill all fields", "warning");
-          return;
-        }
-
-        const token = localStorage.getItem("access_token");
-        if (!token) return showAlert("Please login to continue", "warning");
-
-        try {
-          const res = await fetch("/coach/add", {
-            method: "POST",
-            headers: { Authorization: "Bearer " + token },
-            body: formData
-          });
-
-          const result = await res.json().catch(() => null);
-          if (res.ok) {
-            showAlert("Coach added successfully", "success");
-            setTimeout(() => location.reload(), 1200);
-          } else {
-            showAlert(result?.msg || "Failed to add coach", "danger");
-          }
-        } catch {
-          showAlert("An error occurred", "danger");
-        }
-      });
-    }
-  });
-</script>
+<style>
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+.avatar-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.table > :not(caption) > * > * {
+  padding: 1rem 0.75rem;
+}
+.btn-group .btn {
+  border-radius: 0.25rem !important;
+  margin: 0 2px;
+}
+</style>
 
 <script>
-  // ---- Edit Coach ----
-  async function openEditModal(coachId) {
-    const res = await fetch(`/coach/edit_coach/${coachId}`, {
-      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-    });
-    const coach = await res.json();
-    document.getElementById("editCoachId").value = coach.id;
-    document.getElementById("editCoachName").value = coach.name;
-    document.getElementById("editCoachEmail").value = coach.email;
-    new bootstrap.Modal(document.getElementById("editCoachModal")).show();
-  }
+function showAlert(message, type="info") {
+  const container = document.body;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow" role="alert" style="z-index:1055; min-width: 300px;">
+      <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  container.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), 4000);
+}
 
-  document.getElementById("editCoachForm")?.addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const id = document.getElementById("editCoachId").value;
-    const name = document.getElementById("editCoachName").value;
+// Add Coach
+document.getElementById("addCoachForm")?.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
 
-    const res = await fetch(`/coach/edit_coach/${id}`, {
+  const token = localStorage.getItem("access_token");
+  if (!token) return showAlert("Please login to continue", "warning");
+
+  try {
+    const res = await fetch("/coach/add", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("access_token")
-      },
-      body: JSON.stringify({ name })
+      headers: { Authorization: "Bearer " + token },
+      body: formData
     });
 
-    const data = await res.json().catch(() => null);
+    const result = await res.json().catch(() => null);
     if (res.ok) {
-      showAlert("Coach updated successfully", "success");
+      showAlert("Coach added successfully", "success");
       setTimeout(() => location.reload(), 1200);
     } else {
-      showAlert(data?.msg || "Update failed", "danger");
+      showAlert(result?.msg || "Failed to add coach", "danger");
     }
+  } catch {
+    showAlert("An error occurred", "danger");
+  }
+});
+
+// Edit Coach
+async function openEditModal(coachId) {
+  const res = await fetch(`/coach/edit_coach/${coachId}`, {
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
   });
-</script>
+  const coach = await res.json();
+  document.getElementById("editCoachId").value = coach.id;
+  document.getElementById("editCoachName").value = coach.name;
+  document.getElementById("editCoachEmail").value = coach.email;
+  new bootstrap.Modal(document.getElementById("editCoachModal")).show();
+}
 
-<script>
-  // ---- Delete Coach ----
-  function confirmDelete(coachId) {
-    if (!confirm("Are you sure you want to delete this coach?")) return;
-    fetch(`/coach/delete_coach/${coachId}`, {
-      method: "DELETE",
-      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-    })
-    .then(res => res.json().catch(() => null))
-    .then(data => {
-      if (data?.msg) {
-        showAlert(data.msg, "success");
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert("Deletion failed", "danger");
-      }
-    });
-  }
-</script>
+document.getElementById("editCoachForm")?.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const id = document.getElementById("editCoachId").value;
+  const name = document.getElementById("editCoachName").value;
 
-<script>
-  // ---- Toggle Status ----
-  function toggleStatus(coachId) {
-    fetch(`/coach/toggle_coach_active/${coachId}`, {
-      method: "PATCH",
-      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-    })
-    .then(res => res.json().catch(() => null))
-    .then(data => {
-      if (data?.msg) {
-        showAlert(data.msg, "success");
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert("Status toggle failed", "danger");
-      }
-    });
-  }
-</script>
-
-<script>
-  // ---- View Athletes ----
-  function viewAthletes(coachId) {
-    const token = localStorage.getItem("access_token");
-    if (!token) return showAlert("Please login to continue", "warning");
-
-    fetch(`/coach/view_athletes/${coachId}`, {
-      headers: { Authorization: "Bearer " + token }
-    })
-    .then(res => res.json().catch(() => null))
-    .then(data => {
-      const athleteList = document.getElementById("athleteList");
-      if (!athleteList) return;
-      athleteList.innerHTML = data?.athletes?.length
-        ? data.athletes.map(a => `<div class="list-group-item"><strong>${a.name}</strong> (${a.email})</div>`).join("")
-        : "<div class='text-muted'>No athletes found</div>";
-      new bootstrap.Modal(document.getElementById("athleteModal")).show();
-    });
-  }
-</script>
-
-<script>
-  // ---- Change Single Role ----
-  function changeUserRole(userId, newRole) {
-    fetch(`/coach/change_role/${userId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("access_token")
-      },
-      body: JSON.stringify({ role: newRole })
-    })
-    .then(res => res.json().then(data => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
-      if (ok) {
-        showAlert(`Role updated to ${newRole}`, "success");
-      } else {
-        showAlert(data.msg || "Error changing role", "danger");
-      }
-    });
-  }
-</script>
-
-<script>
-  // ---- Filters ----
-  const searchInput = document.getElementById("searchInput");
-  const statusFilter = document.getElementById("statusFilter");
-  const roleFilter = document.getElementById("roleFilter");
-  const table = document.getElementById("coachTable");
-  const rows = table?.querySelectorAll("tbody tr") || [];
-
-  function filterTable() {
-    const searchValue = searchInput.value.toLowerCase();
-    const statusValue = statusFilter.value;
-    const roleValue = roleFilter.value;
-
-    rows.forEach(row => {
-      const name = row.querySelector(".name").textContent.toLowerCase();
-      const email = row.querySelector(".email").textContent.toLowerCase();
-      const status = row.querySelector(".status").dataset.status;
-      const role = row.querySelector(".role").dataset.role;
-
-      const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
-      const matchesStatus = !statusValue || status === statusValue;
-      const matchesRole = !roleValue || role === roleValue;
-
-      row.style.display = (matchesSearch && matchesStatus && matchesRole) ? "" : "none";
-    });
-  }
-
-  searchInput?.addEventListener("input", filterTable);
-  statusFilter?.addEventListener("change", filterTable);
-  roleFilter?.addEventListener("change", filterTable);
-</script>
-
-<script>
-  // ---- Select All ----
-  document.addEventListener("DOMContentLoaded", () => {
-    const selectAll = document.getElementById("selectAll");
-    if (selectAll) {
-      selectAll.addEventListener("change", function () {
-        document.querySelectorAll(".row-checkbox").forEach(cb => {
-          cb.checked = this.checked;
-        });
-      });
-    }
+  const res = await fetch(`/coach/edit_coach/${id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("access_token")
+    },
+    body: JSON.stringify({ name })
   });
-</script>
 
-<script>
-  // ---- Bulk Actions ----
-  async function bulkDelete() {
-    const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
-    if (!ids.length) return showAlert("Select at least one user", "warning");
+  const data = await res.json().catch(() => null);
+  if (res.ok) {
+    showAlert("Coach updated successfully", "success");
+    setTimeout(() => location.reload(), 1200);
+  } else {
+    showAlert(data?.msg || "Update failed", "danger");
+  }
+});
 
-    if (!confirm("Are you sure you want to delete selected users?")) return;
-
-    const res = await fetch("/coach/bulk_delete", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`
-      },
-      body: JSON.stringify({ ids })
-    });
-
-    if (res.ok) {
-      showAlert("Users deleted successfully", "success");
+// Delete Coach
+function confirmDelete(coachId) {
+  if (!confirm("Are you sure you want to delete this coach?")) return;
+  fetch(`/coach/delete_coach/${coachId}`, {
+    method: "DELETE",
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  })
+  .then(res => res.json().catch(() => null))
+  .then(data => {
+    if (data?.msg) {
+      showAlert(data.msg, "success");
       setTimeout(() => location.reload(), 1200);
     } else {
-      showAlert("Bulk delete failed", "danger");
+      showAlert("Deletion failed", "danger");
     }
-  }
+  });
+}
 
-  async function bulkChangeRole() {
-    const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
-    const newRole = document.getElementById("bulkRoleSelect").value;
-    if (!ids.length) return showAlert("Select users first!", "warning");
-    if (!newRole) return showAlert("Select a role to assign", "warning");
-
-    const res = await fetch("/coach/bulk_change_role", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`
-      },
-      body: JSON.stringify({ ids, role: newRole })
-    });
-
-    if (res.ok) {
-      showAlert("Roles updated successfully", "success");
+// Toggle Status
+function toggleStatus(coachId) {
+  fetch(`/coach/toggle_coach_active/${coachId}`, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  })
+  .then(res => res.json().catch(() => null))
+  .then(data => {
+    if (data?.msg) {
+      showAlert(data.msg, "success");
       setTimeout(() => location.reload(), 1200);
     } else {
-      showAlert("Bulk role change failed", "danger");
+      showAlert("Status toggle failed", "danger");
     }
-  }
-</script>
+  });
+}
 
-<script>
-  // ---- Reset Password ----
-  async function resetPassword(userId) {
-    if (!confirm("Reset this user's password?")) return;
-    const res = await fetch(`/coach/reset_password/${userId}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
-    });
-    if (res.ok) showAlert("Password reset successful!", "success");
-    else showAlert("Password reset failed", "danger");
-  }
-</script>
+// View Athletes
+function viewAthletes(coachId) {
+  const token = localStorage.getItem("access_token");
+  if (!token) return showAlert("Please login to continue", "warning");
 
-<script>
-  // ---- Alert Helper ----
-  function showAlert(message, type = "info") {
-    const container = document.getElementById("alert-container");
-    if (!container) return;
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>`;
-    container.appendChild(wrapper);
-    setTimeout(() => bootstrap.Alert.getOrCreateInstance(wrapper.querySelector(".alert")).close(), 5000);
+  fetch(`/coach/view_athletes/${coachId}`, {
+    headers: { Authorization: "Bearer " + token }
+  })
+  .then(res => res.json().catch(() => null))
+  .then(data => {
+    const athleteList = document.getElementById("athleteList");
+    if (!athleteList) return;
+    athleteList.innerHTML = data?.athletes?.length
+      ? data.athletes.map(a => `
+          <div class="list-group-item d-flex align-items-center">
+            <i class="bi bi-person-circle fs-4 text-primary me-3"></i>
+            <div>
+              <strong>${a.name}</strong>
+              <div class="text-muted small">${a.email}</div>
+            </div>
+          </div>`).join("")
+      : "<div class='text-muted text-center py-4'>No athletes assigned</div>";
+    new bootstrap.Modal(document.getElementById("athleteModal")).show();
+  });
+}
+
+// Filters
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const table = document.getElementById("coachTable");
+const rows = table?.querySelectorAll("tbody tr") || [];
+
+function filterTable() {
+  const searchValue = searchInput.value.toLowerCase();
+  const statusValue = statusFilter.value;
+
+  rows.forEach(row => {
+    const name = row.querySelector(".name").textContent.toLowerCase();
+    const email = row.querySelector(".email").textContent.toLowerCase();
+    const status = row.querySelector(".status").dataset.status;
+
+    const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
+    const matchesStatus = !statusValue || status === statusValue;
+
+    row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+  });
+}
+
+searchInput?.addEventListener("input", filterTable);
+statusFilter?.addEventListener("change", filterTable);
+
+// Select All
+document.getElementById("selectAll")?.addEventListener("change", function() {
+  document.querySelectorAll(".row-checkbox").forEach(cb => {
+    cb.checked = this.checked;
+  });
+});
+
+// Bulk Actions
+async function bulkDelete() {
+  const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
+  if (!ids.length) return showAlert("Select at least one coach", "warning");
+  if (!confirm("Are you sure you want to delete selected coaches?")) return;
+
+  const res = await fetch("/coach/bulk_delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`
+    },
+    body: JSON.stringify({ ids })
+  });
+
+  if (res.ok) {
+    showAlert("Coaches deleted successfully", "success");
+    setTimeout(() => location.reload(), 1200);
+  } else {
+    showAlert("Bulk delete failed", "danger");
   }
+}
+
+async function bulkChangeRole() {
+  const ids = [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value);
+  const newRole = document.getElementById("bulkRoleSelect").value;
+  if (!ids.length) return showAlert("Select coaches first!", "warning");
+  if (!newRole) return showAlert("Select a role to assign", "warning");
+
+  const res = await fetch("/coach/bulk_change_role", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`
+    },
+    body: JSON.stringify({ ids, role: newRole })
+  });
+
+  if (res.ok) {
+    showAlert("Roles updated successfully", "success");
+    setTimeout(() => location.reload(), 1200);
+  } else {
+    showAlert("Bulk role change failed", "danger");
+  }
+}
+
+// Reset Password
+async function resetPassword(userId) {
+  if (!confirm("Reset this coach's password?")) return;
+  const res = await fetch(`/coach/reset_password/${userId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+  });
+  if (res.ok) {
+    showAlert("Password reset successful!", "success");
+  } else {
+    showAlert("Password reset failed", "danger");
+  }
+}
 </script>
 {% endblock %}

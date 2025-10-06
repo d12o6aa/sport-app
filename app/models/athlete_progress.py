@@ -7,6 +7,7 @@ class AthleteProgress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     athlete_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     date = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    progress = db.Column(db.Text, nullable=True)
     weight = db.Column(db.Float, nullable=True)
     weight_goal = db.Column(db.Float, nullable=True)
     calories_burned = db.Column(db.Float, nullable=True)

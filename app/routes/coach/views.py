@@ -149,6 +149,7 @@ def manage_coachs():
     active_count = User.query.filter_by(role='coach', status='active').count()
     suspended_count = User.query.filter_by(role='coach', status='suspended').count()
     return render_template("admin/manage_coachs.html",
+                        current_user=user,
                         coaches=coaches,
                         coach_count=coach_count,
                         active_count=active_count,

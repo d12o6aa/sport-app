@@ -33,7 +33,7 @@ def manage_athletes():
 
 
     coaches = User.query.filter_by(role='coach').all()
-    return render_template("admin/manage_athletes.html", athletes=athletes, coaches=coaches, athlete_count=athlete_count,
+    return render_template("admin/manage_athletes.html",current_user=user, athletes=athletes, coaches=coaches, athlete_count=athlete_count,
                             active_count=active_count, suspended_count=suspended_count, pagination=pagination)
 
 
@@ -167,7 +167,7 @@ def unassigned_count():
     )
 
     coaches = User.query.filter_by(role="coach", status='active').all()
-    return render_template("admin/unassigned.html", athletes=unassigned_count, coaches=coaches)
+    return render_template("admin/unassigned.html",current_user=user, athletes=unassigned_count, coaches=coaches)
 
 
 # ---------------- Assign Coach ----------------

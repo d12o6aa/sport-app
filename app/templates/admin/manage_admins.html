@@ -3,287 +3,418 @@
 {% block content %}
 <main class="col-lg-10 bg-light min-vh-100 p-4">
 
-  <!-- Page Title -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold">Manage Admins</h4>
-    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-      <i class="bi bi-plus-lg me-1"></i> Add Admin
-    </a>
+    <div>
+      <h2 class="fw-bold mb-1">Admin Management</h2>
+      <p class="text-muted mb-0">Manage system administrators and their permissions</p>
+    </div>
+    {% if current_user_is_superadmin %}
+    <button class="btn btn-primary btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+      <i class="bi bi-plus-circle me-2"></i>Add New Admin
+    </button>
+    {% endif %}
   </div>
 
-  <!-- Stats -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card text-center shadow-sm">
-        <div class="card-body">
-          <i class="bi bi-person-badge-fill fs-2 text-primary"></i>
-          <h5 class="card-title mt-2">{{ admin_count }}</h5>
-          <p class="card-text">Total Admins</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow-sm">
-        <div class="card-body">
-          <i class="bi bi-check-circle-fill fs-2 text-success"></i>
-          <h5 class="card-title mt-2">{{ active_count }}</h5>
-          <p class="card-text">Active</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow-sm">
-        <div class="card-body">
-          <i class="bi bi-x-circle-fill fs-2 text-danger"></i>
-          <h5 class="card-title mt-2">{{ suspended_count }}</h5>
-          <p class="card-text">Suspended</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="row mb-3">
+  <div class="row g-3 mb-4">
     <div class="col-md-4">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email...">
-    </div>
-    <div class="col-md-3">
-      <select id="statusFilter" class="form-select">
-        <option value="">Filter by Status</option>
-        <option value="active">Active</option>
-        <option value="suspended">Suspended</option>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <select id="roleFilter" class="form-select">
-        <option value="">Filter by Role</option>
-        <option value="admin">Admin</option>
-        <option value="super_admin">Super Admin</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Bulk Actions -->
-  <div class="mb-3 d-flex gap-2">
-    <button class="btn btn-outline-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
-    <select id="bulkRoleSelect" class="form-select form-select-sm" style="width: 150px; display:inline-block;">
-      <option value="">Change Role...</option>
-      <option value="admin">Admin</option>
-      <option value="coach">Coach</option>
-      <option value="athlete">Athlete</option>
-    </select>
-    <button class="btn btn-outline-secondary btn-sm" onclick="bulkChangeRole()">Apply</button>
-  </div>
-
-  <!-- Table -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <table class="table table-hover" id="adminTable">
-        <thead class="table-light">
-          <tr>
-            <th><input type="checkbox" id="selectAll"></th>
-            <th>Profile</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Role</th>
-            <th>Joined</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for admin in admins %}
-          <tr>
-            <td><input type="checkbox" class="row-checkbox" value="{{ admin.id }}"></td>
-            <td class="d-flex align-items-center">
-              <img src="{{ url_for('static', filename='uploads/' ~ (admin.profile_image or 'default.jpg')) }}"
-                  class="rounded-circle me-2" width="40" height="40" alt="Profile">
-              <span class="fw-semibold name">{{ admin.name }}</span>
-            </td>
-            <td class="email">{{ admin.email }}</td>
-            <td class="status">
-              {% if admin.status == 'active' %}
-                <button class="btn btn-sm btn-outline-success" onclick="toggleActive({{ admin.id }})">Active</button>
-              {% else %}
-                <button class="btn btn-sm btn-outline-danger" onclick="toggleActive({{ admin.id }})">Suspended</button>
-              {% endif %}
-            </td>
-            <td class="role" data-role="{{ 'super_admin' if admin.admin_profile.is_superadmin else 'admin' }}">
-              {% if admin.admin_profile.is_superadmin %}
-                <span class="btn btn-sm btn-outline-primary">Super Admin</span>
-              {% else %}
-                <span class="btn btn-sm btn-outline-secondary">Admin</span>
-              {% endif %}
-            </td>
-            <td>{{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
-            <td>
-              <button class="btn btn-sm btn-light" data-id="{{ admin.id }}"><i class="bi bi-pencil"></i></button>
-              <button class="btn btn-sm btn-light text-danger" data-id="{{ admin.id }}"><i class="bi bi-trash"></i></button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword({{ admin.id }})">Reset Password</button>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-
-  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title" id="confirmDeleteLabel">Confirm Delete</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-people-fill fs-2 text-primary"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Total Admins</h6>
+              <h3 class="mb-0 fw-bold">{{ admin_count }}</h3>
+            </div>
+          </div>
         </div>
-        <div class="modal-body">
-          Are you sure you want to delete this admin?
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-success bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Active</h6>
+              <h3 class="mb-0 fw-bold text-success">{{ active_count }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-danger bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-pause-circle-fill fs-2 text-danger"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Suspended</h6>
+              <h3 class="mb-0 fw-bold text-danger">{{ suspended_count }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-start-0 ps-0" 
+                   placeholder="Search by name or email...">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <select id="statusFilter" class="form-select">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        
+        <div class="col-md-4">
+          <select id="roleFilter" class="form-select">
+            <option value="">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if current_user_is_superadmin %}
+  <div class="card border-0 shadow-sm mb-3" id="bulkActionsContainer">
+    <div class="card-body py-2">
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-muted me-2">Bulk Actions:</small>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+          <i class="bi bi-trash me-1"></i>Delete Selected
+        </button>
+        <select id="bulkRoleSelect" class="form-select form-select-sm" style="width: 180px;">
+          <option value="">Change Role...</option>
+          <option value="admin">Admin</option>
+          <option value="coach">Coach</option>
+          <option value="athlete">Athlete</option>
+        </select>
+        <button class="btn btn-sm btn-outline-primary" onclick="bulkChangeRole()">
+          <i class="bi bi-arrow-repeat me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="adminTable">
+          <thead class="bg-light">
+            <tr>
+              <th class="px-4 py-3">
+                {% if current_user_is_superadmin %}
+                <input type="checkbox" id="selectAll" class="form-check-input">
+                {% endif %}
+              </th>
+              <th class="py-3">Admin</th>
+              <th class="py-3">Email</th>
+              <th class="py-3">Status</th>
+              <th class="py-3">Role</th>
+              <th class="py-3">Joined Date</th>
+              <th class="py-3 text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for admin in admins %}
+            <tr data-admin-id="{{ admin.id }}" data-is-superadmin="{{ 'true' if admin.admin_profile.is_superadmin else 'false' }}">
+              <td class="px-4">
+                {% if current_user_is_superadmin %}
+                <input type="checkbox" class="row-checkbox form-check-input" value="{{ admin.id }}">
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <img src="{{ url_for('static', filename='uploads/' ~ (admin.profile_image or 'default.jpg')) }}"
+                       class="rounded-circle me-3" width="45" height="45" alt="Profile">
+                  <div>
+                    <div class="fw-semibold name">{{ admin.name }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="email text-muted">{{ admin.email }}</td>
+              <td class="status">
+                <span class="status-btn-container">
+                  {% if admin.status == 'active' %}
+                    <button class="btn btn-sm btn-success rounded-pill px-3" onclick="toggleActive({{ admin.id }})">
+                      <i class="bi bi-check-circle me-1"></i>Active
+                    </button>
+                  {% else %}
+                    <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="toggleActive({{ admin.id }})">
+                      <i class="bi bi-x-circle me-1"></i>Suspended
+                    </button>
+                  {% endif %}
+                </span>
+              </td>
+              <td class="role" data-role="{{ 'super_admin' if admin.admin_profile.is_superadmin else 'admin' }}">
+                {% if admin.admin_profile.is_superadmin %}
+                  <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                    <i class="bi bi-star-fill me-1"></i>Super Admin
+                  </span>
+                {% else %}
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2">
+                    <i class="bi bi-shield-check me-1"></i>Admin
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group" role="group">
+                  {% if current_user_is_superadmin %}
+                  <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ admin.id }}" title="Edit">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ admin.id }}" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  {% endif %}
+                  <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword({{ admin.id }})" title="Reset Password">
+                    <i class="bi bi-key"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if pagination.has_prev %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('admin.manage_admins', page=pagination.prev_num) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+        </li>
+      {% endif %}
+
+      {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          {% if p == pagination.page %}
+            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+          {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_admins', page=p) }}">{{ p }}</a></li>
+          {% endif %}
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if pagination.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('admin.manage_admins', page=pagination.next_num) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+</main>
+
+<div class="modal fade" id="addAdminModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content border-0 shadow" id="addAdminForm">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New Admin</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label for="name" class="form-label fw-semibold">Full Name</label>
+          <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label fw-semibold">Email Address</label>
+          <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label fw-semibold">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <input type="hidden" id="role" name="role" value="admin">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg me-2"></i>Add Admin
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="editAdminModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <form id="editAdminForm">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Admin</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+            {% if current_user_is_superadmin %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Role</label>
+              <select class="form-select" id="editRole">
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+                <option value="coach">Coach</option>
+                <option value="athlete">Athlete</option>
+              </select>
+            </div>
+            <hr>
+            <div class="mb-4">
+              <label class="form-label fw-semibold mb-3">Permissions</label>
+              <div class="d-flex flex-wrap gap-2" id="permissionButtonsContainer">
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="can_manage_admins">
+                  <i class="bi bi-people me-1"></i>Manage Admins
+                </button>
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="can_manage_coaches">
+                  <i class="bi bi-person-badge me-1"></i>Manage Coaches
+                </button>
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="can_manage_athletes">
+                  <i class="bi bi-person me-1"></i>Manage Athletes
+                </button>
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="view_reports">
+                  <i class="bi bi-file-earmark-text me-1"></i>View Reports
+                </button>
+                <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="manage_gym">
+                  <i class="bi bi-building me-1"></i>Manage Gym
+                </button>
+              </div>
+            </div>
+            {% endif %}
+
+          <input type="hidden" id="editUserId">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info text-white">
+            <i class="bi bi-check-lg me-2"></i>Save Changes
+          </button>
         </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4 text-center">
+        <i class="bi bi-trash display-1 text-danger mb-3"></i>
+        <p class="mb-0">Are you sure you want to delete this admin?</p>
+        <p class="text-muted small">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <i class="bi bi-trash me-2"></i>Delete
+        </button>
       </div>
     </div>
   </div>
-  
-  <!-- Add Admin Form -->
-    <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form class="modal-content" id="addAdminForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addAdminModalLabel">Add New Admin</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <!-- Form Inputs -->
-            <div class="mb-3">
-              <label for="name" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="name" name="name" required>
-            </div>
-    
-            <div class="mb-3">
-              <label for="email" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-    
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-    
-            <input type="hidden" id="role" name="role" value="admin">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Add Admin</button>
-          </div>
-        </form>
-      </div>
-    </div>
+</div>
 
-    <!-- Edit Admin Modal -->
-    <div class="modal fade" id="editAdminModal" tabindex="-1" aria-labelledby="editAdminModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form id="editAdminForm">
-            <div class="modal-header">
-              <h5 class="modal-title" id="editAdminModalLabel">Edit User</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <div class="modal-body">
-              <!-- Permissions -->
-              <div class="mb-3">
-                <label class="form-label">Permissions</label>
-                <div class="d-flex flex-wrap gap-2">
-                  <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="manage_users">Manage Users</button>
-                  <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="view_reports">View Reports</button>
-                  <button type="button" class="btn btn-outline-secondary perm-btn" data-perm="edit_coaches">Edit Coaches</button>
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Role</label>
-                <select class="form-select" id="editRole">
-                  <option value="" disabled selected>Change Role</option>
-                  <option value="admin">Admin</option>
-                  <option value="super_admin">Super Admin</option>
-                  <option value="coach">Coach</option>
-                  <option value="athlete">Athlete</option>
-                </select>
-              </div>
-
-              <input type="hidden" id="editUserId">
-            </div>
-
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-
-
-  <nav aria-label="Page navigation example">
-      <ul class="pagination justify-content-center">
-        {% if pagination.has_prev %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('admin.manage_admins', page=pagination.prev_num) }}" aria-label="Previous">
-              <i class="bi bi-chevron-double-left"></i>
-            </a>
-          </li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-left"></i></span></li>
-        {% endif %}
-
-        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-          {% if p %}
-            {% if p == pagination.page %}
-              <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-            {% else %}
-              <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_admins', page=p) }}">{{ p }}</a></li>
-            {% endif %}
-          {% else %}
-            <li class="page-item disabled"><span class="page-link">…</span></li>
-          {% endif %}
-        {% endfor %}
-
-        {% if pagination.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('admin.manage_admins', page=pagination.next_num) }}" aria-label="Next">
-              <i class="bi bi-chevron-double-right"></i>
-            </a>
-          </li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-right"></i></span></li>
-        {% endif %}
-      </ul>
-    </nav>
-</main>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+/* CSS styles */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+.avatar-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.table-responsive {
+  overflow-x: auto;
+}
+.table > :not(caption) > * > * {
+  padding: 1rem 0.75rem;
+}
+.btn-group .btn {
+  border-radius: 0.25rem !important;
+  margin: 0 2px;
+}
+</style>
+
 <script>
 function showAlert(message, type="info") {
-  const container = document.getElementById("alert-container") || document.body;
+  const container = document.body;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow" role="alert" style="z-index:1055; min-width: 300px;">
+      <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`;
   container.appendChild(wrapper);
   setTimeout(() => wrapper.remove(), 4000);
 }
-</script>
-<script>
+
 let deleteId = null;
 let currentEditId = null;
 let selectedPermissions = [];
+const currentUserIsSuperadmin = {{ 'true' if current_user_is_superadmin else 'false' }};
 
 // ---- Add Admin ----
 document.getElementById("addAdminForm").addEventListener("submit", async e => {
@@ -292,42 +423,78 @@ document.getElementById("addAdminForm").addEventListener("submit", async e => {
   const name = document.getElementById("name").value;
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  const role = "admin";
-
+  
   const res = await fetch("/admin/add_admin", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password, role })
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("access_token")
+    },
+    body: JSON.stringify({ name, email, password })
   });
 
   const data = await res.json();
   if (res.ok) {
-    location.reload();
+    showAlert(data.msg || "Admin added successfully", "success");
+    setTimeout(() => location.reload(), 1000);
   } else {
     showAlert(data.msg, "danger");
   }
 });
 
-
-// ---- Delete ----
-document.querySelectorAll(".delete-btn").forEach(btn=>{
-  btn.onclick = ()=> {
-    deleteId = btn.dataset.id;
-    new bootstrap.Modal(document.getElementById("confirmDeleteModal")).show();
-  }
+// ---- Delete Admin ----
+document.querySelectorAll(".delete-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    deleteId = this.dataset.id;
+    const confirmDeleteModal = new bootstrap.Modal(document.getElementById("confirmDeleteModal"));
+    confirmDeleteModal.show();
+  });
 });
-document.getElementById("confirmDeleteBtn").onclick = async ()=>{
+
+document.getElementById("confirmDeleteBtn").onclick = async () => {
   if (!deleteId) return;
   const res = await fetch(`/admin/delete_admin/${deleteId}`, {
-    method:"DELETE", headers:{ Authorization:`Bearer ${localStorage.getItem("access_token")}` }
+    method: "DELETE", 
+    headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
   });
-  if (res.ok) location.reload(); else showAlert("Delete failed","danger");
+  if (res.ok) {
+    showAlert("Admin deleted successfully", "success");
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    showAlert("Delete failed", "danger");
+  }
 };
 
-// Toggle permissions
+// ---- Toggle Active Status ----
+async function toggleActive(userId) {
+  fetch(`/admin/toggle_active/${userId}`, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  })
+  .then(res => res.json().catch(() => null))
+  .then(data => {
+    if (data?.msg) {
+      showAlert(data.msg, "success");
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showAlert("Status toggle failed", "danger");
+    }
+  });
+}
+
+// 🆕 Re-bind event listeners for permission buttons
+// This function attaches click listeners to all .perm-btn elements
+function setupPermissionButtons() {
+    document.querySelectorAll(".perm-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            togglePermission(this);
+        });
+    });
+}
+
+// Toggle permissions logic
 function togglePermission(btn) {
   const perm = btn.dataset.perm;
-
   if (selectedPermissions.includes(perm)) {
     selectedPermissions = selectedPermissions.filter(p => p !== perm);
     btn.classList.remove("btn-success");
@@ -339,35 +506,14 @@ function togglePermission(btn) {
   }
 }
 
-document.querySelectorAll(".perm-btn").forEach(btn => {
-  btn.addEventListener("click", function () {
-    togglePermission(this);
-  });
-});
-
-async function toggleActive(userId) {
-  fetch(`/admin/toggle_active/${userId}`, {
-      method: "PATCH",
-      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-    })
-    .then(res => res.json().catch(() => null))
-    .then(data => {
-      if (data?.msg) {
-        showAlert(data.msg, "success");
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert("Status toggle failed", "danger");
-      }
-    });
-}
-
-
-
-// Reset / Apply permissions visually
+// Update permissions in the modal UI based on selectedPermissions array
 function updatePermissionButtons() {
+  const permsArray = Array.isArray(selectedPermissions) ? selectedPermissions : [];
+
   document.querySelectorAll(".perm-btn").forEach(btn => {
     const perm = btn.dataset.perm;
-    if (selectedPermissions.includes(perm)) {
+    
+    if (permsArray.includes(perm)) {
       btn.classList.remove("btn-outline-secondary");
       btn.classList.add("btn-success");
     } else {
@@ -377,67 +523,89 @@ function updatePermissionButtons() {
   });
 }
 
-// Load data into modal
-document.querySelectorAll(".edit-btn").forEach((btn) => {
-  btn.addEventListener("click", async function () {
+// Load data into edit modal
+document.querySelectorAll(".edit-btn").forEach(btn => {
+  btn.addEventListener("click", async function() {
     const userId = this.dataset.id;
     currentEditId = userId;
-    document.getElementById("editUserId").value = userId;
-
+    
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`/user/${userId}`, {
+    const response = await fetch(`/admin/get_admin/${userId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
+    if (!response.ok) {
+      showAlert("Failed to load admin data", "danger");
+      return;
+    }
+    
     const data = await response.json();
+    
+    document.getElementById("editUserId").value = userId;
 
-    selectedPermissions = Array.isArray(data.permissions) ? data.permissions : [];
-    updatePermissionButtons();
+    if (currentUserIsSuperadmin) {
+        if (typeof data.permissions === 'object' && data.permissions !== null && !Array.isArray(data.permissions)) {
+            selectedPermissions = Object.keys(data.permissions).filter(key => data.permissions[key]);
+        } else {
+            selectedPermissions = data.permissions || [];
+        }
+        updatePermissionButtons();
+        
+        const editRoleDropdown = document.getElementById("editRole");
+        if (data.is_superadmin) {
+            editRoleDropdown.value = "super_admin";
+            document.querySelectorAll(".perm-btn").forEach(btn => btn.disabled = true);
+        } else {
+            editRoleDropdown.value = "admin";
+            document.querySelectorAll(".perm-btn").forEach(btn => btn.disabled = false);
+        }
+    }
 
-    document.getElementById("editRole").value = 
-      (data.role === "admin" && data.is_superadmin) ? "super_admin" : data.role || "";
-
-    const modal = new bootstrap.Modal(document.getElementById("editAdminModal"));
-    modal.show();
+    const editAdminModal = new bootstrap.Modal(document.getElementById("editAdminModal"));
+    editAdminModal.show();
   });
 });
 
+// Handle role change only for Super Admin
+if (currentUserIsSuperadmin) {
+    document.getElementById("editRole").addEventListener("change", function() {
+        const newRole = this.value;
+        const permButtons = document.querySelectorAll(".perm-btn");
 
-// Handle role change live
-document.getElementById("editRole").addEventListener("change", function () {
-  const newRole = this.value;
+        if (newRole === "super_admin") {
+            selectedPermissions = ["can_manage_admins", "can_manage_coaches", "can_manage_athletes", "view_reports", "manage_gym"];
+            updatePermissionButtons();
+            permButtons.forEach(btn => btn.disabled = true);
+        } else if (newRole === "admin") {
+            permButtons.forEach(btn => btn.disabled = false);
+            // You might want to reset selectedPermissions here or keep them
+        } else {
+            selectedPermissions = [];
+            updatePermissionButtons();
+            permButtons.forEach(btn => btn.disabled = true);
+        }
+    });
+}
 
-  if (newRole === "super_admin") {
-    // ✅ Super Admin → كل الصلاحيات + disable buttons
-    selectedPermissions = ["manage_users", "view_reports", "edit_coaches"];
-    updatePermissionButtons();
-    document.querySelectorAll(".perm-btn").forEach(btn => btn.disabled = true);
-  } else if (newRole === "admin") {
-    // ✅ Admin → reset permissions (محتاج يحددها السوبر أدمن)
-    selectedPermissions = [];
-    updatePermissionButtons();
-    document.querySelectorAll(".perm-btn").forEach(btn => btn.disabled = false);
-  } else {
-    // ✅ Coach / Athlete → مفيش permissions
-    selectedPermissions = [];
-    updatePermissionButtons();
-    document.querySelectorAll(".perm-btn").forEach(btn => btn.disabled = true);
-  }
-});
-
-document.getElementById("editAdminForm").addEventListener("submit", async function (e) {
+// Submit the Edit Form
+document.getElementById("editAdminForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
   const userId = document.getElementById("editUserId").value;
   const token = localStorage.getItem("access_token");
-  let newRole = document.getElementById("editRole").value;
+  
+  const body = {};
 
-  let is_superadmin = false;
-  if (newRole === "super_admin") {
-    newRole = "admin";
-    is_superadmin = true;
+  if (currentUserIsSuperadmin) {
+    const newRole = document.getElementById("editRole").value;
+    let is_superadmin = (newRole === "super_admin");
+    let role = (newRole === "super_admin") ? "admin" : newRole;
+
+    body.role = role;
+    body.is_superadmin = is_superadmin;
+    body.permissions = selectedPermissions;
   }
-
+  
   try {
     const res = await fetch(`/admin/update_admin/${userId}`, {
       method: "PUT",
@@ -445,21 +613,10 @@ document.getElementById("editAdminForm").addEventListener("submit", async functi
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ 
-        permissions: selectedPermissions, 
-        role: newRole,
-        is_superadmin: is_superadmin
-      })
+      body: JSON.stringify(body)
     });
 
-    const contentType = res.headers.get("content-type");
-    let data = {};
-    if (contentType && contentType.includes("application/json")) {
-      data = await res.json();
-    } else {
-      data = { msg: await res.text() };
-    }
-
+    const data = await res.json();
     if (res.ok) {
       showAlert(data.msg || "User updated successfully", "success");
       setTimeout(() => location.reload(), 800);
@@ -472,47 +629,105 @@ document.getElementById("editAdminForm").addEventListener("submit", async functi
   }
 });
 
-
 // ---- Filters ----
-function filterTable(){
-  const s=searchInput.value.toLowerCase();
-  const st=statusFilter.value;
-  const r=roleFilter.value;
-  rows.forEach(row=>{
-    const name=row.querySelector(".name").textContent.toLowerCase();
-    const email=row.querySelector(".email").textContent.toLowerCase();
-    const status=row.querySelector(".status").textContent.toLowerCase();
-    const role=row.querySelector(".role").dataset.role;
-    const ok=( (!s||name.includes(s)||email.includes(s)) &&
-              (!st||status.includes(st)) &&
-              (!r||role===r) );
-    row.style.display=ok?"":"none";
+function filterTable() {
+  const s = searchInput.value.toLowerCase();
+  const st = statusFilter.value;
+  const r = roleFilter.value;
+  rows.forEach(row => {
+    const name = row.querySelector(".name").textContent.toLowerCase();
+    const email = row.querySelector(".email").textContent.toLowerCase();
+    const status = row.querySelector(".status").textContent.toLowerCase();
+    const role = row.querySelector(".role").dataset.role;
+    const ok = ((!s || name.includes(s) || email.includes(s)) &&
+                (!st || status.includes(st)) &&
+                (!r || role === r));
+    row.style.display = ok ? "" : "none";
   });
 }
-const rows=document.querySelectorAll("#adminTable tbody tr");
-searchInput.oninput=filterTable; statusFilter.onchange=filterTable; roleFilter.onchange=filterTable;
 
-// ---- Bulk ----
-function getSelectedIds(){ return [...document.querySelectorAll(".row-checkbox:checked")].map(cb=>cb.value); }
-async function bulkDelete(){ const ids=getSelectedIds(); if(!ids.length) return showAlert("Select at least one","warning"); if(!confirm("Delete selected?")) return;
-  const res=await fetch("/admin/bulk_delete",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${localStorage.getItem("access_token")}`},body:JSON.stringify({ids})});
-  if(res.ok) location.reload(); else showAlert("Bulk delete failed","danger");
+const rows = document.querySelectorAll("#adminTable tbody tr");
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const roleFilter = document.getElementById("roleFilter");
+searchInput.oninput = filterTable; 
+statusFilter.onchange = filterTable; 
+roleFilter.onchange = filterTable;
+
+// ---- Bulk Actions ----
+function getSelectedIds() { 
+  return [...document.querySelectorAll(".row-checkbox:checked")].map(cb => cb.value); 
 }
-async function bulkChangeRole(){ const ids=getSelectedIds(); const role=bulkRoleSelect.value; if(!ids.length) return showAlert("Select users","warning"); if(!role) return showAlert("Choose role","warning");
-  const res=await fetch("/admin/bulk_change_role",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${localStorage.getItem("access_token")}`},body:JSON.stringify({ids,role})});
-  if(res.ok){ showAlert("Roles updated","success"); setTimeout(()=>location.reload(),1000);} else showAlert("Bulk change failed","danger");
+
+async function bulkDelete() { 
+  const ids = getSelectedIds(); 
+  if (!ids.length) return showAlert("Select at least one admin", "warning"); 
+  if (!confirm("Delete selected admins?")) return;
+  
+  const res = await fetch("/admin/bulk_delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`
+    },
+    body: JSON.stringify({ids})
+  });
+  
+  if (res.ok) {
+    showAlert("Admins deleted successfully", "success");
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    showAlert("Bulk delete failed", "danger");
+  }
 }
-document.getElementById("selectAll").onchange=function(){ document.querySelectorAll(".row-checkbox").forEach(cb=>cb.checked=this.checked); };
+
+async function bulkChangeRole() { 
+  const ids = getSelectedIds(); 
+  const role = bulkRoleSelect.value; 
+  if (!ids.length) return showAlert("Select users", "warning"); 
+  if (!role) return showAlert("Choose role", "warning");
+  
+  const res = await fetch("/admin/bulk_change_role", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`
+    },
+    body: JSON.stringify({ids, role})
+  });
+  
+  if (res.ok) { 
+    showAlert("Roles updated", "success"); 
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    showAlert("Bulk change failed", "danger");
+  }
+}
+
+document.getElementById("selectAll").onchange = function() { 
+  document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = this.checked); 
+};
 
 // ---- Reset Password ----
-async function resetPassword(id){
-  if(!confirm("Reset password?")) return;
-  const res=await fetch(`/admin/reset_password/${id}`,{method:"POST",headers:{Authorization:`Bearer ${localStorage.getItem("access_token")}`}});
-  if(res.ok) showAlert("Password reset","success"); else showAlert("Failed","danger");
+async function resetPassword(id) {
+  if (!confirm("Reset password for this admin?")) return;
+  const res = await fetch(`/admin/reset_password/${id}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+  });
+  if (res.ok) {
+    showAlert("Password reset successfully", "success");
+  } else {
+    showAlert("Password reset failed", "danger");
+  }
 }
+
+// 🆕 Initial setup for permission buttons
+document.addEventListener("DOMContentLoaded", function() {
+    if (currentUserIsSuperadmin) {
+        setupPermissionButtons();
+    }
+});
+
 </script>
-
-
-
-
 {% endblock %}

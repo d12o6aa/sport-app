@@ -1,110 +1,329 @@
 {% extends "shared/base.html" %}
+
 {% block content %}
-<div class="container mt-4">
+<main class="col-lg-10 bg-light min-vh-100 p-4">
 
-  <!-- Page Title -->
-  <h2 class="mb-4">Admin Dashboard Overview</h2>
+  <!-- Page Header -->
+  <div class="mb-4">
+    <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+    <p class="text-muted mb-0">Welcome back! Here's what's happening with your platform.</p>
+  </div>
 
-  <!-- Stats Cards -->
-  <div class="row">
+  <!-- Main Stats Cards -->
+  <div class="row g-3 mb-4">
     <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <h5 class="card-title">Coaches</h5>
-          <p class="display-6">{{ stats.coaches }}</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-people-fill fs-2 text-primary"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Total Users</h6>
+              <h3 class="mb-0 fw-bold">{{ total_users }}</h3>
+              <small class="text-success"><i class="bi bi-arrow-up"></i> +{{ new_users_this_month }} this month</small>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    
     <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <h5 class="card-title">Athletes</h5>
-          <p class="display-6">{{ stats.athletes }}</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-success bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-person-check-fill fs-2 text-success"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Active Users</h6>
+              <h3 class="mb-0 fw-bold">{{ active_users }}</h3>
+              <small class="text-muted">{{ active_percentage }}% of total</small>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    
     <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <h5 class="card-title">Active Plans</h5>
-          <p class="display-6">{{ stats.plans }}</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-warning bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Unassigned Athletes</h6>
+              <h3 class="mb-0 fw-bold">{{ unassigned_athletes }}</h3>
+              <a href="/athlete/unassigned" class="small text-primary">Assign now</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    
     <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <h5 class="card-title">Feedbacks</h5>
-          <p class="display-6">{{ stats.feedbacks }}</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-info bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-activity fs-2 text-info"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Workouts Today</h6>
+              <h3 class="mb-0 fw-bold">{{ workouts_today }}</h3>
+              <small class="text-muted">{{ total_workouts }} total</small>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Charts Row -->
-  <div class="row mt-4">
+  <!-- Role Distribution & Quick Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3"><i class="bi bi-diagram-3-fill me-2 text-primary"></i>User Distribution</h5>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted"><i class="bi bi-shield-check me-2"></i>Admins</span>
+              <span class="fw-bold">{{ admins_count }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-primary" style="width: {{ (admins_count / total_users * 100) if total_users else 0 }}%"></div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted"><i class="bi bi-person-badge me-2"></i>Coaches</span>
+              <span class="fw-bold">{{ coaches_count }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-success" style="width: {{ (coaches_count / total_users * 100) if total_users else 0 }}%"></div>
+            </div>
+          </div>
+          
+          <div class="mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted"><i class="bi bi-person me-2"></i>Athletes</span>
+              <span class="fw-bold">{{ athletes_count }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-info" style="width: {{ (athletes_count / total_users * 100) if total_users else 0 }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3"><i class="bi bi-graph-up-arrow me-2 text-success"></i>System Health</h5>
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <div>
+              <div class="text-muted small">Active Plans</div>
+              <h4 class="mb-0 fw-bold">{{ active_plans }}</h4>
+            </div>
+            <i class="bi bi-calendar-check fs-1 text-success opacity-25"></i>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <div>
+              <div class="text-muted small">Completed Workouts</div>
+              <h4 class="mb-0 fw-bold">{{ completed_workouts }}</h4>
+            </div>
+            <i class="bi bi-check-circle fs-1 text-info opacity-25"></i>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small">Avg. Completion Rate</div>
+              <h4 class="mb-0 fw-bold">{{ completion_rate }}%</h4>
+            </div>
+            <i class="bi bi-trophy fs-1 text-warning opacity-25"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Quick Actions</h5>
+          <div class="d-grid gap-2">
+            
+            <a href="/admin/manage_admins" class="btn btn-outline-secondary text-start">
+              <i class="bi bi-shield me-2"></i>Manage Admins
+            </a>
+            <a href="/coach/manage_coachs" class="btn btn-outline-success text-start">
+              <i class="bi bi-people me-2"></i>Manage Coaches
+            </a>
+            <a href="/athlete/manage_athletes" class="btn btn-outline-info text-start">
+              <i class="bi bi-person-workspace me-2"></i>Manage Athletes
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activities & Latest Users -->
+  <div class="row g-3 mb-4">
     <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-header">Athlete Growth</div>
+      <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
-          <canvas id="athleteChart"></canvas>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Registrations</h5>
+            <a href="/admin/manage_admins" class="btn btn-sm btn-outline-primary">View All</a>
+          </div>
+          <div class="list-group list-group-flush">
+            {% for user in recent_users[:5] %}
+            <div class="list-group-item px-0 border-0">
+              <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' ~ (user.profile_image or 'default.jpg')) }}"
+                    class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ user.name }}</div>
+                  <small class="text-muted">{{ user.email }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'success' if user.role == 'coach' else 'info' }} bg-opacity-10 text-{{ 'primary' if user.role == 'admin' else 'success' if user.role == 'coach' else 'info' }}">
+                    {{ user.role.title() }}
+                  </span>
+                  <div class="small text-muted mt-1">{{ user.created_at.strftime('%d %b %Y') }}</div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              No recent registrations
+            </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
+    
     <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-header">Plans Compliance</div>
+      <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
-          <canvas id="planChart"></canvas>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0"><i class="bi bi-bar-chart-line me-2 text-success"></i>Top Performing Athletes</h5>
+            <a href="/athlete/manage_athletes" class="btn btn-sm btn-outline-success">View All</a>
+          </div>
+          <div class="list-group list-group-flush">
+            {% for athlete in top_athletes[:5] %}
+            <div class="list-group-item px-0 border-0">
+              <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' ~ (athlete.user.profile_image or 'default.jpg')) }}"
+                    class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ athlete.user.name }}</div>
+                  <small class="text-muted">{{ athlete.workout_count }} workouts completed</small>
+                </div>
+                <div class="text-end">
+                  <div class="badge bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-trophy-fill me-1"></i>{{ athlete.completion_rate }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              No workout data available
+            </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Latest Activity -->
-  <div class="card mt-4 shadow-sm">
-    <div class="card-header">Recent Activity</div>
-    <div class="card-body">
-      <ul class="list-group">
-        {% for activity in activities %}
-          <li class="list-group-item">
-            <strong>{{ activity.user }}</strong> {{ activity.action }} 
-            <small class="text-muted">({{ activity.time }})</small>
-          </li>
-        {% endfor %}
-      </ul>
+  <!-- User Growth Chart -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-4"><i class="bi bi-graph-up me-2 text-primary"></i>User Growth (Last 6 Months)</h5>
+          <canvas id="userGrowthChart" height="80"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 
-</div>
+</main>
+{% endblock %}
 
-<!-- Chart.js -->
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+.avatar-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+
 <script>
-  const ctx1 = document.getElementById('athleteChart');
-  new Chart(ctx1, {
+// User Growth Chart
+const ctx = document.getElementById('userGrowthChart');
+if (ctx) {
+  new Chart(ctx, {
     type: 'line',
     data: {
-      labels: {{ chart.athlete_labels|tojson }},
+      labels: {{ growth_labels | tojson }},
       datasets: [{
-        label: 'Athletes',
-        data: {{ chart.athlete_data|tojson }},
-        borderColor: 'blue',
-        fill: false
+        label: 'Total Users',
+        data: {{ growth_data | tojson }},
+        borderColor: 'rgb(13, 110, 253)',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        tension: 0.4,
+        fill: true
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      }
     }
   });
-
-  const ctx2 = document.getElementById('planChart');
-  new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-      labels: ['Compliant', 'Not Compliant'],
-      datasets: [{
-        data: {{ chart.plan_data|tojson }},
-        backgroundColor: ['green', 'red']
-      }]
-    }
-  });
+}
 </script>
 {% endblock %}

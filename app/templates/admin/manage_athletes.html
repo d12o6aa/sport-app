@@ -2,140 +2,221 @@
 
 {% block content %}
 <main class="col-lg-10 bg-light min-vh-100 p-4">
-  
 
-  <!-- Page Title -->
+  <!-- Page Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold">Manage Athletes</h4>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAthleteModal">
-      <i class="bi bi-plus-lg me-1"></i> Add Athlete
+    <div>
+      <h2 class="fw-bold mb-1">Athlete Management</h2>
+      <p class="text-muted mb-0">Manage athletes and their coach assignments</p>
+    </div>
+    <button class="btn btn-primary btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#addAthleteModal">
+      <i class="bi bi-plus-circle me-2"></i>Add New Athlete
     </button>
   </div>
 
-  <!-- Stats -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+  <!-- Stats Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <i class="bi bi-person-badge-fill fs-2 text-primary"></i>
-          <h5 class="card-title mt-2">{{ athlete_count }}</h5>
-          <p class="card-text">Total Athlete</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-person-fill fs-2 text-primary"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Total Athletes</h6>
+              <h3 class="mb-0 fw-bold">{{ athlete_count }}</h3>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <i class="bi bi-check-circle-fill fs-2 text-success"></i>
-          <h5 class="card-title mt-2">{{ active_count }}</h5>
-          <p class="card-text">Active</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-success bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Active</h6>
+              <h3 class="mb-0 fw-bold text-success">{{ active_count }}</h3>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow-sm">
+    
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 hover-lift">
         <div class="card-body">
-          <i class="bi bi-x-circle-fill fs-2 text-danger"></i>
-          <h5 class="card-title mt-2">{{ suspended_count }}</h5>
-          <p class="card-text">Suspended</p>
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar-icon bg-danger bg-opacity-10 rounded-3 p-3">
+                <i class="bi bi-pause-circle-fill fs-2 text-danger"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted mb-1">Suspended</h6>
+              <h3 class="mb-0 fw-bold text-danger">{{ suspended_count }}</h3>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email...">
-    </div>
-    <div class="col-md-3">
-      <select id="statusFilter" class="form-select">
-        <option value="">Filter by Status</option>
-        <option value="active">Active</option>
-        <option value="suspended">Suspended</option>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <select id="roleFilter" class="form-select">
-        <option value="">Filter by Role</option>
-        <option value="admin">Admin</option>
-        <option value="super_admin">Super Admin</option>
-      </select>
+  <!-- Filters & Search -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-start-0 ps-0" 
+                   placeholder="Search by name or email...">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <select id="statusFilter" class="form-select">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        
+        <div class="col-md-3">
+          <select id="roleFilter" class="form-select">
+            <option value="">Filter by Role</option>
+            <option value="admin">Admin</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <table class="table table-hover" id="adminTable">
-        <thead class="table-light">
-          <tr>
-            <th><input type="checkbox" id="selectAll"></th>
-            <th>Profile</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Registered At</th>
-            <th>Coach</th>
-            <th>Actions</th>
-            <th>Change Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for athlete in athletes %}
-          <tr>
-            <td><input type="checkbox" class="row-checkbox" value="{{ athlete.id }}"></td>
-            <td class="d-flex align-items-center">
-              <img src="{{ url_for('static', filename='uploads/' ~ (athlete.profile_image or 'default.jpg')) }}"
-                  class="rounded-circle me-2" width="40" height="40" alt="Profile">
-              <span class="fw-semibold name">{{ athlete.name }}</span>
-            </td>
-            <td class="email">{{ athlete.email }}</td>
-            <td class="status">
-              {% if athlete.status == 'active' %}
-                <button class="btn btn-sm btn-outline-success" onclick="toggleActive({{ athlete.id }})">Active</button>
-              {% else %}
-                <button class="btn btn-sm btn-outline-danger" onclick="toggleActive({{ athlete.id }})">Suspended</button>
-              {% endif %}
-            </td>
-            
-            <td>{{ athlete.created_at.strftime('%Y-%m-%d') if athlete.created_at else 'N/A' }}</td>
-            <td>
-              {% set coach_link = athlete.coach_links.first() %}
-              {{ coach_link.coach.name if coach_link else 'Unassigned' }}
-            </td>
-
-            <td>
-              <button class="btn btn-sm btn-light" onclick="openEditModal('{{ athlete.id }}', '{{ athlete.name }}', '{{ athlete.email }}', '{{ coach_link.coach.id if coach_link else '' }}')"><i class="bi bi-pencil"></i></button>
-              <button class="btn btn-sm btn-light text-danger" onclick="confirmDelete('{{ athlete.id }}')"><i class="bi bi-trash"></i></button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword({{ athlete.id }})">Reset Password</button>
-            </td>
-            <td>
-              <select class="form-select form-select-sm" onchange="changeUserRole('{{ athlete.id }}', this.value)">
-                <option value="" disabled selected>Change Role</option>
-                <option value="admin">Admin</option>
-                <option value="coach">Coach</option>
-                <option value="athlete">Athlete</option>
-              </select>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="adminTable">
+          <thead class="bg-light">
+            <tr>
+              <th class="px-4 py-3">
+                <input type="checkbox" id="selectAll" class="form-check-input">
+              </th>
+              <th class="py-3">Athlete</th>
+              <th class="py-3">Email</th>
+              <th class="py-3">Status</th>
+              <th class="py-3">Registered</th>
+              <th class="py-3">Coach</th>
+              <th class="py-3 text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for athlete in athletes %}
+            <tr>
+              <td class="px-4">
+                <input type="checkbox" class="row-checkbox form-check-input" value="{{ athlete.id }}">
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <img src="{{ url_for('static', filename='uploads/' ~ (athlete.profile_image or 'default.jpg')) }}"
+                       class="rounded-circle me-3" width="45" height="45" alt="Profile">
+                  <div>
+                    <div class="fw-semibold name">{{ athlete.name }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="email text-muted">{{ athlete.email }}</td>
+              <td class="status">
+                {% if athlete.status == 'active' %}
+                  <button class="btn btn-sm btn-success rounded-pill px-3" onclick="toggleActive({{ athlete.id }})">
+                    <i class="bi bi-check-circle me-1"></i>Active
+                  </button>
+                {% else %}
+                  <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="toggleActive({{ athlete.id }})">
+                    <i class="bi bi-x-circle me-1"></i>Suspended
+                  </button>
+                {% endif %}
+              </td>
+              <td class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ athlete.created_at.strftime('%Y-%m-%d') if athlete.created_at else 'N/A' }}
+              </td>
+              <td>
+                {% set coach_link = athlete.coach_links.first() %}
+                {% if coach_link %}
+                  <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                    <i class="bi bi-person-badge me-1"></i>{{ coach_link.coach.name }}
+                  </span>
+                {% else %}
+                  <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Unassigned
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-primary" onclick="openEditModal('{{ athlete.id }}', '{{ athlete.name }}', '{{ athlete.email }}', '{{ coach_link.coach.id if coach_link else '' }}')" title="Edit">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('{{ athlete.id }}')" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword({{ athlete.id }})" title="Reset Password">
+                    <i class="bi bi-key"></i>
+                  </button>
+                  <select class="form-select form-select-sm d-inline-block" style="width: auto;" onchange="changeUserRole('{{ athlete.id }}', this.value)" title="Change Role">
+                    <option value="" disabled selected>Role</option>
+                    <option value="admin">Admin</option>
+                    <option value="coach">Coach</option>
+                    <option value="athlete">Athlete</option>
+                  </select>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Add Modal -->
-  <div class="modal fade" id="addAthleteModal" tabindex="-1">
-    <div class="modal-dialog">
-      <form id="addAthleteForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Athlete</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
+</main>
+
+<!-- Add Athlete Modal -->
+<div class="modal fade" id="addAthleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="addAthleteForm" class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New Athlete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Full Name</label>
+          <input type="text" name="name" class="form-control" required>
         </div>
-        <div class="modal-body">
-          <input type="text" name="name" class="form-control mb-3" placeholder="Name" required>
-          <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
-          <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email Address</label>
+          <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Assign Coach</label>
           <select name="coach_id" class="form-select">
             <option value="">Unassigned</option>
             {% for coach in coaches %}
@@ -143,51 +224,91 @@
             {% endfor %}
           </select>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-primary" type="submit">Add</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg me-2"></i>Add Athlete
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <!-- Edit Modal -->
-  <div class="modal fade" id="editAthleteModal" tabindex="-1">
-    <div class="modal-dialog">
-      <form id="editAthleteForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Athlete</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Edit Athlete Modal -->
+<div class="modal fade" id="editAthleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="editAthleteForm" class="modal-content border-0 shadow">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Athlete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="editAthleteId">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Full Name</label>
+          <input type="text" id="editAthleteName" class="form-control" required>
         </div>
-        <div class="modal-body">
-          <input type="hidden" id="editAthleteId">
-          <input type="text" id="editAthleteName" class="form-control" placeholder="Name" required>
-          <input type="email" id="editAthleteEmail" class="form-control mt-3" disabled>
-          <select id="editAthleteCoach" class="form-select mt-3">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email Address</label>
+          <input type="email" id="editAthleteEmail" class="form-control" disabled>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Assign Coach</label>
+          <select id="editAthleteCoach" class="form-select">
             <option value="">Unassigned</option>
             {% for coach in coaches %}
               <option value="{{ coach.id }}">{{ coach.name }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary" type="submit">Save</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-info text-white">
+          <i class="bi bi-check-lg me-2"></i>Save Changes
+        </button>
+      </div>
+    </form>
   </div>
-</main>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+.avatar-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.table > :not(caption) > * > * {
+  padding: 1rem 0.75rem;
+}
+.btn-group .btn, .btn-group .form-select {
+  border-radius: 0.25rem !important;
+  margin: 0 2px;
+}
+</style>
+
 <script>
-// ================== Show Alert ==================
 function showAlert(message, type="info") {
-  const container = document.getElementById("alert-container") || document.body;
+  const container = document.body;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow" role="alert" style="z-index:1055; min-width: 300px;">
+      <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`;
@@ -195,7 +316,7 @@ function showAlert(message, type="info") {
   setTimeout(() => wrapper.remove(), 4000);
 }
 
-// ================== Add Athlete ==================
+// Add Athlete
 document.getElementById("addAthleteForm").addEventListener("submit", async e => {
   e.preventDefault();
   const formData = new FormData(e.target);
@@ -209,13 +330,14 @@ document.getElementById("addAthleteForm").addEventListener("submit", async e => 
 
   const data = await res.json();
   if (res.ok) {
-    location.reload();
+    showAlert("Athlete added successfully", "success");
+    setTimeout(() => location.reload(), 1200);
   } else {
     showAlert(data.msg || "Failed to add athlete", "danger");
   }
 });
 
-// ================== Edit Athlete ==================
+// Edit Athlete
 function openEditModal(id, name, email, coachId) {
   document.getElementById("editAthleteId").value = id;
   document.getElementById("editAthleteName").value = name;
@@ -238,74 +360,87 @@ document.getElementById("editAthleteForm").addEventListener("submit", async e =>
 
   const data = await res.json();
   if (res.ok) {
-    location.reload();
+    showAlert("Athlete updated successfully", "success");
+    setTimeout(() => location.reload(), 1200);
   } else {
     showAlert(data.msg || "Failed to update athlete", "danger");
   }
 });
 
-// ================== Delete Athlete ==================
-let deleteId = null;
+// Delete Athlete
 function confirmDelete(id) {
-  deleteId = id;
-  if (confirm("Are you sure you want to delete this athlete?")) {
-    deleteAthlete();
-  }
+  if (!confirm("Are you sure you want to delete this athlete?")) return;
+  
+  fetch(`/athlete/delete/${id}`, { 
+    method: "DELETE",
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data?.msg) {
+      showAlert("Athlete deleted successfully", "success");
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showAlert("Failed to delete athlete", "danger");
+    }
+  });
 }
 
-async function deleteAthlete() {
-  if (!deleteId) return;
-  const res = await fetch(`/athlete/delete/${deleteId}`, { method: "DELETE" });
-  if (res.ok) {
-    location.reload();
-  } else {
-    showAlert("Failed to delete athlete", "danger");
-  }
-}
-
-// ================== Toggle Active ==================
+// Toggle Active
 async function toggleActive(id) {
   fetch(`/athlete/toggle_status/${id}`, {
-      method: "PATCH",
-      headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-    })
-    .then(res => res.json().catch(() => null))
-    .then(data => {
-      if (data?.msg) {
-        showAlert(data.msg, "success");
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert("Status toggle failed", "danger");
-      }
-    });
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  })
+  .then(res => res.json().catch(() => null))
+  .then(data => {
+    if (data?.msg) {
+      showAlert(data.msg, "success");
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showAlert("Status toggle failed", "danger");
+    }
+  });
 }
 
-// ================== Reset Password ==================
+// Reset Password
 async function resetPassword(id) {
-  const res = await fetch(`/athlete/reset_password/${id}`, { method: "POST" });
+  if (!confirm("Reset this athlete's password?")) return;
+  
+  const res = await fetch(`/athlete/reset_password/${id}`, { 
+    method: "POST",
+    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+  });
   const data = await res.json();
   if (res.ok) {
-    showAlert("Password has been reset successfully", "success");
+    showAlert("Password reset successfully", "success");
   } else {
     showAlert(data.msg || "Failed to reset password", "danger");
   }
 }
 
-// ================== Change Role ==================
+// Change Role
 async function changeUserRole(id, role) {
+  if (!role) return;
+  
   const res = await fetch(`/athlete/change_role/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("access_token")
+    },
     body: JSON.stringify({ role })
   });
+  
   if (res.ok) {
     showAlert("Role updated successfully", "success");
+    setTimeout(() => location.reload(), 1200);
   } else {
     showAlert("Failed to update role", "danger");
   }
 }
 
-// ================== Search & Filters ==================
+// Search & Filters
 document.getElementById("searchInput").addEventListener("keyup", filterTable);
 document.getElementById("statusFilter").addEventListener("change", filterTable);
 document.getElementById("roleFilter").addEventListener("change", filterTable);
@@ -320,24 +455,20 @@ function filterTable() {
     const name = row.querySelector(".name").textContent.toLowerCase();
     const email = row.querySelector(".email").textContent.toLowerCase();
     const statusText = row.querySelector(".status button").textContent.toLowerCase();
-    const roleSelect = row.querySelector("select")?.value || "";
 
     let visible = true;
     if (search && !(name.includes(search) || email.includes(search))) visible = false;
-    if (status && statusText !== status) visible = false;
-    if (role && roleSelect !== role) visible = false;
+    if (status && !statusText.includes(status)) visible = false;
 
     row.style.display = visible ? "" : "none";
   });
 }
 
-// ================== Select All Checkboxes ==================
+// Select All
 document.getElementById("selectAll").addEventListener("change", e => {
   document.querySelectorAll(".row-checkbox").forEach(cb => {
     cb.checked = e.target.checked;
   });
 });
 </script>
-
-
 {% endblock %}
