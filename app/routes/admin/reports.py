@@ -30,46 +30,32 @@ def reports():
     if not is_admin(identity):
         return jsonify({"msg": "Unauthorized"}), 403
 
-    # Get date range (default to last 30 days)
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=30)
     
-    # Calculate statistics
     stats = calculate_dashboard_stats(start_date, end_date)
-    
-    # Get coach performance data
     coaches_performance = get_coaches_performance(start_date, end_date)
     
     return render_template(
         "admin/reports.html",
-        num_members=stats['total_members'],
-        avg_progress=stats['avg_progress'],
-        coaches_performance=coaches_performance,
-        stats=stats
+        stats=stats,
+        coaches_performance=coaches_performance
     )
-
-# ================================
-# Statistics Calculation Functions
-# ================================
 
 def calculate_dashboard_stats(start_date, end_date):
     """Calculate comprehensive dashboard statistics"""
-    
-    # Total members
     total_members = User.query.filter_by(is_deleted=False).count()
     new_members = User.query.filter(
         User.created_at >= datetime.combine(start_date, datetime.min.time()),
         User.is_deleted == False
     ).count()
     
-    # Average progress
     avg_progress_result = db.session.query(func.avg(cast(AthleteProgress.progress, Float))).filter(
         AthleteProgress.date >= start_date,
         AthleteProgress.date <= end_date
     ).scalar()
     avg_progress = float(avg_progress_result) if avg_progress_result else 0.0
     
-    # Workout statistics
     total_workouts = WorkoutLog.query.filter(
         WorkoutLog.date >= start_date,
         WorkoutLog.date <= end_date
@@ -81,17 +67,14 @@ def calculate_dashboard_stats(start_date, end_date):
         WorkoutLog.completion_status == 'completed'
     ).count()
     
-    # Active training plans
     active_plans = TrainingPlan.query.filter_by(status='active').count()
     
-    # Equipment usage
     equipment_stats = {
         'total': Equipment.query.count(),
         'available': Equipment.query.filter_by(status='available').count(),
         'maintenance': Equipment.query.filter_by(status='maintenance').count()
     }
     
-    # Member activity stats
     active_members = User.query.join(WorkoutLog).filter(
         WorkoutLog.date >= start_date,
         WorkoutLog.date <= end_date,
@@ -112,7 +95,6 @@ def calculate_dashboard_stats(start_date, end_date):
 
 def get_coaches_performance(start_date, end_date):
     """Get coach performance rankings"""
-    
     coaches_performance = db.session.query(
         User.id.label("coach_id"),
         User.name.label("coach_name"),
@@ -159,6 +141,35 @@ def get_reports_stats():
             "end": end_date.isoformat()
         }
     })
+
+# 🆕 New API endpoint for fetching coaches performance
+@admin_bp.route("/api/reports/coaches-performance", methods=["GET"])
+@jwt_required()
+def get_coaches_performance_api():
+    identity = get_jwt_identity()
+    if not is_admin(identity):
+        return jsonify({"msg": "Unauthorized"}), 403
+    
+    days = int(request.args.get('days', 30))
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=days)
+    
+    coaches_performance = get_coaches_performance(start_date, end_date)
+    
+    coaches_data = [
+        {
+            "coach_id": coach.coach_id,
+            "coach_name": coach.coach_name,
+            "total_athletes": coach.total_athletes,
+            "avg_progress": float(coach.avg_progress) if coach.avg_progress else 0.0
+        } for coach in coaches_performance
+    ]
+    
+    return jsonify({
+        "success": True,
+        "coaches_performance": coaches_data
+    })
+
 
 @admin_bp.route("/api/reports/member-activity", methods=["GET"])
 @jwt_required()
@@ -232,6 +243,7 @@ def export_report():
     
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=int(date_range))
+    
     stats = calculate_dashboard_stats(start_date, end_date)
     coaches_performance = get_coaches_performance(start_date, end_date)
     

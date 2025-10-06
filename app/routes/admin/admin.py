@@ -32,6 +32,7 @@ def inject_user_permissions():
         pass
     
     return {'current_user': user}
+
 # =========================================================
 # Admin Management Routes
 # =========================================================

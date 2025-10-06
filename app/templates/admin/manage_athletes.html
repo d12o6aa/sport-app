@@ -3,7 +3,6 @@
 {% block content %}
 <main class="col-lg-10 bg-light min-vh-100 p-4">
 
-  <!-- Page Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h2 class="fw-bold mb-1">Athlete Management</h2>
@@ -14,7 +13,6 @@
     </button>
   </div>
 
-  <!-- Stats Cards -->
   <div class="row g-3 mb-4">
     <div class="col-md-4">
       <div class="card border-0 shadow-sm h-100 hover-lift">
@@ -71,7 +69,6 @@
     </div>
   </div>
 
-  <!-- Filters & Search -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3">
@@ -93,18 +90,11 @@
           </select>
         </div>
         
-        <div class="col-md-3">
-          <select id="roleFilter" class="form-select">
-            <option value="">Filter by Role</option>
-            <option value="admin">Admin</option>
-            <option value="super_admin">Super Admin</option>
-          </select>
-        </div>
+        
       </div>
     </div>
   </div>
 
-  <!-- Table -->
   <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -194,7 +184,6 @@
 
 </main>
 
-<!-- Add Athlete Modal -->
 <div class="modal fade" id="addAthleteModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form id="addAthleteForm" class="modal-content border-0 shadow">
@@ -235,7 +224,6 @@
   </div>
 </div>
 
-<!-- Edit Athlete Modal -->
 <div class="modal fade" id="editAthleteModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form id="editAthleteForm" class="modal-content border-0 shadow">
@@ -316,24 +304,56 @@ function showAlert(message, type="info") {
   setTimeout(() => wrapper.remove(), 4000);
 }
 
+// 🆕 Centralized fetch function for API calls
+async function apiFetch(url, options = {}) {
+    const token = localStorage.getItem('access_token');
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+    };
+
+    try {
+        const response = await fetch(url, { ...options, headers });
+
+        if (response.status === 401) {
+            const errorData = await response.json();
+            showAlert(errorData.msg || "Your session has expired. Please log in again.", "danger");
+            window.location.href = "/login"; // Redirect to login page
+            return null;
+        }
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            const errorMsg = data.msg || data.error || 'An unexpected error occurred.';
+            showAlert(errorMsg, 'danger');
+            return null;
+        }
+
+        return data;
+
+    } catch (error) {
+        console.error('API call failed:', error);
+        showAlert('An unexpected error occurred. Check the console for details.', 'danger');
+        return null;
+    }
+}
+
 // Add Athlete
 document.getElementById("addAthleteForm").addEventListener("submit", async e => {
   e.preventDefault();
   const formData = new FormData(e.target);
   const payload = Object.fromEntries(formData.entries());
 
-  const res = await fetch("/athlete/add", {
+  const data = await apiFetch("/athlete/add", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
 
-  const data = await res.json();
-  if (res.ok) {
+  if (data) {
     showAlert("Athlete added successfully", "success");
     setTimeout(() => location.reload(), 1200);
-  } else {
-    showAlert(data.msg || "Failed to add athlete", "danger");
   }
 });
 
@@ -352,18 +372,14 @@ document.getElementById("editAthleteForm").addEventListener("submit", async e =>
   const name = document.getElementById("editAthleteName").value;
   const coach_id = document.getElementById("editAthleteCoach").value;
 
-  const res = await fetch(`/athlete/update/${id}`, {
+  const data = await apiFetch(`/athlete/update/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, coach_id })
   });
 
-  const data = await res.json();
-  if (res.ok) {
+  if (data) {
     showAlert("Athlete updated successfully", "success");
     setTimeout(() => location.reload(), 1200);
-  } else {
-    showAlert(data.msg || "Failed to update athlete", "danger");
   }
 });
 
@@ -371,51 +387,42 @@ document.getElementById("editAthleteForm").addEventListener("submit", async e =>
 function confirmDelete(id) {
   if (!confirm("Are you sure you want to delete this athlete?")) return;
   
-  fetch(`/athlete/delete/${id}`, { 
+  apiFetch(`/athlete/delete/${id}`, { 
     method: "DELETE",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    headers: { 'Content-Type': 'application/json' }
   })
-  .then(res => res.json())
   .then(data => {
-    if (data?.msg) {
+    if (data) {
       showAlert("Athlete deleted successfully", "success");
       setTimeout(() => location.reload(), 1200);
-    } else {
-      showAlert("Failed to delete athlete", "danger");
     }
   });
 }
 
 // Toggle Active
 async function toggleActive(id) {
-  fetch(`/athlete/toggle_status/${id}`, {
+  const data = await apiFetch(`/athlete/toggle_status/${id}`, {
     method: "PATCH",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
-  })
-  .then(res => res.json().catch(() => null))
-  .then(data => {
-    if (data?.msg) {
-      showAlert(data.msg, "success");
-      setTimeout(() => location.reload(), 1200);
-    } else {
-      showAlert("Status toggle failed", "danger");
-    }
+    headers: { 'Content-Type': 'application/json' }
   });
+
+  if (data) {
+    showAlert(data.msg, "success");
+    setTimeout(() => location.reload(), 1200);
+  }
 }
 
 // Reset Password
 async function resetPassword(id) {
   if (!confirm("Reset this athlete's password?")) return;
   
-  const res = await fetch(`/athlete/reset_password/${id}`, { 
+  const data = await apiFetch(`/athlete/reset_password/${id}`, { 
     method: "POST",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") }
+    headers: { 'Content-Type': 'application/json' }
   });
-  const data = await res.json();
-  if (res.ok) {
-    showAlert("Password reset successfully", "success");
-  } else {
-    showAlert(data.msg || "Failed to reset password", "danger");
+  
+  if (data) {
+    showAlert(data.msg, "success");
   }
 }
 
@@ -423,20 +430,14 @@ async function resetPassword(id) {
 async function changeUserRole(id, role) {
   if (!role) return;
   
-  const res = await fetch(`/athlete/change_role/${id}`, {
-    method: "PATCH",
-    headers: { 
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("access_token")
-    },
+  const data = await apiFetch(`/admin/change_role/${id}`, {
+    method: "POST",
     body: JSON.stringify({ role })
   });
   
-  if (res.ok) {
+  if (data) {
     showAlert("Role updated successfully", "success");
     setTimeout(() => location.reload(), 1200);
-  } else {
-    showAlert("Failed to update role", "danger");
   }
 }
 

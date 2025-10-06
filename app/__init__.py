@@ -3,7 +3,7 @@ import eventlet
 
 eventlet.monkey_patch()
 
-from flask import Flask, jsonify, url_for
+from flask import Flask, jsonify, url_for, render_template
 from flask_cors import CORS
 from app.extensions import db, ma, jwt, migrate,socketio
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
@@ -44,18 +44,12 @@ def create_app():
         
         # This will return a JSON response with a 401 status code
         # The frontend will be responsible for handling this response.
-        return jsonify({
-            "msg": "The session has expired. Please log in again.",
-            "redirect_to": url_for("auth.login_page", _external=True) # Assuming your login route is named 'auth.login'
-        }), 401
+        return render_template("auth/login.html")
 
     # 🆕 Set up the handler for invalid tokens as well for consistency
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
-        return jsonify({
-            "msg": "The token is invalid. Please log in again.",
-            "redirect_to": url_for("auth.login_page", _external=True)
-        }), 401
+        return render_template("auth/login.html")
     # context processor
     @app.context_processor
     def inject_user():

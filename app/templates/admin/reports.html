@@ -24,7 +24,7 @@
                 <option value="30" selected>Last 30 Days</option>
                 <option value="90">Last 3 Months</option>
                 <option value="365">Last Year</option>
-                <option value="custom">Custom Range</option>
+                
               </select>
             </div>
             <div class="col-md-3">
@@ -54,19 +54,19 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row" id="statsCardsContainer">
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card members-card">
         <div class="card-body">
-          <h5 class="card-title">Total Members <span id="membersChange" class="text-success">| {{ "%.0f"|format(stats.member_change) }}%</span></h5>
+          <h5 class="card-title">Total Members <span id="membersChange" class="text-success">| 0%</span></h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
               <i class="bi bi-people"></i>
             </div>
             <div class="ps-3">
-              <h6 id="totalMembers">{{ stats.total_members or 0 }}</h6>
+              <h6 id="totalMembers">0</h6>
               <span class="text-success small pt-1 fw-bold">
-                <span id="newMembers">+{{ stats.new_members or 0 }}</span> new
+                <span id="newMembers">+0</span> new
               </span>
               <span class="text-muted small pt-2 ps-1">this month</span>
             </div>
@@ -84,7 +84,7 @@
               <i class="bi bi-graph-up"></i>
             </div>
             <div class="ps-3">
-              <h6 id="avgProgress">{{ "%.1f"|format(stats.avg_progress or 0) }}%</h6>
+              <h6 id="avgProgress">0.0%</h6>
               <span class="text-info small pt-1 fw-bold">improvement</span>
               <span class="text-muted small pt-2 ps-1">vs last month</span>
             </div>
@@ -102,9 +102,9 @@
               <i class="bi bi-clipboard-check"></i>
             </div>
             <div class="ps-3">
-              <h6 id="activePlans">{{ stats.active_plans or 0 }}</h6>
+              <h6 id="activePlans">0</h6>
               <span class="text-warning small pt-1 fw-bold">
-                <span id="completedWorkouts">{{ stats.completed_workouts or 0 }}</span> completed
+                <span id="completedWorkouts">0</span> completed
               </span>
               <span class="text-muted small pt-2 ps-1">this week</span>
             </div>
@@ -116,15 +116,15 @@
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card equipment-card">
         <div class="card-body">
-          <h5 class="card-title">Equipment <span class="text-info">| {{ stats.equipment_stats.available or 0 }} available</span></h5>
+          <h5 class="card-title">Equipment <span class="text-info">| <span id="availableEquipment">0</span> available</span></h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
               <i class="bi bi-bicycle"></i>
             </div>
             <div class="ps-3">
-              <h6 id="totalEquipment">{{ stats.equipment_stats.total or 0 }}</h6>
+              <h6 id="totalEquipment">0</h6>
               <span class="text-danger small pt-1 fw-bold">
-                <span id="maintenanceEquipment">{{ stats.equipment_stats.maintenance or 0 }}</span> in maintenance
+                <span id="maintenanceEquipment">0</span> in maintenance
               </span>
               <span class="text-muted small pt-2 ps-1">total equipment</span>
             </div>
@@ -135,39 +135,19 @@
   </div>
 
   <div class="row">
-    <div class="col-lg-6" id="coachTableContainer">
+    <div class="col-lg-12" id="coachTableContainer">
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Coach Performance Rankings</h5>
           <div class="coaches-performance" style="max-height: 400px; overflow-y: auto;">
-            {% for perf in coaches_performance %}
-            <div class="coach-performance-item d-flex align-items-center p-3 mb-2 bg-light rounded">
-              <div class="rank-badge me-3">
-                <span class="badge bg-primary rounded-pill">#{{ loop.index }}</span>
+            <div id="coachesList">
               </div>
-              <div class="coach-avatar me-3">
-                <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                  <i class="bi bi-person"></i>
-                </div>
-              </div>
-              <div class="flex-grow-1">
-                <h6 class="mb-1">Coach {{ perf.coach_name }}</h6>
-                <div class="progress" style="height: 6px;">
-                  <div class="progress-bar bg-success" style="width: {{ perf.avg_progress or 0 }}%"></div>
-                </div>
-                <small class="text-muted">{{ "%.1f"|format(perf.avg_progress or 0) }}% avg progress</small>
-              </div>
-              <div class="performance-score">
-                <span class="badge bg-success">{{ "%.0f"|format(perf.avg_progress or 0) }}%</span>
-              </div>
-            </div>
-            {% endfor %}
           </div>
         </div>
       </div>
     </div>
 
-    <div class="col-lg-6" id="memberTableContainer">
+    <div class="col-lg-12" id="memberTableContainer">
       <div class="card">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
@@ -199,42 +179,6 @@
       </div>
     </div>
   </div>
-
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">System Alerts & Recommendations</h5>
-          
-          <div class="alerts-container">
-            <div class="alert alert-warning d-flex align-items-center" role="alert">
-              <i class="bi bi-exclamation-triangle me-2"></i>
-              <div>
-                <strong>Low Equipment Usage:</strong> Treadmill #3 has only 15% utilization this week. Consider maintenance or relocation.
-              </div>
-              <button type="button" class="btn btn-sm btn-outline-warning ms-auto">Review</button>
-            </div>
-
-            <div class="alert alert-info d-flex align-items-center" role="alert">
-              <i class="bi bi-info-circle me-2"></i>
-              <div>
-                <strong>High Demand Period:</strong> 6-8 PM shows consistent high usage. Consider extending hours or adding equipment.
-              </div>
-              <button type="button" class="btn btn-sm btn-outline-info ms-auto">Plan</button>
-            </div>
-
-            <div class="alert alert-success d-flex align-items-center" role="alert">
-              <i class="bi bi-check-circle me-2"></i>
-              <div>
-                <strong>Revenue Growth:</strong> Monthly revenue increased by 18% compared to last month. Great job!
-              </div>
-              <button type="button" class="btn btn-sm btn-outline-success ms-auto">Details</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
 {% endblock %}
 
@@ -244,10 +188,11 @@
 // Global variables
 let currentDateRange = 30;
 let currentReportType = 'overview';
+let allMembersData = [];
 
-// Initialize dashboard
+// Initialize dashboard on page load
 document.addEventListener('DOMContentLoaded', function() {
-  updateReports();
+    updateReports();
 });
 
 // Update reports based on filters
@@ -258,51 +203,89 @@ function updateReports() {
     currentDateRange = dateRange;
     currentReportType = reportType;
     
+    const statsCardsContainer = document.getElementById('statsCardsContainer');
     const coachTableContainer = document.getElementById('coachTableContainer');
     const memberTableContainer = document.getElementById('memberTableContainer');
-    
-    // Conditionally hide/show the containers
+
+    // Hide all sections first
+    statsCardsContainer.style.display = 'none';
     coachTableContainer.style.display = 'none';
     memberTableContainer.style.display = 'none';
     
-    if (reportType === 'members') {
+    // Show sections based on report type
+    if (reportType === 'overview') {
+        statsCardsContainer.style.display = 'flex';
+        coachTableContainer.style.display = 'block';
         memberTableContainer.style.display = 'block';
-        // Add a small delay to ensure the DOM has updated
-        setTimeout(fetchMemberActivity, 50);
+        fetchStats(dateRange);
+        fetchMemberActivity();
+    } else if (reportType === 'members') {
+        memberTableContainer.style.display = 'block';
+        fetchMemberActivity();
     } else if (reportType === 'performance') {
         coachTableContainer.style.display = 'block';
-    } else { // 'overview'
-        coachTableContainer.style.display = 'block';
-        memberTableContainer.style.display = 'block';
-        // Add a small delay for the same reason
-        setTimeout(fetchMemberActivity, 50);
+        fetchCoachesPerformance(dateRange);
     }
 }
 
+// Fetch main statistics dynamically
+async function fetchStats(days) {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`/admin/api/reports/stats?days=${days}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const stats = data.stats;
+            document.getElementById('totalMembers').textContent = stats.total_members;
+            document.getElementById('newMembers').textContent = `+${stats.new_members}`;
+            document.getElementById('membersChange').textContent = `| ${stats.member_change.toFixed(0)}%`;
+            document.getElementById('avgProgress').textContent = `${stats.avg_progress.toFixed(1)}%`;
+            document.getElementById('activePlans').textContent = stats.active_plans;
+            document.getElementById('completedWorkouts').textContent = stats.completed_workouts;
+            document.getElementById('totalEquipment').textContent = stats.equipment_stats.total;
+            document.getElementById('availableEquipment').textContent = stats.equipment_stats.available;
+            document.getElementById('maintenanceEquipment').textContent = stats.equipment_stats.maintenance;
+        }
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        showAlert('Failed to load dashboard data. Please try again.', 'danger');
+    }
+}
 
 // Fetch member activity data dynamically
 async function fetchMemberActivity() {
-  const tbody = document.getElementById('memberActivityBody');
-  // ✅ The error is here. The element is not available when the function is called
-  //    under certain conditions. The `if` check below handles this gracefully.
-  if (!tbody) {
-    console.error("Element with ID 'memberActivityBody' was not found. Skipping data fetch.");
-    return;
-  }
+    const tbody = document.getElementById('memberActivityBody');
+    if (!tbody) return;
   
-  try {
-    const token = localStorage.getItem('access_token');
-    const response = await fetch('/admin/api/reports/member-activity', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch('/admin/api/reports/member-activity', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
     
-    const data = await response.json();
+        const data = await response.json();
     
-    if (data.success) {
-      tbody.innerHTML = ''; // Clear existing data
-      data.members.forEach(member => {
+        if (data.success) {
+            allMembersData = data.members;
+            renderMemberActivityTable(allMembersData);
+        }
+    } catch (error) {
+        console.error('Error fetching member activity:', error);
+        showAlert('Failed to load member activity data.', 'danger');
+    }
+}
+
+// Render member activity table from global data
+function renderMemberActivityTable(members) {
+    const tbody = document.getElementById('memberActivityBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    members.forEach(member => {
         const row = `
           <tr>
             <td>
@@ -335,13 +318,74 @@ async function fetchMemberActivity() {
           </tr>
         `;
         tbody.insertAdjacentHTML('beforeend', row);
-      });
-    }
-  } catch (error) {
-    console.error('Error fetching member activity:', error);
-    showAlert('Failed to load member activity data.', 'danger');
-  }
+    });
 }
+
+// Filter member activity table based on status
+function filterActivity(status) {
+    document.querySelectorAll('.btn-group-sm .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    let filteredData = [];
+    if (status === 'all') {
+        filteredData = allMembersData;
+    } else {
+        filteredData = allMembersData.filter(member => member.status === status);
+    }
+    renderMemberActivityTable(filteredData);
+}
+
+// Fetch coaches performance data
+async function fetchCoachesPerformance(days) {
+    const coachesList = document.getElementById('coachesList');
+    if (!coachesList) return;
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`/admin/api/reports/coaches-performance?days=${days}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            coachesList.innerHTML = '';
+            data.coaches_performance.forEach((coach, index) => {
+                const item = `
+                    <div class="coach-performance-item d-flex align-items-center p-3 mb-2 bg-light rounded">
+                      <div class="rank-badge me-3">
+                        <span class="badge bg-primary rounded-pill">#${index + 1}</span>
+                      </div>
+                      <div class="coach-avatar me-3">
+                        <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                          <i class="bi bi-person"></i>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1">
+                        <h6 class="mb-1">Coach ${coach.coach_name}</h6>
+                        <div class="progress" style="height: 6px;">
+                          <div class="progress-bar bg-success" style="width: ${coach.avg_progress || 0}%"></div>
+                        </div>
+                        <small class="text-muted">${coach.avg_progress.toFixed(1) || 0}% avg progress</small>
+                      </div>
+                      <div class="performance-score">
+                        <span class="badge bg-success">${coach.avg_progress.toFixed(0) || 0}%</span>
+                      </div>
+                    </div>
+                `;
+                coachesList.insertAdjacentHTML('beforeend', item);
+            });
+        } else {
+             showAlert(data.error || 'Failed to load coaches performance', 'danger');
+        }
+    } catch (error) {
+        console.error('Error fetching coaches performance:', error);
+        showAlert('Failed to load coaches performance data.', 'danger');
+    }
+}
+
 
 // Export function to call the backend API
 function exportReport() {
@@ -366,7 +410,9 @@ function exportReport() {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || 'Network response was not ok');
+            });
         }
         return response.blob();
     })
@@ -385,24 +431,6 @@ function exportReport() {
         console.error('Export failed:', error);
         showAlert(`Export failed: ${error.message}`, 'danger');
     });
-}
-
-function filterActivity(status) {
-  event.target.parentElement.querySelectorAll('.btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.classList.add('active');
-  
-  const rows = document.querySelectorAll('#memberActivityBody tr');
-  rows.forEach(row => {
-    if (status === 'all') {
-      row.style.display = '';
-    } else {
-      const statusCell = row.querySelector('td:nth-child(5) .badge');
-      const memberStatus = statusCell.textContent.toLowerCase();
-      row.style.display = memberStatus === status ? '' : 'none';
-    }
-  });
 }
 
 function viewMember(name) {
