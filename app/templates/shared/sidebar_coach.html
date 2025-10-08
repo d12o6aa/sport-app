@@ -20,11 +20,7 @@
             <i class="bi bi-circle"></i><span>Manage Athletes</span>
           </a>
         </li>
-        <li>
-          <a href="{{ url_for('coach.my_athletes_view') }}">
-            <i class="bi bi-circle"></i><span>My Athletes</span>
-          </a>
-        </li>
+        
         <li>
           <a href="{{ url_for('coach.athlete_compliance_view') }}">
             <i class="bi bi-circle"></i><span>Compliance</span>
@@ -45,25 +41,11 @@
       </a>
       <ul id="plans-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
-          <a href="{{ url_for('coach.create_plan_view') }}">
-            <i class="bi bi-circle"></i><span>Create Plan</span>
+          <a href="{{ url_for('coach.training_plans_management') }}">
+            <i class="bi bi-circle"></i><span>Training Plans Management</span>
           </a>
         </li>
-        <li>
-          <a href="{{ url_for('coach.manage_plans_view') }}">
-            <i class="bi bi-circle"></i><span>Manage Plans</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('coach.edit_plan_view') }}">
-            <i class="bi bi-circle"></i><span>Edit Plans</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('coach.coach_plans_view') }}">
-            <i class="bi bi-circle"></i><span>All Plans</span>
-          </a>
-        </li>
+        
         <li>
           <a href="{{ url_for('coach.calendar_view') }}">
             <i class="bi bi-circle"></i><span>Calendar</span>

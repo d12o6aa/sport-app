@@ -10,203 +10,1143 @@
       <li class="breadcrumb-item active">Manage Athletes</li>
     </ol>
   </nav>
-</div><!-- End Page Title -->
+</div>
 
 <section class="section">
-  <div class="row">
-
-    <!-- Athletes Table -->
-    <div class="col-12">
-      <div class="card recent-sales overflow-auto">
+  <!-- Quick Stats -->
+  <div class="row mb-4">
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card athletes-card">
         <div class="card-body">
-          <h5 class="card-title">Athletes List</h5>
-          <div class="d-flex justify-content-end mb-3">
-            <button onclick="addAthlete()" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add New Athlete</button>
+          <h5 class="card-title">Total Athletes</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="totalAthletes">0</h6>
+              <span class="text-success small pt-1 fw-bold" id="activeAthletes">0 active</span>
+            </div>
           </div>
-          <table id="athletesTable" class="table table-borderless datatable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Last Activity</th>
-                <th>Compliance</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
         </div>
       </div>
-    </div><!-- End Athletes Table -->
+    </div>
 
-    <!-- Add/Edit Athlete Modal -->
-    <div class="modal fade" id="athleteModal" tabindex="-1" aria-labelledby="athleteModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="athleteModalLabel">Add/Edit Athlete</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card compliance-card">
+        <div class="card-body">
+          <h5 class="card-title">Avg Compliance</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="avgCompliance">0%</h6>
+              <span class="text-info small pt-1">overall progress</span>
+            </div>
           </div>
-          <div class="modal-body">
-            <form id="athleteForm">
-              <input type="hidden" id="athleteId">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card workouts-card">
+        <div class="card-body">
+          <h5 class="card-title">Active Plans</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="activePlans">0</h6>
+              <span class="text-warning small pt-1">assigned</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card alerts-card">
+        <div class="card-body">
+          <h5 class="card-title">Need Attention</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="ps-3">
+              <h6 id="needAttention">0</h6>
+              <span class="text-danger small pt-1">inactive</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter and Search Bar -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Search Athletes</label>
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Status</label>
+              <select id="statusFilter" class="form-select" onchange="filterAthletes()">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Compliance</label>
+              <select id="complianceFilter" class="form-select" onchange="filterAthletes()">
+                <option value="">All Levels</option>
+                <option value="high">High (80%+)</option>
+                <option value="medium">Medium (50-80%)</option>
+                <option value="low">Low (<50%)</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Activity</label>
+              <select id="activityFilter" class="form-select" onchange="filterAthletes()">
+                <option value="">All</option>
+                <option value="recent">Recently Active</option>
+                <option value="inactive">Inactive (7+ days)</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <div class="btn-group w-100">
+                <button class="btn btn-outline-primary" onclick="filterAthletes()">
+                  <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+                <button class="btn btn-primary" onclick="addAthlete()">
+                  <i class="bi bi-plus-circle"></i> Add Athlete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Athletes Grid/List View -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Athletes List</h5>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-primary active" onclick="toggleView('grid')">
+                <i class="bi bi-grid-3x3"></i>
+              </button>
+              <button type="button" class="btn btn-outline-primary" onclick="toggleView('list')">
+                <i class="bi bi-list-ul"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid View -->
+          <div id="athletesGrid" class="row g-3">
+            <!-- Athletes cards will be populated here -->
+          </div>
+
+          <!-- List View (hidden by default) -->
+          <div id="athletesList" class="table-responsive" style="display: none;">
+            <table class="table table-hover datatable" id="athletesTable">
+              <thead>
+                <tr>
+                  <th>Athlete</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Last Active</th>
+                  <th>Compliance</th>
+                  <th>Progress</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="athletesTableBody">
+                <!-- Table rows will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add/Edit Athlete Modal -->
+<div class="modal fade" id="athleteModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="athleteModalLabel">Add New Athlete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="athleteForm">
+          <input type="hidden" id="athleteId">
+          
+          <div class="row">
+            <div class="col-md-6">
               <div class="mb-3">
-                <label for="athleteName" class="form-label">Name</label>
+                <label class="form-label">Full Name <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="athleteName" required>
               </div>
+            </div>
+            <div class="col-md-6">
               <div class="mb-3">
-                <label for="athleteEmail" class="form-label">Email</label>
+                <label class="form-label">Email <span class="text-danger">*</span></label>
                 <input type="email" class="form-control" id="athleteEmail" required>
               </div>
-              <div class="mb-3" id="passwordField">
-                <label for="athletePassword" class="form-label">Password</label>
+            </div>
+          </div>
+
+          <div class="row" id="passwordField">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
                 <input type="password" class="form-control" id="athletePassword" required>
               </div>
+            </div>
+            <div class="col-md-6">
               <div class="mb-3">
-                <label for="athleteAge" class="form-label">Age</label>
-                <input type="number" class="form-control" id="athleteAge">
+                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="athletePasswordConfirm" required>
               </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
               <div class="mb-3">
-                <label for="athleteGender" class="form-label">Gender</label>
+                <label class="form-label">Age</label>
+                <input type="number" class="form-control" id="athleteAge" min="1" max="120">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Gender</label>
                 <select class="form-select" id="athleteGender">
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
+            </div>
+            <div class="col-md-4">
               <div class="mb-3">
-                <label for="athleteWeight" class="form-label">Weight (kg)</label>
+                <label class="form-label">Team/Position</label>
+                <input type="text" class="form-control" id="athleteTeam">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Weight (kg)</label>
                 <input type="number" step="0.1" class="form-control" id="athleteWeight">
               </div>
+            </div>
+            <div class="col-md-4">
               <div class="mb-3">
-                <label for="athleteHeight" class="form-label">Height (cm)</label>
+                <label class="form-label">Height (cm)</label>
                 <input type="number" step="0.1" class="form-control" id="athleteHeight">
               </div>
-            </form>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Initial Goal</label>
+                <select class="form-select" id="athleteGoal">
+                  <option value="">Select Goal</option>
+                  <option value="weight_loss">Weight Loss</option>
+                  <option value="muscle_gain">Muscle Gain</option>
+                  <option value="endurance">Improve Endurance</option>
+                  <option value="strength">Build Strength</option>
+                  <option value="general">General Fitness</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" onclick="saveAthlete()">Save</button>
+
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" id="athleteNotes" rows="3" placeholder="Any special notes or requirements..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveAthlete()">
+          <span id="saveButtonText">Save Athlete</span>
+          <div class="spinner-border spinner-border-sm ms-2 d-none" id="saveSpinner"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Athlete Details Modal -->
+<div class="modal fade" id="athleteDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-person-badge"></i> <span id="detailAthleteName"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <!-- Left Column: Profile Info -->
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="mb-3">
+                  <img id="detailAthleteAvatar" src="" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;" alt="Avatar">
+                </div>
+                <h5 id="detailAthleteNameFull"></h5>
+                <p class="text-muted mb-3" id="detailAthleteEmail"></p>
+                <span id="detailAthleteStatus" class="badge"></span>
+                
+                <hr>
+                
+                <div class="profile-stats">
+                  <div class="stat-item mb-2">
+                    <strong>Age:</strong> <span id="detailAge">-</span>
+                  </div>
+                  <div class="stat-item mb-2">
+                    <strong>Weight:</strong> <span id="detailWeight">-</span> kg
+                  </div>
+                  <div class="stat-item mb-2">
+                    <strong>Height:</strong> <span id="detailHeight">-</span> cm
+                  </div>
+                  <div class="stat-item mb-2">
+                    <strong>BMI:</strong> <span id="detailBMI">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Tabs -->
+          <div class="col-md-8">
+            <ul class="nav nav-tabs nav-tabs-bordered" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview-tab">Overview</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#progress-tab">Progress</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#workouts-tab">Workouts</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#plans-tab">Plans</button>
+              </li>
+            </ul>
+
+            <div class="tab-content pt-3">
+              <!-- Overview Tab -->
+              <div class="tab-pane fade show active" id="overview-tab">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="card mb-3">
+                      <div class="card-body">
+                        <h6 class="card-title">Compliance Rate</h6>
+                        <div class="progress mb-2" style="height: 20px;">
+                          <div id="detailComplianceBar" class="progress-bar" style="width: 0%">0%</div>
+                        </div>
+                        <small class="text-muted">Based on completed workouts</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="card mb-3">
+                      <div class="card-body">
+                        <h6 class="card-title">Last Activity</h6>
+                        <p id="detailLastActivity" class="mb-0">-</p>
+                        <small class="text-muted">Last workout session</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title">Recent Activity</h6>
+                    <div id="recentActivity">
+                      <!-- Recent activities will be loaded here -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress Tab -->
+              <div class="tab-pane fade" id="progress-tab">
+                <canvas id="progressChart" width="100" height="50"></canvas>
+              </div>
+
+              <!-- Workouts Tab -->
+              <div class="tab-pane fade" id="workouts-tab">
+                <div id="athleteWorkouts">
+                  <!-- Workout history will be loaded here -->
+                </div>
+              </div>
+
+              <!-- Plans Tab -->
+              <div class="tab-pane fade" id="plans-tab">
+                <div id="athletePlans">
+                  <!-- Assigned plans will be loaded here -->
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div><!-- End Modal -->
-
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-warning" onclick="editAthleteFromDetails()">
+          <i class="bi bi-pencil"></i> Edit Profile
+        </button>
+        <button type="button" class="btn btn-primary" onclick="assignPlan()">
+          <i class="bi bi-clipboard-plus"></i> Assign Plan
+        </button>
+      </div>
+    </div>
   </div>
-</section>
+</div>
+
 {% endblock %}
+
 {% block scripts %}
 {{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+// Global variables
+let athletes = [];
+let currentView = 'grid';
+let currentAthleteId = null;
+let progressChart = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
   loadAthletes();
+  
+  // Search functionality
+  document.getElementById('searchInput').addEventListener('input', function() {
+    filterAthletes();
+  });
 });
 
+// Load all athletes
 function loadAthletes() {
-  fetch("/coach/athletes", { headers: authHeader() })
-    .then(r => r.json())
-    .then(data => {
-      const tbody = document.querySelector("#athletesTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(a => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${a.name}</td>
-            <td>${a.email}</td>
-            <td><span class="badge bg-${a.status === 'active' ? 'success' : 'warning'}">${a.status}</span></td>
-            <td>${a.last_activity || 'N/A'}</td>
-            <td>${a.compliance}%</td>
-            <td>
-              <button class="btn btn-sm btn-outline-primary" onclick="editAthlete(${a.id})">Edit</button>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteAthlete(${a.id})">Remove</button>
-            </td>
-          </tr>`;
-      });
-      // Reinitialize datatable
-      if ($.fn.DataTable.isDataTable('#athletesTable')) {
-        $('#athletesTable').DataTable().destroy();
-      }
-      $('#athletesTable').DataTable({
-        responsive: true,
-        order: [[0, 'asc']]
-      });
-    });
+  fetch('/coach/athletes', {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    athletes = data;
+    displayAthletes();
+    updateStats();
+  })
+  .catch(error => {
+    console.error('Error loading athletes:', error);
+    showAlert('Failed to load athletes', 'danger');
+  });
 }
 
-function addAthlete() {
-  document.getElementById("athleteForm").reset();
-  document.getElementById("athleteId").value = "";
-  document.getElementById("passwordField").style.display = "block";
-  document.getElementById("athleteModalLabel").textContent = "Add New Athlete";
-  new bootstrap.Modal(document.getElementById("athleteModal")).show();
-}
-
-function editAthlete(id) {
-  fetch(`/coach/athlete/${id}`, { headers: authHeader() })
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById("athleteId").value = data.id;
-      document.getElementById("athleteName").value = data.name;
-      document.getElementById("athleteEmail").value = data.email;
-      document.getElementById("athleteAge").value = data.age || "";
-      document.getElementById("athleteGender").value = data.gender || "";
-      document.getElementById("athleteWeight").value = data.weight || "";
-      document.getElementById("athleteHeight").value = data.height || "";
-      document.getElementById("passwordField").style.display = "none";
-      document.getElementById("athleteModalLabel").textContent = "Edit Athlete";
-      new bootstrap.Modal(document.getElementById("athleteModal")).show();
-    });
-}
-
-function saveAthlete() {
-  const id = document.getElementById("athleteId").value;
-  const data = {
-    name: document.getElementById("athleteName").value,
-    email: document.getElementById("athleteEmail").value,
-    age: document.getElementById("athleteAge").value || null,
-    gender: document.getElementById("athleteGender").value || null,
-    weight: document.getElementById("athleteWeight").value || null,
-    height: document.getElementById("athleteHeight").value || null
-  };
-  if (!id) {
-    data.password = document.getElementById("athletePassword").value;
+// Display athletes in current view
+function displayAthletes() {
+  if (currentView === 'grid') {
+    displayAthletesGrid();
+  } else {
+    displayAthletesList();
   }
+}
 
-  const url = id ? `/coach/athlete/${id}` : "/coach/athlete/add";
-  const method = id ? "PUT" : "POST";
+// Display athletes in grid view
+function displayAthletesGrid() {
+  const grid = document.getElementById('athletesGrid');
+  const filteredAthletes = getFilteredAthletes();
+  
+  if (filteredAthletes.length === 0) {
+    grid.innerHTML = `
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-people fs-1 text-muted"></i>
+        <p class="mt-2 text-muted">No athletes found matching your criteria</p>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = filteredAthletes.map(athlete => `
+    <div class="col-lg-4 col-md-6">
+      <div class="card athlete-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="athlete-avatar me-3">
+              <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <span class="fw-bold">${getInitials(athlete.name)}</span>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-1">${athlete.name}</h6>
+              <small class="text-muted">${athlete.email}</small>
+            </div>
+            <span class="badge bg-${getStatusColor(athlete.status)}">${athlete.status}</span>
+          </div>
 
+          <div class="athlete-stats mb-3">
+            <div class="d-flex justify-content-between mb-2">
+              <small class="text-muted">Compliance</small>
+              <strong class="text-${getComplianceColor(athlete.compliance)}">${athlete.compliance}%</strong>
+            </div>
+            <div class="progress mb-2" style="height: 6px;">
+              <div class="progress-bar bg-${getComplianceColor(athlete.compliance)}" style="width: ${athlete.compliance}%"></div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">
+                <i class="bi bi-clock"></i> ${athlete.last_activity}
+              </small>
+            </div>
+          </div>
+
+          <div class="athlete-actions d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary flex-fill" onclick="viewAthleteDetails(${athlete.id})">
+              <i class="bi bi-eye"></i> View
+            </button>
+            <button class="btn btn-sm btn-outline-warning" onclick="editAthlete(${athlete.id})">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteAthlete(${athlete.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Display athletes in list view
+function displayAthletesList() {
+  const tbody = document.getElementById('athletesTableBody');
+  const filteredAthletes = getFilteredAthletes();
+  
+  tbody.innerHTML = filteredAthletes.map(athlete => `
+    <tr onclick="viewAthleteDetails(${athlete.id})" style="cursor: pointer;">
+      <td>
+        <div class="d-flex align-items-center">
+          <div class="athlete-avatar me-2">
+            <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 12px;">
+              ${getInitials(athlete.name)}
+            </div>
+          </div>
+          <span>${athlete.name}</span>
+        </div>
+      </td>
+      <td>${athlete.email}</td>
+      <td><span class="badge bg-${getStatusColor(athlete.status)}">${athlete.status}</span></td>
+      <td><small>${athlete.last_activity}</small></td>
+      <td>
+        <div class="progress" style="height: 8px; width: 80px;">
+          <div class="progress-bar bg-${getComplianceColor(athlete.compliance)}" style="width: ${athlete.compliance}%"></div>
+        </div>
+        <small>${athlete.compliance}%</small>
+      </td>
+      <td><span class="badge bg-info">View</span></td>
+      <td onclick="event.stopPropagation();">
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-warning" onclick="editAthlete(${athlete.id})">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-outline-danger" onclick="deleteAthlete(${athlete.id})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Get filtered athletes based on current filters
+function getFilteredAthletes() {
+  let filtered = [...athletes];
+  
+  // Search filter
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  if (searchTerm) {
+    filtered = filtered.filter(a => 
+      a.name.toLowerCase().includes(searchTerm) || 
+      a.email.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  // Status filter
+  const statusFilter = document.getElementById('statusFilter').value;
+  if (statusFilter) {
+    filtered = filtered.filter(a => a.status === statusFilter);
+  }
+  
+  // Compliance filter
+  const complianceFilter = document.getElementById('complianceFilter').value;
+  if (complianceFilter) {
+    filtered = filtered.filter(a => {
+      if (complianceFilter === 'high') return a.compliance >= 80;
+      if (complianceFilter === 'medium') return a.compliance >= 50 && a.compliance < 80;
+      if (complianceFilter === 'low') return a.compliance < 50;
+      return true;
+    });
+  }
+  
+  // Activity filter
+  const activityFilter = document.getElementById('activityFilter').value;
+  if (activityFilter) {
+    // This would require parsing the last_activity field
+    // Simplified implementation for now
+  }
+  
+  return filtered;
+}
+
+// Filter athletes
+function filterAthletes() {
+  displayAthletes();
+}
+
+// Toggle between grid and list view
+function toggleView(view) {
+  currentView = view;
+  
+  // Update buttons
+  document.querySelectorAll('.btn-group .btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.closest('.btn').classList.add('active');
+  
+  // Toggle visibility
+  if (view === 'grid') {
+    document.getElementById('athletesGrid').style.display = '';
+    document.getElementById('athletesList').style.display = 'none';
+  } else {
+    document.getElementById('athletesGrid').style.display = 'none';
+    document.getElementById('athletesList').style.display = '';
+  }
+  
+  displayAthletes();
+}
+
+// Update dashboard stats
+function updateStats() {
+  const totalAthletes = athletes.length;
+  const activeAthletes = athletes.filter(a => a.status === 'active').length;
+  const avgCompliance = athletes.length > 0 ? 
+    Math.round(athletes.reduce((sum, a) => sum + a.compliance, 0) / athletes.length) : 0;
+  const needAttention = athletes.filter(a => a.last_activity.includes('week') || a.last_activity === 'N/A').length;
+  
+  document.getElementById('totalAthletes').textContent = totalAthletes;
+  document.getElementById('activeAthletes').textContent = `${activeAthletes} active`;
+  document.getElementById('avgCompliance').textContent = `${avgCompliance}%`;
+  document.getElementById('needAttention').textContent = needAttention;
+}
+
+// Add new athlete
+function addAthlete() {
+  document.getElementById('athleteForm').reset();
+  document.getElementById('athleteId').value = '';
+  document.getElementById('passwordField').style.display = '';
+  document.getElementById('athleteModalLabel').textContent = 'Add New Athlete';
+  
+  new bootstrap.Modal(document.getElementById('athleteModal')).show();
+}
+
+// Edit athlete
+function editAthlete(id) {
+  fetch(`/coach/athlete/${id}`, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById('athleteId').value = data.id;
+    document.getElementById('athleteName').value = data.name;
+    document.getElementById('athleteEmail').value = data.email;
+    document.getElementById('athleteAge').value = data.age || '';
+    document.getElementById('athleteGender').value = data.gender || '';
+    document.getElementById('athleteWeight').value = data.weight || '';
+    document.getElementById('athleteHeight').value = data.height || '';
+    document.getElementById('athleteTeam').value = data.team || '';
+    document.getElementById('passwordField').style.display = 'none';
+    document.getElementById('athleteModalLabel').textContent = 'Edit Athlete';
+    
+    new bootstrap.Modal(document.getElementById('athleteModal')).show();
+  })
+  .catch(error => {
+    showAlert('Failed to load athlete data', 'danger');
+  });
+}
+
+// Save athlete
+function saveAthlete() {
+  const id = document.getElementById('athleteId').value;
+  const password = document.getElementById('athletePassword').value;
+  const passwordConfirm = document.getElementById('athletePasswordConfirm').value;
+  
+  // Validate passwords for new athletes
+  if (!id && password !== passwordConfirm) {
+    showAlert('Passwords do not match', 'warning');
+    return;
+  }
+  
+  const data = {
+    name: document.getElementById('athleteName').value,
+    email: document.getElementById('athleteEmail').value,
+    age: document.getElementById('athleteAge').value || null,
+    gender: document.getElementById('athleteGender').value || null,
+    weight: document.getElementById('athleteWeight').value || null,
+    height: document.getElementById('athleteHeight').value || null,
+    team: document.getElementById('athleteTeam').value || null
+  };
+  
+  if (!id) {
+    data.password = password;
+  }
+  
+  // Show loading state
+  document.getElementById('saveButtonText').textContent = 'Saving...';
+  document.getElementById('saveSpinner').classList.remove('d-none');
+  
+  const url = id ? `/coach/athlete/${id}` : '/coach/athlete/add';
+  const method = id ? 'PUT' : 'POST';
+  
   fetch(url, {
-    method,
-    headers: { ...authHeader(), "Content-Type": "application/json" },
+    method: method,
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(data)
   })
-    .then(r => r.json())
-    .then(data => {
-      if (data.msg) {
-        alert(data.msg);
-        bootstrap.Modal.getInstance(document.getElementById("athleteModal")).hide();
-        loadAthletes();
-      }
-    });
+  .then(response => response.json())
+  .then(data => {
+    if (data.msg) {
+      showAlert(data.msg, 'success');
+      bootstrap.Modal.getInstance(document.getElementById('athleteModal')).hide();
+      loadAthletes();
+    }
+  })
+  .catch(error => {
+    showAlert('Failed to save athlete', 'danger');
+  })
+  .finally(() => {
+    document.getElementById('saveButtonText').textContent = 'Save Athlete';
+    document.getElementById('saveSpinner').classList.add('d-none');
+  });
 }
 
+// Delete athlete
 function deleteAthlete(id) {
-  if (confirm("Are you sure you want to remove this athlete?")) {
-    fetch(`/coach/athlete/${id}`, {
-      method: "DELETE",
-      headers: authHeader()
-    })
-      .then(r => r.json())
-      .then(data => {
-        alert(data.msg);
-        loadAthletes();
-      });
+  if (!confirm('Are you sure you want to remove this athlete? This action cannot be undone.')) {
+    return;
   }
+  
+  fetch(`/coach/athlete/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    showAlert(data.msg, 'success');
+    loadAthletes();
+  })
+  .catch(error => {
+    showAlert('Failed to remove athlete', 'danger');
+  });
 }
 
-function authHeader() {
-  return { "Authorization": "Bearer " + localStorage.getItem("access_token") };
+// View athlete details
+function viewAthleteDetails(id) {
+  currentAthleteId = id;
+  
+  fetch(`/coach/athlete/${id}/details`, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    populateAthleteDetails(data);
+    loadAthleteProgress(id);
+    loadAthleteWorkouts(id);
+    loadAthletePlans(id);
+    
+    new bootstrap.Modal(document.getElementById('athleteDetailsModal')).show();
+  })
+  .catch(error => {
+    showAlert('Failed to load athlete details', 'danger');
+  });
+}
+
+// Populate athlete details modal
+function populateAthleteDetails(data) {
+  document.getElementById('detailAthleteName').textContent = data.name;
+  document.getElementById('detailAthleteNameFull').textContent = data.name;
+  document.getElementById('detailAthleteEmail').textContent = data.email;
+  document.getElementById('detailAthleteStatus').className = `badge bg-${getStatusColor(data.status)}`;
+  document.getElementById('detailAthleteStatus').textContent = data.status;
+  
+  // Set avatar
+  const avatar = document.getElementById('detailAthleteAvatar');
+  avatar.src = data.profile_image || 'https://via.placeholder.com/100';
+  
+  // Set profile stats
+  document.getElementById('detailAge').textContent = data.age || '-';
+  document.getElementById('detailWeight').textContent = data.weight || '-';
+  document.getElementById('detailHeight').textContent = data.height || '-';
+  
+  // Calculate BMI
+  if (data.weight && data.height) {
+    const bmi = (data.weight / Math.pow(data.height / 100, 2)).toFixed(1);
+    document.getElementById('detailBMI').textContent = bmi;
+  } else {
+    document.getElementById('detailBMI').textContent = '-';
+  }
+  
+  // Set compliance
+  const complianceBar = document.getElementById('detailComplianceBar');
+  complianceBar.style.width = `${data.compliance}%`;
+  complianceBar.textContent = `${data.compliance}%`;
+  complianceBar.className = `progress-bar bg-${getComplianceColor(data.compliance)}`;
+  
+  // Set last activity
+  document.getElementById('detailLastActivity').textContent = data.last_activity || 'No recent activity';
+  
+  // Load recent activity
+  loadRecentActivity(data.recent_activities || []);
+}
+
+// Load athlete progress chart
+function loadAthleteProgress(athleteId) {
+  fetch(`/coach/athlete/${athleteId}/progress`, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    renderProgressChart(data);
+  })
+  .catch(error => {
+    console.error('Error loading progress:', error);
+  });
+}
+
+// Render progress chart
+function renderProgressChart(data) {
+  const ctx = document.getElementById('progressChart');
+  
+  if (progressChart) {
+    progressChart.destroy();
+  }
+  
+  progressChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.dates || [],
+      datasets: [{
+        label: 'Weight (kg)',
+        data: data.weights || [],
+        borderColor: '#4154f1',
+        backgroundColor: 'rgba(65, 84, 241, 0.1)',
+        tension: 0.4,
+        fill: true
+      }, {
+        label: 'Workouts Completed',
+        data: data.workouts || [],
+        borderColor: '#2eca6a',
+        backgroundColor: 'rgba(46, 202, 106, 0.1)',
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left'
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          grid: {
+            drawOnChartArea: false
+          }
+        }
+      }
+    }
+  });
+}
+
+// Load athlete workouts
+function loadAthleteWorkouts(athleteId) {
+  fetch(`/coach/athlete/${athleteId}/workouts`, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    displayAthleteWorkouts(data);
+  })
+  .catch(error => {
+    console.error('Error loading workouts:', error);
+  });
+}
+
+// Display athlete workouts
+function displayAthleteWorkouts(workouts) {
+  const container = document.getElementById('athleteWorkouts');
+  
+  if (workouts.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center py-4">No workout history found</p>';
+    return;
+  }
+  
+  container.innerHTML = workouts.map(workout => `
+    <div class="card mb-2">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1">${workout.title || 'Workout'}</h6>
+            <small class="text-muted">${workout.date} • ${workout.duration || 0} mins</small>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-${workout.completion_status === 'completed' ? 'success' : 'warning'}">
+              ${workout.completion_status}
+            </span>
+            <br>
+            <small class="text-muted">${workout.calories_burned || 0} cal</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Load athlete plans
+function loadAthletePlans(athleteId) {
+  fetch(`/coach/athlete/${athleteId}/plans`, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    displayAthletePlans(data);
+  })
+  .catch(error => {
+    console.error('Error loading plans:', error);
+  });
+}
+
+// Display athlete plans
+function displayAthletePlans(plans) {
+  const container = document.getElementById('athletePlans');
+  
+  if (plans.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-4">
+        <p class="text-muted">No training plans assigned</p>
+        <button class="btn btn-primary btn-sm" onclick="assignPlan()">
+          <i class="bi bi-plus"></i> Assign Plan
+        </button>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = plans.map(plan => `
+    <div class="card mb-2">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1">${plan.title}</h6>
+            <small class="text-muted">${plan.start_date} - ${plan.end_date}</small>
+          </div>
+          <span class="badge bg-${plan.status === 'active' ? 'success' : 'secondary'}">
+            ${plan.status}
+          </span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Load recent activity
+function loadRecentActivity(activities) {
+  const container = document.getElementById('recentActivity');
+  
+  if (activities.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
+    return;
+  }
+  
+  container.innerHTML = activities.map(activity => `
+    <div class="d-flex align-items-start mb-3">
+      <div class="activity-icon me-3">
+        <i class="bi ${activity.icon} text-primary"></i>
+      </div>
+      <div class="flex-grow-1">
+        <p class="mb-0">${activity.description}</p>
+        <small class="text-muted">${activity.timestamp}</small>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Edit athlete from details modal
+function editAthleteFromDetails() {
+  bootstrap.Modal.getInstance(document.getElementById('athleteDetailsModal')).hide();
+  editAthlete(currentAthleteId);
+}
+
+// Assign plan to athlete
+function assignPlan() {
+  // This would open a plan assignment modal
+  showAlert('Plan assignment feature coming soon', 'info');
+}
+
+// Utility functions
+function getInitials(name) {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+}
+
+function getStatusColor(status) {
+  const colors = {
+    'active': 'success',
+    'pending': 'warning',
+    'suspended': 'danger'
+  };
+  return colors[status] || 'secondary';
+}
+
+function getComplianceColor(compliance) {
+  if (compliance >= 80) return 'success';
+  if (compliance >= 50) return 'warning';
+  return 'danger';
+}
+
+function showAlert(message, type = 'info') {
+  const alertContainer = document.createElement('div');
+  alertContainer.className = 'position-fixed top-0 end-0 p-3';
+  alertContainer.style.zIndex = '9999';
+  
+  const alertElement = document.createElement('div');
+  alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+  alertElement.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  alertContainer.appendChild(alertElement);
+  document.body.appendChild(alertContainer);
+  
+  setTimeout(() => {
+    if (alertContainer && alertContainer.parentNode) {
+      alertContainer.parentNode.removeChild(alertContainer);
+    }
+  }, 4000);
 }
 </script>
+
+<style>
+/* Nice Admin Compatible Styles */
+.athletes-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
+.compliance-card .card-icon { background: linear-gradient(90deg, #17a2b8, #20c997); }
+.workouts-card .card-icon { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+.alerts-card .card-icon { background: linear-gradient(90deg, #dc3545, #fd7e14); }
+
+.athlete-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e1e5e9;
+}
+
+.athlete-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #4154f1, #2678c7);
+}
+
+.athlete-avatar {
+  transition: all 0.3s ease;
+}
+
+.athlete-card:hover .athlete-avatar {
+  transform: scale(1.1);
+}
+
+.nav-tabs-bordered {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.nav-tabs-bordered .nav-link {
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-tabs-bordered .nav-link:hover {
+  border-color: #e9ecef #e9ecef #dee2e6;
+}
+
+.nav-tabs-bordered .nav-link.active {
+  color: #4154f1;
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.activity-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f3ff;
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .athlete-card {
+    margin-bottom: 1rem;
+  }
+}
+</style>
 {% endblock %}

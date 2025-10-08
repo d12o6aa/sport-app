@@ -1,89 +1,1541 @@
 {% extends "shared/base.html" %}
 
 {% block content %}
-<div class="pagetitle">
-  <h1>Create Workout</h1>
-  <nav>
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('coach.coach_dashboard') }}">Coach Dashboard</a></li>
-      <li class="breadcrumb-item active">Create Workout</li>
-    </ol>
-  </nav>
-</div>
+<section class="section dashboard">
+  <!-- Header with Navigation -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+      <h5 class="m-0 me-3">Athletes Workout Management</h5>
+      <div class="btn-group" role="group">
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeWeek(-1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="goToToday()">Today</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeWeek(1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="openAddWorkout()">
+      <i class="bi bi-plus-lg me-1"></i> Create Workout
+    </button>
+  </div>
 
-<section class="section">
-  <div class="row">
-    <div class="col-lg-12">
+  <!-- Filters Row -->
+  <div class="card mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Select Athlete</label>
+          <select class="form-select form-select-sm" id="athleteFilter" onchange="applyFilters()">
+            <option value="">All Athletes</option>
+            {% for athlete in athletes %}
+              <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Workout Type</label>
+          <select class="form-select form-select-sm" id="typeFilter" onchange="applyFilters()">
+            <option value="all">All Types</option>
+            <option value="strength">💪 Strength</option>
+            <option value="cardio">🏃 Cardio</option>
+            <option value="yoga">🧘 Yoga</option>
+            <option value="crossfit">🏋️ CrossFit</option>
+            <option value="running">🏃‍♂️ Running</option>
+            <option value="cycling">🚴 Cycling</option>
+            <option value="swimming">🏊 Swimming</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Start Date</label>
+          <input type="date" class="form-control form-control-sm" id="startDateFilter" onchange="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">End Date</label>
+          <input type="date" class="form-control form-control-sm" id="endDateFilter" onchange="applyFilters()">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-sm btn-outline-secondary me-2" onclick="clearFilters()">
+            <i class="bi bi-x-circle me-1"></i> Clear
+          </button>
+          <button class="btn btn-sm btn-outline-primary" onclick="exportData()">
+            <i class="bi bi-download me-1"></i> Export
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Calendar -->
+  <div class="card mb-4">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <small class="text-muted fw-medium" id="weekRange">Loading...</small>
+        <div class="d-flex gap-2">
+          <span class="badge bg-success">● Completed</span>
+          <span class="badge bg-warning">● In Progress</span>
+          <span class="badge bg-danger">● Missed</span>
+        </div>
+      </div>
+      <div class="row g-2" id="weeklyCalendar">
+        <!-- Calendar days will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards Row -->
+  <div class="row g-3 mb-4">
+    <!-- Total Workouts -->
+    <div class="col-md-3">
+      <div class="card bg-gradient-primary text-white h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small mb-1">Total Workouts</div>
+              <h3 class="mb-0" id="totalWorkouts">0</h3>
+            </div>
+            <div class="fs-1 opacity-50">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Athletes -->
+    <div class="col-md-3">
+      <div class="card bg-gradient-success text-white h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small mb-1">Active Athletes</div>
+              <h3 class="mb-0" id="activeAthletes">{{ athletes|length }}</h3>
+            </div>
+            <div class="fs-1 opacity-50">
+              <i class="bi bi-people"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Duration -->
+    <div class="col-md-3">
+      <div class="card bg-gradient-info text-white h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small mb-1">Total Duration</div>
+              <h3 class="mb-0" id="totalDuration">0h</h3>
+            </div>
+            <div class="fs-1 opacity-50">
+              <i class="bi bi-clock"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Calories -->
+    <div class="col-md-3">
+      <div class="card bg-gradient-warning text-white h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small mb-1">Total Calories</div>
+              <h3 class="mb-0" id="totalCalories">0</h3>
+            </div>
+            <div class="fs-1 opacity-50">
+              <i class="bi bi-fire"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Row -->
+  <div class="row g-4">
+    <!-- Left Column - Workouts List -->
+    <div class="col-md-8">
       <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Recent Workouts</h6>
+          <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-outline-secondary active" onclick="setView('list')">
+              <i class="bi bi-list-ul"></i>
+            </button>
+            <button class="btn btn-outline-secondary" onclick="setView('grid')">
+              <i class="bi bi-grid-3x3"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-2" style="max-height: 600px; overflow-y: auto;">
+          <div id="workoutsList">
+            <!-- Workouts will be populated here -->
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-activity fs-1"></i>
+              <p class="mt-2">Loading workouts...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Athlete Stats & Calendar -->
+    <div class="col-md-4">
+      <!-- Selected Athlete Stats -->
+      <div class="card mb-3" id="athleteStatsCard" style="display: none;">
+        <div class="card-header">
+          <h6 class="mb-0" id="selectedAthleteName">Athlete Stats</h6>
+        </div>
         <div class="card-body">
-          <h5 class="card-title">Create New Workout</h5>
-          <form id="workoutForm" onsubmit="event.preventDefault(); createWorkout();">
-            <div class="mb-3">
-              <label for="athleteSelect" class="form-label">Select Athlete</label>
-              <select class="form-select" id="athleteSelect" required>
-                <option value="">Select an athlete</option>
-                {% for athlete in athletes %}
-                  <option value="{{ athlete.id }}">{{ athlete.name }}</option>
-                {% endfor %}
-              </select>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <small class="text-muted">Completion Rate</small>
+              <small class="fw-bold" id="completionRate">0%</small>
             </div>
-            <div class="mb-3">
-              <label for="name" class="form-label">Workout Name</label>
-              <input type="text" class="form-control" id="name" required>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-success" id="completionProgress" style="width: 0%"></div>
             </div>
-            <div class="mb-3">
-              <label for="type" class="form-label">Workout Type</label>
-              <select class="form-select" id="type" required>
-                <option value="strength">Strength</option>
-                <option value="cardio">Cardio</option>
-                <option value="flexibility">Flexibility</option>
-                <option value="endurance">Endurance</option>
-              </select>
+          </div>
+          
+          <div class="row g-2 small">
+            <div class="col-6">
+              <div class="p-2 bg-light rounded text-center">
+                <div class="text-muted">Workouts</div>
+                <div class="fw-bold fs-5" id="athleteTotalWorkouts">0</div>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="duration" class="form-label">Duration (minutes)</label>
-              <input type="number" class="form-control" id="duration">
+            <div class="col-6">
+              <div class="p-2 bg-light rounded text-center">
+                <div class="text-muted">Duration</div>
+                <div class="fw-bold fs-5" id="athleteTotalDuration">0h</div>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="performedAt" class="form-label">Performed At</label>
-              <input type="date" class="form-control" id="performedAt" required>
+            <div class="col-6">
+              <div class="p-2 bg-light rounded text-center">
+                <div class="text-muted">Calories</div>
+                <div class="fw-bold fs-5" id="athleteTotalCalories">0</div>
+              </div>
             </div>
-            <button type="submit" class="btn btn-primary">Create Workout</button>
-          </form>
+            <div class="col-6">
+              <div class="p-2 bg-light rounded text-center">
+                <div class="text-muted">Avg HR</div>
+                <div class="fw-bold fs-5" id="athleteAvgHR">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Calendar -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h6 class="mb-0" id="calendarMonth">Calendar</h6>
+        </div>
+        <div class="card-body p-2">
+          <div id="monthlyCalendar" class="text-center">
+            <!-- Monthly calendar will be generated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Quick Actions</h6>
+        </div>
+        <div class="card-body p-2">
+          <div class="d-grid gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="openBulkCreate()">
+              <i class="bi bi-lightning me-1"></i> Bulk Create Workouts
+            </button>
+            <button class="btn btn-sm btn-outline-success" onclick="viewAllAthletes()">
+              <i class="bi bi-people me-1"></i> View All Athletes
+            </button>
+            <button class="btn btn-sm btn-outline-info" onclick="generateReport()">
+              <i class="bi bi-file-earmark-bar-graph me-1"></i> Generate Report
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
-{% endblock %}
-{% block scripts %}
-{{ super() }}
-<script>
-function createWorkout() {
-  const data = {
-    athlete_id: document.getElementById("athleteSelect").value,
-    name: document.getElementById("name").value,
-    type: document.getElementById("type").value,
-    duration: document.getElementById("duration").value,
-    performed_at: document.getElementById("performedAt").value
-  };
 
-  fetch("/coach/create_workout", {
-    method: "POST",
-    headers: { 
-      "Authorization": "Bearer " + localStorage.getItem("access_token"),
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams(data)
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.msg) {
-        alert(data.msg);
-        window.location.reload();
-      }
-    });
+<!-- Enhanced Workout Modal -->
+<div class="modal fade" id="workoutModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form id="workoutForm" class="modal-content" enctype="multipart/form-data">
+      <div class="modal-header">
+        <h5 class="modal-title" id="workoutModalTitle">Create Workout</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="workoutId">
+        
+        <!-- Athlete Selection -->
+        <div class="mb-3">
+          <label class="form-label">Select Athlete <span class="text-danger">*</span></label>
+          <select id="workoutAthleteId" class="form-select" required>
+            <option value="">Choose athlete...</option>
+            {% for athlete in athletes %}
+              <option value="{{ athlete.id }}">{{ athlete.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Basic Info Row -->
+        <div class="row">
+          <div class="col-md-8">
+            <div class="mb-3">
+              <label class="form-label">Workout Title <span class="text-danger">*</span></label>
+              <input id="workoutTitle" type="text" class="form-control" required maxlength="150" 
+                     placeholder="e.g., Morning Strength Training">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Date <span class="text-danger">*</span></label>
+              <input id="workoutDate" type="date" class="form-control" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workout Type & Duration Row -->
+        <div class="row">
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Workout Type <span class="text-danger">*</span></label>
+              <select id="workoutType" class="form-select" required onchange="generateWorkoutImage()">
+                <option value="strength">💪 Strength Training</option>
+                <option value="cardio">🏃 Cardio</option>
+                <option value="yoga">🧘 Yoga</option>
+                <option value="crossfit">🏋️ CrossFit</option>
+                <option value="running">🏃‍♂️ Running</option>
+                <option value="cycling">🚴 Cycling</option>
+                <option value="swimming">🏊 Swimming</option>
+                <option value="mobility">🤸 Mobility</option>
+                <option value="pilates">🤸‍♀️ Pilates</option>
+                <option value="boxing">🥊 Boxing</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Duration (minutes) <span class="text-danger">*</span></label>
+              <input id="plannedDuration" type="number" class="form-control" min="1" max="300" required 
+                     placeholder="30" onchange="updateCaloriesEstimate()">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Difficulty</label>
+              <select id="difficultyLevel" class="form-select" onchange="updateCaloriesEstimate()">
+                <option value="beginner">🟢 Beginner</option>
+                <option value="intermediate">🟡 Intermediate</option>
+                <option value="advanced">🔴 Advanced</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generated Image Preview -->
+        <div class="row">
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label">Workout Image</label>
+              <div class="text-center p-3 border rounded" id="imagePreview">
+                <img id="generatedImage" src="" style="width: 200px; height: 120px; object-fit: cover; border-radius: 8px; display: none;">
+                <div id="imagePlaceholder" class="bg-light d-flex align-items-center justify-content-center rounded" 
+                     style="width: 200px; height: 120px; margin: 0 auto;">
+                  <i class="bi bi-image fs-1 text-muted"></i>
+                </div>
+                <small class="text-muted d-block mt-2">Image will be generated based on workout type</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics Row -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Calories Burned (estimated)</label>
+              <input id="caloriesBurned" type="number" class="form-control" min="0" readonly>
+              <small class="text-muted">Auto-calculated based on type, duration, and difficulty</small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select id="completionStatus" class="form-select">
+                <option value="completed">✅ Completed</option>
+                <option value="in_progress">⏳ In Progress</option>
+                <option value="partial">⚠️ Partial</option>
+                <option value="missed">❌ Missed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Metrics (Collapsible) -->
+        <div class="accordion" id="advancedMetrics">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                      data-bs-target="#collapseAdvanced" aria-expanded="false">
+                Advanced Metrics (Optional)
+              </button>
+            </h2>
+            <div id="collapseAdvanced" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <!-- Heart Rate Row -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Average Heart Rate</label>
+                      <input id="avgHeartRateInput" type="number" class="form-control" min="0" max="220" placeholder="150">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Max Heart Rate</label>
+                      <input id="maxHeartRateInput" type="number" class="form-control" min="0" max="220" placeholder="180">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Training Effects Row -->
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Aerobic Effect (0-5)</label>
+                      <input id="aerobicEffect" type="number" class="form-control" min="0" max="5" step="0.1" placeholder="2.5">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Anaerobic Effect (0-5)</label>
+                      <input id="anaerobicEffect" type="number" class="form-control" min="0" max="5" step="0.1" placeholder="1.2">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Recovery Time (hours)</label>
+                      <input id="recoveryTimeInput" type="number" class="form-control" min="0" max="72" placeholder="24">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-3 mt-3">
+          <label class="form-label">Notes & Instructions</label>
+          <textarea id="workoutNotes" class="form-control" rows="3" 
+                    placeholder="Add instructions, focus areas, or notes for the athlete..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger me-auto" type="button" id="deleteWorkoutBtn" style="display: none;" onclick="deleteWorkout()">
+          <i class="bi bi-trash me-1"></i> Delete
+        </button>
+        <button class="btn btn-primary" type="submit" id="saveWorkoutBtn">
+          <span id="saveButtonText">Save Workout</span>
+          <div class="spinner-border spinner-border-sm ms-2 d-none" id="saveSpinner"></div>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Workout Detail Modal -->
+<div class="modal fade" id="workoutDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailModalTitle">Workout Details</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="workoutDetailContent">
+        <!-- Workout details will be populated here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary" onclick="editWorkoutFromDetail()">
+          <i class="bi bi-pencil me-1"></i> Edit Workout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Create Modal -->
+<div class="modal fade" id="bulkCreateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bulk Create Workouts</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          Create multiple workouts for selected athletes at once
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Select Athletes</label>
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;">
+            {% for athlete in athletes %}
+              <div class="form-check">
+                <input class="form-check-input bulk-athlete-check" type="checkbox" value="{{ athlete.id }}" id="bulkAthlete{{ athlete.id }}">
+                <label class="form-check-label" for="bulkAthlete{{ athlete.id }}">
+                  {{ athlete.name }}
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Workout Title</label>
+              <input type="text" class="form-control" id="bulkTitle" placeholder="e.g., Weekly Cardio Session">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Workout Type</label>
+              <select class="form-select" id="bulkType">
+                <option value="strength">💪 Strength Training</option>
+                <option value="cardio">🏃 Cardio</option>
+                <option value="yoga">🧘 Yoga</option>
+                <option value="crossfit">🏋️ CrossFit</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Duration (minutes)</label>
+              <input type="number" class="form-control" id="bulkDuration" min="1" value="30">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" id="bulkDate">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="createBulkWorkouts()">
+          <i class="bi bi-lightning me-1"></i> Create All
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Global variables
+let WORKOUTS = [];
+let currentWeek = new Date();
+let editingWorkoutId = null;
+let selectedWorkout = null;
+let currentView = 'list';
+let currentFilters = {
+  athlete_id: null,
+  workout_type: 'all',
+  start_date: null,
+  end_date: null
+};
+
+// Workout type configurations
+const WORKOUT_CONFIGS = {
+  strength: { 
+    emoji: '💪', 
+    color: '#dc3545',
+    caloriesPerMinute: 8,
+    bgGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  },
+  cardio: { 
+    emoji: '🏃', 
+    color: '#fd7e14',
+    caloriesPerMinute: 12,
+    bgGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+  },
+  yoga: { 
+    emoji: '🧘', 
+    color: '#20c997',
+    caloriesPerMinute: 4,
+    bgGradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+  },
+  crossfit: { 
+    emoji: '🏋️', 
+    color: '#6f42c1',
+    caloriesPerMinute: 15,
+    bgGradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+  },
+  running: { 
+    emoji: '🏃‍♂️', 
+    color: '#0d6efd',
+    caloriesPerMinute: 14,
+    bgGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  },
+  cycling: { 
+    emoji: '🚴', 
+    color: '#198754',
+    caloriesPerMinute: 10,
+    bgGradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
+  },
+  swimming: { 
+    emoji: '🏊', 
+    color: '#0dcaf0',
+    caloriesPerMinute: 13,
+    bgGradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+  },
+  mobility: { 
+    emoji: '🤸', 
+    color: '#ffc107',
+    caloriesPerMinute: 3,
+    bgGradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
+  },
+  pilates: { 
+    emoji: '🤸‍♀️', 
+    color: '#e91e63',
+    caloriesPerMinute: 5,
+    bgGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+  },
+  boxing: { 
+    emoji: '🥊', 
+    color: '#795548',
+    caloriesPerMinute: 16,
+    bgGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  }
+};
+
+// Utility functions
+function alertShow(message, type = "info") {
+  const container = document.body;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-lg" role="alert" style="z-index:1060; min-width: 300px;">
+      <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'x-circle' : 'info-circle'} me-2"></i>
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  container.appendChild(wrapper);
+  setTimeout(() => wrapper.remove(), 4000);
 }
+
+function formatTime(minutes) {
+  if (!minutes) return "0h 0m";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+}
+
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
+
+// Image generation
+function generateWorkoutImage() {
+  const workoutType = document.getElementById('workoutType').value;
+  const config = WORKOUT_CONFIGS[workoutType] || WORKOUT_CONFIGS.strength;
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 240;
+  const ctx = canvas.getContext('2d');
+  
+  const gradient = ctx.createLinearGradient(0, 0, 400, 240);
+  gradient.addColorStop(0, config.color + '80');
+  gradient.addColorStop(1, config.color + '40');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 400, 240);
+  
+  ctx.font = '80px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(config.emoji, 200, 140);
+  
+  ctx.font = 'bold 24px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(workoutType.charAt(0).toUpperCase() + workoutType.slice(1), 200, 200);
+  
+  const dataURL = canvas.toDataURL('image/png');
+  document.getElementById('generatedImage').src = dataURL;
+  document.getElementById('generatedImage').style.display = 'block';
+  document.getElementById('imagePlaceholder').style.display = 'none';
+  
+  return dataURL;
+}
+
+// Calorie estimation
+function updateCaloriesEstimate() {
+  const workoutType = document.getElementById('workoutType').value;
+  const duration = parseInt(document.getElementById('plannedDuration').value) || 0;
+  const difficulty = document.getElementById('difficultyLevel').value;
+  
+  if (workoutType && duration > 0) {
+    const config = WORKOUT_CONFIGS[workoutType] || WORKOUT_CONFIGS.strength;
+    let caloriesPerMinute = config.caloriesPerMinute;
+    
+    const difficultyMultiplier = {
+      beginner: 0.8,
+      intermediate: 1.0,
+      advanced: 1.3
+    };
+    
+    const estimatedCalories = Math.round(duration * caloriesPerMinute * difficultyMultiplier[difficulty]);
+    document.getElementById('caloriesBurned').value = estimatedCalories;
+  }
+}
+
+// Calendar functions
+function changeWeek(direction) {
+  currentWeek.setDate(currentWeek.getDate() + (direction * 7));
+  generateWeeklyCalendar();
+}
+
+function goToToday() {
+  currentWeek = new Date();
+  generateWeeklyCalendar();
+}
+
+function generateWeeklyCalendar() {
+  const startOfWeek = new Date(currentWeek);
+  startOfWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+  document.getElementById('weekRange').textContent = 
+    `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
+  
+  const calendarContainer = document.getElementById('weeklyCalendar');
+  calendarContainer.innerHTML = '';
+  
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(startOfWeek);
+    date.setDate(startOfWeek.getDate() + i);
+    
+    const isToday = date.toDateString() === new Date().toDateString();
+    const dayWorkouts = WORKOUTS.filter(w => 
+      new Date(w.date).toDateString() === date.toDateString()
+    );
+    
+    const dayElement = document.createElement('div');
+    dayElement.className = 'col text-center';
+    dayElement.innerHTML = `
+      <div class="calendar-day p-3 rounded ${isToday ? 'bg-primary text-white' : 'bg-light'}" 
+           style="cursor: pointer; min-height: 100px; position: relative;" 
+           onclick="selectDate('${date.toISOString().split('T')[0]}')">
+        <div class="small mb-1">${days[i]}</div>
+        <div class="fw-bold fs-5 mb-2">${date.getDate()}</div>
+        <div class="mt-1">
+          ${dayWorkouts.map(w => {
+            const config = WORKOUT_CONFIGS[w.workout_type] || WORKOUT_CONFIGS.strength;
+            const statusColor = w.completion_status === 'completed' ? 'success' : 
+                               w.completion_status === 'in_progress' ? 'warning' : 
+                               w.completion_status === 'missed' ? 'danger' : 'secondary';
+            return `<div class="badge bg-${statusColor} mb-1" style="font-size: 9px; display: block;" 
+                         onclick="event.stopPropagation(); showWorkoutDetails(${w.id})" 
+                         title="${w.title} - ${w.athlete_name}">
+                      ${w.athlete_name?.split(' ')[0] || 'Athlete'}
+                    </div>`;
+          }).join('')}
+          ${dayWorkouts.length > 2 ? `<div class="badge bg-info" style="font-size: 8px;">+${dayWorkouts.length - 2}</div>` : ''}
+        </div>
+      </div>
+    `;
+    calendarContainer.appendChild(dayElement);
+  }
+}
+
+function generateMonthlyCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  document.getElementById('calendarMonth').textContent = `${monthNames[month]} ${year}`;
+  
+  let calendarHTML = `
+    <div class="row g-0 small text-center mb-2">
+      <div class="col fw-bold">S</div><div class="col fw-bold">M</div><div class="col fw-bold">T</div>
+      <div class="col fw-bold">W</div><div class="col fw-bold">T</div><div class="col fw-bold">F</div><div class="col fw-bold">S</div>
+    </div>
+  `;
+  
+  let week = '<div class="row g-0">';
+  
+  for (let i = 0; i < firstDay; i++) {
+    week += '<div class="col p-1"><div style="height: 32px;"></div></div>';
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = day === today;
+    const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    const dayWorkouts = WORKOUTS.filter(w => w.date === dateString);
+    const hasWorkout = dayWorkouts.length > 0;
+    
+    week += `
+      <div class="col p-1">
+        <div class="calendar-mini-day ${isToday ? 'bg-primary text-white' : ''} 
+                    ${hasWorkout ? 'border border-success border-2' : ''} rounded text-center d-flex align-items-center justify-content-center" 
+             style="cursor: pointer; font-size: 11px; height: 32px; position: relative;"
+             onclick="selectDate('${dateString}')">
+          ${day}
+          ${hasWorkout ? `<div class="position-absolute" style="top: 2px; right: 2px; width: 6px; height: 6px; background: #28a745; border-radius: 50%;"></div>` : ''}
+        </div>
+      </div>
+    `;
+    
+    if ((firstDay + day) % 7 === 0) {
+      week += '</div><div class="row g-0">';
+    }
+  }
+  
+  week += '</div>';
+  calendarHTML += week;
+  
+  document.getElementById('monthlyCalendar').innerHTML = calendarHTML;
+}
+
+// Fetch workouts with filters
+async function fetchWorkouts() {
+  try {
+    let url = '/coach/api/workouts?';
+    const params = new URLSearchParams();
+    
+    if (currentFilters.athlete_id) params.append('athlete_id', currentFilters.athlete_id);
+    if (currentFilters.workout_type && currentFilters.workout_type !== 'all') params.append('workout_type', currentFilters.workout_type);
+    if (currentFilters.start_date) params.append('start_date', currentFilters.start_date);
+    if (currentFilters.end_date) params.append('end_date', currentFilters.end_date);
+    
+    const response = await fetch(url + params.toString(), {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) throw new Error(await response.text() || 'Network error');
+    
+    WORKOUTS = await response.json();
+    updateDashboard();
+    generateWeeklyCalendar();
+    generateMonthlyCalendar();
+    
+  } catch (error) {
+    console.error('Fetch error:', error);
+    WORKOUTS = [];
+    alertShow(`Failed to load workouts: ${error.message}`, 'danger');
+  }
+}
+
+// Apply filters
+function applyFilters() {
+  currentFilters.athlete_id = document.getElementById('athleteFilter').value || null;
+  currentFilters.workout_type = document.getElementById('typeFilter').value;
+  currentFilters.start_date = document.getElementById('startDateFilter').value || null;
+  currentFilters.end_date = document.getElementById('endDateFilter').value || null;
+  
+  fetchWorkouts();
+  
+  // Load athlete stats if specific athlete selected
+  if (currentFilters.athlete_id) {
+    loadAthleteStats(currentFilters.athlete_id);
+  } else {
+    document.getElementById('athleteStatsCard').style.display = 'none';
+  }
+}
+
+function clearFilters() {
+  document.getElementById('athleteFilter').value = '';
+  document.getElementById('typeFilter').value = 'all';
+  document.getElementById('startDateFilter').value = '';
+  document.getElementById('endDateFilter').value = '';
+  currentFilters = {
+    athlete_id: null,
+    workout_type: 'all',
+    start_date: null,
+    end_date: null
+  };
+  fetchWorkouts();
+  document.getElementById('athleteStatsCard').style.display = 'none';
+}
+
+// Load athlete stats
+async function loadAthleteStats(athleteId) {
+  try {
+    const response = await fetch(`/coach/api/athletes/${athleteId}/stats`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) throw new Error('Failed to load stats');
+    
+    const stats = await response.json();
+    
+    // Show stats card
+    document.getElementById('athleteStatsCard').style.display = 'block';
+    
+    // Get athlete name
+    const athleteSelect = document.getElementById('athleteFilter');
+    const athleteName = athleteSelect.options[athleteSelect.selectedIndex].text;
+    document.getElementById('selectedAthleteName').textContent = `${athleteName} Stats`;
+    
+    // Update stats
+    document.getElementById('completionRate').textContent = `${stats.completion_rate}%`;
+    document.getElementById('completionProgress').style.width = `${stats.completion_rate}%`;
+    document.getElementById('athleteTotalWorkouts').textContent = stats.total_workouts;
+    document.getElementById('athleteTotalDuration').textContent = `${Math.round(stats.total_duration / 60)}h`;
+    document.getElementById('athleteTotalCalories').textContent = stats.total_calories;
+    document.getElementById('athleteAvgHR').textContent = stats.avg_heart_rate || '-';
+    
+  } catch (error) {
+    console.error('Stats error:', error);
+  }
+}
+
+// Date selection
+function selectDate(dateString) {
+  const dayWorkouts = WORKOUTS.filter(w => w.date === dateString);
+  
+  if (dayWorkouts.length > 0) {
+    showWorkoutDetails(dayWorkouts[0].id);
+  } else {
+    openAddWorkout(dateString);
+  }
+}
+
+// Open add workout modal
+function openAddWorkout(selectedDate = null) {
+  resetForm();
+  if (selectedDate) {
+    document.getElementById('workoutDate').value = selectedDate;
+  } else {
+    document.getElementById('workoutDate').value = new Date().toISOString().split('T')[0];
+  }
+  
+  // Pre-select athlete if filtered
+  if (currentFilters.athlete_id) {
+    document.getElementById('workoutAthleteId').value = currentFilters.athlete_id;
+  }
+  
+  const modal = new bootstrap.Modal(document.getElementById('workoutModal'));
+  modal.show();
+  
+  setTimeout(() => generateWorkoutImage(), 100);
+}
+
+// Show workout details
+function showWorkoutDetails(workoutId) {
+  const workout = WORKOUTS.find(w => w.id === workoutId);
+  if (!workout) {
+    alertShow('Workout not found', 'error');
+    return;
+  }
+  
+  selectedWorkout = workout;
+  
+  document.getElementById('detailModalTitle').textContent = workout.title;
+  
+  const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+  
+  document.getElementById('workoutDetailContent').innerHTML = `
+    <div class="row">
+      <div class="col-md-6">
+        <div class="text-center mb-3">
+          <div style="width: 200px; height: 120px; background: ${config.bgGradient}; 
+                      border-radius: 12px; display: flex; align-items: center; 
+                      justify-content: center; margin: 0 auto;">
+            <span style="font-size: 48px;">${config.emoji}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h5 class="text-primary mb-3">${workout.title}</h5>
+        <div class="mb-2">
+          <strong>Athlete:</strong> 
+          <span class="badge bg-info">${workout.athlete_name}</span>
+        </div>
+        <div class="mb-2">
+          <strong>Type:</strong> 
+          <span class="badge" style="background-color: ${config.color}">
+            ${workout.workout_type.charAt(0).toUpperCase() + workout.workout_type.slice(1)}
+          </span>
+        </div>
+        <div class="mb-2"><strong>Date:</strong> ${formatDate(workout.date)}</div>
+        <div class="mb-2"><strong>Duration:</strong> ${formatTime(workout.actual_duration || workout.planned_duration || 0)}</div>
+        <div class="mb-2"><strong>Calories:</strong> ${workout.calories_burned || 0} kcal</div>
+        <div class="mb-2">
+          <strong>Status:</strong> 
+          <span class="badge ${workout.completion_status === 'completed' ? 'bg-success' : 
+                              workout.completion_status === 'in_progress' ? 'bg-warning' : 
+                              workout.completion_status === 'partial' ? 'bg-info' : 'bg-danger'}">
+            ${workout.completion_status.charAt(0).toUpperCase() + workout.completion_status.slice(1)}
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    ${workout.avg_heart_rate || workout.max_heart_rate ? `
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <h6>Heart Rate Data</h6>
+          ${workout.avg_heart_rate ? `<div><strong>Average:</strong> ${workout.avg_heart_rate} bpm</div>` : ''}
+          ${workout.max_heart_rate ? `<div><strong>Maximum:</strong> ${workout.max_heart_rate} bpm</div>` : ''}
+        </div>
+        <div class="col-md-6">
+          <h6>Training Effects</h6>
+          ${workout.training_effect?.aerobic ? `<div><strong>Aerobic:</strong> ${workout.training_effect.aerobic}</div>` : ''}
+          ${workout.training_effect?.anaerobic ? `<div><strong>Anaerobic:</strong> ${workout.training_effect.anaerobic}</div>` : ''}
+          ${workout.recovery_time ? `<div><strong>Recovery:</strong> ${workout.recovery_time}h</div>` : ''}
+        </div>
+      </div>
+    ` : ''}
+    
+    ${workout.notes ? `
+      <hr>
+      <h6>Notes & Instructions</h6>
+      <p class="text-muted">${workout.notes}</p>
+    ` : ''}
+  `;
+  
+  const modal = new bootstrap.Modal(document.getElementById('workoutDetailModal'));
+  modal.show();
+}
+
+function editWorkoutFromDetail() {
+  if (!selectedWorkout) return;
+  
+  bootstrap.Modal.getInstance(document.getElementById('workoutDetailModal')).hide();
+  
+  editingWorkoutId = selectedWorkout.id;
+  document.getElementById('workoutModalTitle').textContent = 'Edit Workout';
+  document.getElementById('deleteWorkoutBtn').style.display = 'block';
+  
+  // Populate form
+  document.getElementById('workoutId').value = selectedWorkout.id;
+  document.getElementById('workoutAthleteId').value = selectedWorkout.athlete_id;
+  document.getElementById('workoutTitle').value = selectedWorkout.title || '';
+  document.getElementById('workoutType').value = selectedWorkout.workout_type || 'strength';
+  document.getElementById('plannedDuration').value = selectedWorkout.planned_duration || selectedWorkout.actual_duration || 30;
+  document.getElementById('caloriesBurned').value = selectedWorkout.calories_burned || 0;
+  document.getElementById('difficultyLevel').value = selectedWorkout.difficulty_level || 'beginner';
+  document.getElementById('completionStatus').value = selectedWorkout.completion_status || 'completed';
+  document.getElementById('workoutDate').value = selectedWorkout.date || new Date().toISOString().split('T')[0];
+  document.getElementById('workoutNotes').value = selectedWorkout.notes || '';
+  
+  // Advanced metrics
+  document.getElementById('avgHeartRateInput').value = selectedWorkout.avg_heart_rate || '';
+  document.getElementById('maxHeartRateInput').value = selectedWorkout.max_heart_rate || '';
+  document.getElementById('aerobicEffect').value = selectedWorkout.training_effect?.aerobic || '';
+  document.getElementById('anaerobicEffect').value = selectedWorkout.training_effect?.anaerobic || '';
+  document.getElementById('recoveryTimeInput').value = selectedWorkout.recovery_time || '';
+  
+  generateWorkoutImage();
+  const modal = new bootstrap.Modal(document.getElementById('workoutModal'));
+  modal.show();
+}
+
+// Dashboard update
+function updateDashboard() {
+  updateStatsCards();
+  updateWorkoutsList();
+}
+
+function updateStatsCards() {
+  const completed = WORKOUTS.filter(w => w.completion_status === 'completed');
+  const totalDuration = completed.reduce((sum, w) => sum + (w.actual_duration || w.planned_duration || 0), 0);
+  const totalCalories = completed.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
+  
+  document.getElementById('totalWorkouts').textContent = WORKOUTS.length;
+  document.getElementById('totalDuration').textContent = `${Math.round(totalDuration / 60)}h`;
+  document.getElementById('totalCalories').textContent = totalCalories.toLocaleString();
+}
+
+function updateWorkoutsList() {
+  const container = document.getElementById('workoutsList');
+  
+  if (WORKOUTS.length === 0) {
+    container.innerHTML = `
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-calendar-x fs-1"></i>
+        <p class="mt-2">No workouts found</p>
+        <button class="btn btn-primary btn-sm" onclick="openAddWorkout()">
+          <i class="bi bi-plus-lg me-1"></i> Create First Workout
+        </button>
+      </div>
+    `;
+    return;
+  }
+  
+  if (currentView === 'list') {
+    container.innerHTML = WORKOUTS.map(workout => {
+      const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+      const statusColor = workout.completion_status === 'completed' ? 'success' : 
+                         workout.completion_status === 'in_progress' ? 'warning' : 
+                         workout.completion_status === 'missed' ? 'danger' : 'secondary';
+      
+      return `
+        <div class="d-flex align-items-center p-3 border-bottom workout-item" 
+             style="cursor: pointer;" onclick="showWorkoutDetails(${workout.id})">
+          <div class="rounded me-3 d-flex align-items-center justify-content-center" 
+               style="width: 50px; height: 50px; background: ${config.bgGradient};">
+            <span style="font-size: 20px;">${config.emoji}</span>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-medium">${workout.title}</div>
+                <div class="text-muted small">
+                  <span class="badge bg-secondary me-1">${workout.athlete_name}</span>
+                  ${formatDate(workout.date)} • ${formatTime(workout.actual_duration || workout.planned_duration || 0)} • ${workout.calories_burned || 0} kcal
+                </div>
+              </div>
+              <div class="text-end">
+                <span class="badge bg-${statusColor}">
+                  ${workout.completion_status === 'completed' ? '✓' : 
+                    workout.completion_status === 'in_progress' ? '⏳' : 
+                    workout.completion_status === 'missed' ? '✗' : '•'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    // Grid view
+    container.innerHTML = `
+      <div class="row g-3 p-2">
+        ${WORKOUTS.map(workout => {
+          const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+          const statusColor = workout.completion_status === 'completed' ? 'success' : 
+                             workout.completion_status === 'in_progress' ? 'warning' : 
+                             workout.completion_status === 'missed' ? 'danger' : 'secondary';
+          
+          return `
+            <div class="col-md-6">
+              <div class="card workout-card h-100" style="cursor: pointer;" onclick="showWorkoutDetails(${workout.id})">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="rounded d-flex align-items-center justify-content-center" 
+                         style="width: 40px; height: 40px; background: ${config.bgGradient};">
+                      <span style="font-size: 18px;">${config.emoji}</span>
+                    </div>
+                    <span class="badge bg-${statusColor}">${workout.completion_status}</span>
+                  </div>
+                  <h6 class="mb-1">${workout.title}</h6>
+                  <div class="small text-muted mb-2">
+                    <span class="badge bg-secondary">${workout.athlete_name}</span>
+                  </div>
+                  <div class="small text-muted">
+                    <div>${formatDate(workout.date)}</div>
+                    <div>${formatTime(workout.actual_duration || workout.planned_duration || 0)} • ${workout.calories_burned || 0} kcal</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+}
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.btn-group button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.closest('button').classList.add('active');
+  updateWorkoutsList();
+}
+
+// Form handling
+document.getElementById('workoutForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Validate athlete selection
+  const athleteId = document.getElementById('workoutAthleteId').value;
+  if (!athleteId) {
+    alertShow('Please select an athlete', 'warning');
+    return;
+  }
+  
+  document.getElementById('saveButtonText').textContent = 'Saving...';
+  document.getElementById('saveSpinner').classList.remove('d-none');
+  document.getElementById('saveWorkoutBtn').disabled = true;
+  
+  const formData = new FormData();
+  
+  formData.append('athlete_id', athleteId);
+  formData.append('title', document.getElementById('workoutTitle').value);
+  formData.append('workout_type', document.getElementById('workoutType').value);
+  formData.append('planned_duration', document.getElementById('plannedDuration').value);
+  formData.append('actual_duration', document.getElementById('plannedDuration').value);
+  formData.append('calories_burned', document.getElementById('caloriesBurned').value || '0');
+  formData.append('difficulty_level', document.getElementById('difficultyLevel').value);
+  formData.append('completion_status', document.getElementById('completionStatus').value);
+  formData.append('date', document.getElementById('workoutDate').value);
+  formData.append('notes', document.getElementById('workoutNotes').value);
+  
+  const avgHR = document.getElementById('avgHeartRateInput').value;
+  const maxHR = document.getElementById('maxHeartRateInput').value;
+  const aerobicEffect = document.getElementById('aerobicEffect').value;
+  const anaerobicEffect = document.getElementById('anaerobicEffect').value;
+  const recoveryTime = document.getElementById('recoveryTimeInput').value;
+  
+  if (avgHR) formData.append('avg_heart_rate', avgHR);
+  if (maxHR) formData.append('max_heart_rate', maxHR);
+  if (recoveryTime) formData.append('recovery_time', recoveryTime);
+  
+  if (aerobicEffect || anaerobicEffect) {
+    const trainingEffects = {
+      aerobic: parseFloat(aerobicEffect) || 0,
+      anaerobic: parseFloat(anaerobicEffect) || 0
+    };
+    formData.append('training_effects', JSON.stringify(trainingEffects));
+  }
+  
+  const generatedImageDataURL = generateWorkoutImage();
+  if (generatedImageDataURL) {
+    const response = await fetch(generatedImageDataURL);
+    const blob = await response.blob();
+    formData.append('image', blob, `workout_${Date.now()}.png`);
+  }
+  
+  try {
+    const url = editingWorkoutId ? 
+      `/coach/api/workouts/${editingWorkoutId}` : 
+      '/coach/api/workouts';
+    const method = editingWorkoutId ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method: method,
+      credentials: 'include',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      alertShow(data.msg || 'Operation failed', 'danger');
+      return;
+    }
+    
+    alertShow(data.msg || (editingWorkoutId ? 'Workout updated successfully!' : 'Workout created successfully!'), 'success');
+    bootstrap.Modal.getInstance(document.getElementById('workoutModal')).hide();
+    resetForm();
+    fetchWorkouts();
+    
+  } catch (error) {
+    console.error('Submit error:', error);
+    alertShow('Network error occurred', 'danger');
+  } finally {
+    document.getElementById('saveButtonText').textContent = 'Save Workout';
+    document.getElementById('saveSpinner').classList.add('d-none');
+    document.getElementById('saveWorkoutBtn').disabled = false;
+  }
+});
+
+function resetForm() {
+  document.getElementById('workoutForm').reset();
+  editingWorkoutId = null;
+  selectedWorkout = null;
+  document.getElementById('workoutModalTitle').textContent = 'Create Workout';
+  document.getElementById('deleteWorkoutBtn').style.display = 'none';
+  document.getElementById('workoutDate').value = new Date().toISOString().split('T')[0];
+  
+  document.getElementById('generatedImage').style.display = 'none';
+  document.getElementById('imagePlaceholder').style.display = 'flex';
+  
+  const advancedCollapse = document.getElementById('collapseAdvanced');
+  if (advancedCollapse.classList.contains('show')) {
+    bootstrap.Collapse.getInstance(advancedCollapse)?.hide();
+  }
+}
+
+async function deleteWorkout() {
+  if (!editingWorkoutId) return;
+  
+  if (!confirm('Are you sure you want to delete this workout?')) return;
+  
+  try {
+    const response = await fetch(`/coach/api/workouts/${editingWorkoutId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      alertShow(data.msg || 'Delete failed', 'danger');
+      return;
+    }
+    
+    alertShow('Workout deleted successfully', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('workoutModal')).hide();
+    resetForm();
+    fetchWorkouts();
+    
+  } catch (error) {
+    console.error('Delete error:', error);
+    alertShow('Network error occurred', 'danger');
+  }
+}
+
+// Bulk create
+function openBulkCreate() {
+  document.getElementById('bulkDate').value = new Date().toISOString().split('T')[0];
+  const modal = new bootstrap.Modal(document.getElementById('bulkCreateModal'));
+  modal.show();
+}
+
+async function createBulkWorkouts() {
+  const selectedAthletes = Array.from(document.querySelectorAll('.bulk-athlete-check:checked')).map(cb => cb.value);
+  
+  if (selectedAthletes.length === 0) {
+    alertShow('Please select at least one athlete', 'warning');
+    return;
+  }
+  
+  const title = document.getElementById('bulkTitle').value;
+  const type = document.getElementById('bulkType').value;
+  const duration = document.getElementById('bulkDuration').value;
+  const date = document.getElementById('bulkDate').value;
+  
+  if (!title || !duration || !date) {
+    alertShow('Please fill all required fields', 'warning');
+    return;
+  }
+  
+  let successCount = 0;
+  let failCount = 0;
+  
+  for (const athleteId of selectedAthletes) {
+    try {
+      const formData = new FormData();
+      formData.append('athlete_id', athleteId);
+      formData.append('title', title);
+      formData.append('workout_type', type);
+      formData.append('planned_duration', duration);
+      formData.append('actual_duration', duration);
+      formData.append('date', date);
+      formData.append('completion_status', 'in_progress');
+      formData.append('difficulty_level', 'intermediate');
+      
+      const response = await fetch('/coach/api/workouts', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      
+      if (response.ok) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    } catch (error) {
+      failCount++;
+    }
+  }
+  
+  bootstrap.Modal.getInstance(document.getElementById('bulkCreateModal')).hide();
+  
+  if (successCount > 0) {
+    alertShow(`Successfully created ${successCount} workout(s)`, 'success');
+    fetchWorkouts();
+  }
+  
+  if (failCount > 0) {
+    alertShow(`Failed to create ${failCount} workout(s)`, 'warning');
+  }
+}
+
+// Export data
+function exportData() {
+  if (WORKOUTS.length === 0) {
+    alertShow('No data to export', 'info');
+    return;
+  }
+  
+  const csvContent = [
+    ['Athlete', 'Title', 'Type', 'Date', 'Duration (min)', 'Calories', 'Status'].join(','),
+    ...WORKOUTS.map(w => [
+      w.athlete_name,
+      w.title,
+      w.workout_type,
+      w.date,
+      w.actual_duration || w.planned_duration || 0,
+      w.calories_burned || 0,
+      w.completion_status
+    ].join(','))
+  ].join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `workouts_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  
+  alertShow('Data exported successfully', 'success');
+}
+
+function viewAllAthletes() {
+  window.location.href = '/coach/athletes';
+}
+
+function generateReport() {
+  alertShow('Report generation feature coming soon!', 'info');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('workoutDate').value = new Date().toISOString().split('T')[0];
+  
+  fetchWorkouts();
+  generateWeeklyCalendar();
+  generateMonthlyCalendar();
+  
+  document.getElementById('workoutType').addEventListener('change', () => {
+    generateWorkoutImage();
+    updateCaloriesEstimate();
+  });
+  
+  document.getElementById('plannedDuration').addEventListener('input', updateCaloriesEstimate);
+  document.getElementById('difficultyLevel').addEventListener('change', updateCaloriesEstimate);
+  
+  document.getElementById('workoutModal').addEventListener('hidden.bs.modal', resetForm);
+  
+  setTimeout(() => generateWorkoutImage(), 500);
+});
 </script>
+
+<style>
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.workout-item:hover,
+.workout-card:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.calendar-day:hover,
+.calendar-mini-day:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  border: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.workout-card {
+  border-left: 4px solid #667eea;
+}
+
+#imagePreview {
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+.calendar-day,
+.calendar-mini-day {
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 10px;
+}
+
+.progress-bar {
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .col-md-8, .col-md-4 {
+    margin-bottom: 1rem;
+  }
+}
+</style>
 {% endblock %}
