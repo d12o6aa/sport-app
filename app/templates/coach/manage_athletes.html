@@ -35,14 +35,14 @@
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card compliance-card">
         <div class="card-body">
-          <h5 class="card-title">Avg Compliance</h5>
+          <h5 class="card-title">Avg Readiness</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-graph-up"></i>
+              <i class="bi bi-activity"></i>
             </div>
             <div class="ps-3">
-              <h6 id="avgCompliance">0%</h6>
-              <span class="text-info small pt-1">overall progress</span>
+              <h6 id="avgReadiness">0%</h6>
+              <span class="text-info small pt-1">from ML model</span>
             </div>
           </div>
         </div>
@@ -52,14 +52,14 @@
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card workouts-card">
         <div class="card-body">
-          <h5 class="card-title">Active Plans</h5>
+          <h5 class="card-title">High Risk</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-clipboard-check"></i>
+              <i class="bi bi-exclamation-triangle"></i>
             </div>
             <div class="ps-3">
-              <h6 id="activePlans">0</h6>
-              <span class="text-warning small pt-1">assigned</span>
+              <h6 id="highRiskCount">0</h6>
+              <span class="text-danger small pt-1">injury risk</span>
             </div>
           </div>
         </div>
@@ -72,11 +72,11 @@
           <h5 class="card-title">Need Attention</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-exclamation-triangle"></i>
+              <i class="bi bi-bell"></i>
             </div>
             <div class="ps-3">
               <h6 id="needAttention">0</h6>
-              <span class="text-danger small pt-1">inactive</span>
+              <span class="text-warning small pt-1">low readiness</span>
             </div>
           </div>
         </div>
@@ -104,20 +104,21 @@
               </select>
             </div>
             <div class="col-md-2">
-              <label class="form-label">Compliance</label>
-              <select id="complianceFilter" class="form-select" onchange="filterAthletes()">
+              <label class="form-label">Injury Risk</label>
+              <select id="riskFilter" class="form-select" onchange="filterAthletes()">
                 <option value="">All Levels</option>
-                <option value="high">High (80%+)</option>
-                <option value="medium">Medium (50-80%)</option>
-                <option value="low">Low (<50%)</option>
+                <option value="high">High Risk</option>
+                <option value="medium">Medium Risk</option>
+                <option value="low">Low Risk</option>
               </select>
             </div>
             <div class="col-md-2">
-              <label class="form-label">Activity</label>
-              <select id="activityFilter" class="form-select" onchange="filterAthletes()">
+              <label class="form-label">Readiness</label>
+              <select id="readinessFilter" class="form-select" onchange="filterAthletes()">
                 <option value="">All</option>
-                <option value="recent">Recently Active</option>
-                <option value="inactive">Inactive (7+ days)</option>
+                <option value="high">High (80%+)</option>
+                <option value="medium">Medium (50-80%)</option>
+                <option value="low">Low (<50%)</option>
               </select>
             </div>
             <div class="col-md-3">
@@ -166,9 +167,9 @@
                   <th>Athlete</th>
                   <th>Contact</th>
                   <th>Status</th>
+                  <th>Readiness</th>
+                  <th>Injury Risk</th>
                   <th>Last Active</th>
-                  <th>Compliance</th>
-                  <th>Progress</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -252,36 +253,18 @@
           </div>
 
           <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Weight (kg)</label>
                 <input type="number" step="0.1" class="form-control" id="athleteWeight">
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Height (cm)</label>
                 <input type="number" step="0.1" class="form-control" id="athleteHeight">
               </div>
             </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Initial Goal</label>
-                <select class="form-select" id="athleteGoal">
-                  <option value="">Select Goal</option>
-                  <option value="weight_loss">Weight Loss</option>
-                  <option value="muscle_gain">Muscle Gain</option>
-                  <option value="endurance">Improve Endurance</option>
-                  <option value="strength">Build Strength</option>
-                  <option value="general">General Fitness</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Notes</label>
-            <textarea class="form-control" id="athleteNotes" rows="3" placeholder="Any special notes or requirements..."></textarea>
           </div>
         </form>
       </div>
@@ -321,6 +304,25 @@
                 
                 <hr>
                 
+                <!-- ML Model Insights -->
+                <div class="alert alert-info mb-3">
+                  <h6 class="mb-2"><i class="bi bi-cpu"></i> ML Insights</h6>
+                  <div class="mb-2">
+                    <small class="text-muted">Readiness Score</small>
+                    <div class="progress mb-1" style="height: 20px;">
+                      <div id="mlReadinessBar" class="progress-bar" style="width: 0%">0%</div>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between mb-1">
+                    <small><strong>Injury Risk:</strong></small>
+                    <span id="mlInjuryRisk" class="badge bg-secondary">N/A</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <small><strong>Performance:</strong></small>
+                    <span id="mlPerformance" class="badge bg-secondary">N/A</span>
+                  </div>
+                </div>
+                
                 <div class="profile-stats">
                   <div class="stat-item mb-2">
                     <strong>Age:</strong> <span id="detailAge">-</span>
@@ -346,13 +348,13 @@
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview-tab">Overview</button>
               </li>
               <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ml-insights-tab">ML Insights</button>
+              </li>
+              <li class="nav-item" role="presentation">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#progress-tab">Progress</button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#workouts-tab">Workouts</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#plans-tab">Plans</button>
               </li>
             </ul>
 
@@ -392,6 +394,42 @@
                 </div>
               </div>
 
+              <!-- ML Insights Tab -->
+              <div class="tab-pane fade" id="ml-insights-tab">
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-cpu"></i> Machine Learning Insights</h6>
+                    
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <div class="alert alert-primary">
+                          <h6>Injury Severity Prediction</h6>
+                          <p id="mlInjurySeverity" class="mb-0">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="alert alert-success">
+                          <h6>Recovery Success</h6>
+                          <p id="mlRecovery" class="mb-0">-</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                      <h6><i class="bi bi-lightbulb"></i> Periodization Recommendation</h6>
+                      <p id="mlPeriodization" class="mb-0">-</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                      <h6>Recovery Prediction</h6>
+                      <p id="mlRecoveryPrediction" class="mb-0">-</p>
+                    </div>
+                    
+                    <small class="text-muted">Last updated: <span id="mlLastUpdate">-</span></small>
+                  </div>
+                </div>
+              </div>
+
               <!-- Progress Tab -->
               <div class="tab-pane fade" id="progress-tab">
                 <canvas id="progressChart" width="100" height="50"></canvas>
@@ -403,13 +441,6 @@
                   <!-- Workout history will be loaded here -->
                 </div>
               </div>
-
-              <!-- Plans Tab -->
-              <div class="tab-pane fade" id="plans-tab">
-                <div id="athletePlans">
-                  <!-- Assigned plans will be loaded here -->
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -419,13 +450,133 @@
         <button type="button" class="btn btn-warning" onclick="editAthleteFromDetails()">
           <i class="bi bi-pencil"></i> Edit Profile
         </button>
-        <button type="button" class="btn btn-primary" onclick="assignPlan()">
-          <i class="bi bi-clipboard-plus"></i> Assign Plan
+        <button type="button" class="btn btn-primary" onclick="openMLInputModal()">
+          <i class="bi bi-cpu"></i> Input ML Data
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- 🆕 New Modal: Manual ML Data Input -->
+<div class="modal fade" id="mlInputModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square"></i> Manual ML Data Input for <span id="mlInputAthleteName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Enter the latest biometric and training data to update the ML prediction score.</p>
+                <form id="mlDataForm">
+                    <div class="row g-3">
+                        <!-- Left Column: Core Biometrics (heart_rate, sleep_hours, Muscle_Tension_(MT), Body_Temperature_(BT)) -->
+                        <div class="col-md-4">
+                            <h6 class="mb-3 text-primary">Physiological Data</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Sleep Hours</label>
+                                <input type="number" step="0.1" class="form-control" id="inputSleepHours" value="7.5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Heart Rate (Avg. BPM)</label>
+                                <input type="number" step="1" class="form-control" id="inputHeartRate" value="120">
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Muscle Tension (0.0 - 1.0)</label>
+                                <input type="number" step="0.1" class="form-control" id="inputMuscleTension" value="0.5">
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Body Temperature (C)</label>
+                                <input type="number" step="0.1" class="form-control" id="inputBodyTemp" value="36.5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Breathing Rate (BPM)</label>
+                                <input type="number" step="1" class="form-control" id="inputBreathingRate" value="16">
+                            </div>
+                        </div>
+
+                        <!-- Middle Column: Training Metrics (Duration, Days, Intensity, Type) -->
+                        <div class="col-md-4">
+                            <h6 class="mb-3 text-primary">Training Metrics</h6>
+                             <div class="mb-3">
+                                <label class="form-label">Training Duration (Mins)</label>
+                                <input type="number" step="1" class="form-control" id="inputTrainingDuration" value="60">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Training Days / Week</label>
+                                <input type="number" step="1" class="form-control" id="inputTrainingDays" value="5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Recovery Days / Week</label>
+                                <input type="number" step="1" class="form-control" id="inputRecoveryDays" value="2">
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Training Intensity</label>
+                                <select class="form-select" id="inputIntensity">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Training Type</label>
+                                <select class="form-select" id="inputTrainingType">
+                                    <option value="Cardio" selected>Cardio</option>
+                                    <option value="Strength">Strength</option>
+                                    <option value="Endurance">Endurance</option>
+                                    <option value="Restorative">Restorative</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Other (BP, Intake, Phase, Time) -->
+                        <div class="col-md-4">
+                            <h6 class="mb-3 text-primary">Progress & Phase</h6>
+                             <div class="mb-3">
+                                <label class="form-label">Dietary Intake (Calories)</label>
+                                <input type="number" step="1" class="form-control" id="inputDietaryIntake" value="2500">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Blood Pressure (Systolic)</label>
+                                <input type="number" step="1" class="form-control" id="inputSystolicBP" value="120">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Blood Pressure (Diastolic)</label>
+                                <input type="number" step="1" class="form-control" id="inputDiastolicBP" value="80">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phase of Training</label>
+                                <select class="form-select" id="inputTrainingPhase">
+                                    <option value="Taper">Taper</option>
+                                    <option value="Build" selected>Build</option>
+                                    <option value="Peak">Peak</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Time Interval</label>
+                                <select class="form-select" id="inputTimeInterval">
+                                    <option value="Morning" selected>Morning</option>
+                                    <option value="Afternoon">Afternoon</option>
+                                    <option value="Evening">Evening</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitMLData()">
+                    <span id="mlSaveButtonText"><i class="bi bi-lightning-charge"></i> Run Prediction</span>
+                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="mlSaveSpinner"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 {% endblock %}
 
@@ -438,6 +589,7 @@ let athletes = [];
 let currentView = 'grid';
 let currentAthleteId = null;
 let progressChart = null;
+let currentAthleteName = ''; // To store the name for the new modal
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -449,26 +601,36 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// Load all athletes
+// Load all athletes (unchanged)
 function loadAthletes() {
   fetch('/coach/athletes', {
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('access_token')
     }
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+        return response.json().then(err => { throw new Error(err.msg); });
+    }
+    return response.json();
+  })
   .then(data => {
-    athletes = data;
-    displayAthletes();
-    updateStats();
+    if (Array.isArray(data)) {
+        athletes = data;
+        displayAthletes();
+        updateStats();
+    } else {
+        console.error('API response is not an array:', data);
+        showAlert('Failed to load athletes due to invalid data format.', 'danger');
+    }
   })
   .catch(error => {
     console.error('Error loading athletes:', error);
-    showAlert('Failed to load athletes', 'danger');
+    showAlert(`Failed to load athletes: ${error.message}`, 'danger');
   });
 }
 
-// Display athletes in current view
+// Display athletes in current view (unchanged)
 function displayAthletes() {
   if (currentView === 'grid') {
     displayAthletesGrid();
@@ -477,7 +639,7 @@ function displayAthletes() {
   }
 }
 
-// Display athletes in grid view
+// Display athletes in grid view (unchanged)
 function displayAthletesGrid() {
   const grid = document.getElementById('athletesGrid');
   const filteredAthletes = getFilteredAthletes();
@@ -494,19 +656,29 @@ function displayAthletesGrid() {
   
   grid.innerHTML = filteredAthletes.map(athlete => `
     <div class="col-lg-4 col-md-6">
-      <div class="card athlete-card h-100">
+      <div class="card athlete-card h-100 ${getCardBorderClass(athlete.injury_risk)}">
         <div class="card-body">
           <div class="d-flex align-items-center mb-3">
             <div class="athlete-avatar me-3">
-              <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                <span class="fw-bold">${getInitials(athlete.name)}</span>
-              </div>
+              <img src="${athlete.profile_image}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;" alt="Avatar">
             </div>
             <div class="flex-grow-1">
               <h6 class="mb-1">${athlete.name}</h6>
               <small class="text-muted">${athlete.email}</small>
             </div>
             <span class="badge bg-${getStatusColor(athlete.status)}">${athlete.status}</span>
+          </div>
+
+          <!-- ML Insights Card -->
+          <div class="mb-3 p-2 bg-light rounded">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <small class="text-muted"><i class="bi bi-activity"></i> Readiness</small>
+              <strong class="text-${getReadinessColor(athlete.readiness_score)}">${athlete.readiness_score || 'N/A'}${athlete.readiness_score && athlete.readiness_score !== 'No Data' ? '%' : ''}</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="bi bi-shield-exclamation"></i> Injury Risk</small>
+              <span class="badge bg-${getRiskColor(athlete.injury_risk)}">${athlete.injury_risk || 'No Data'}</span>
+            </div>
           </div>
 
           <div class="athlete-stats mb-3">
@@ -532,8 +704,8 @@ function displayAthletesGrid() {
             <button class="btn btn-sm btn-outline-warning" onclick="editAthlete(${athlete.id})">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteAthlete(${athlete.id})">
-              <i class="bi bi-trash"></i>
+            <button class="btn btn-sm btn-outline-danger" onclick="unassignAthlete(${athlete.id})">
+              <i class="bi bi-x-circle"></i>
             </button>
           </div>
         </div>
@@ -542,7 +714,7 @@ function displayAthletesGrid() {
   `).join('');
 }
 
-// Display athletes in list view
+// Display athletes in list view (unchanged)
 function displayAthletesList() {
   const tbody = document.getElementById('athletesTableBody');
   const filteredAthletes = getFilteredAthletes();
@@ -552,30 +724,30 @@ function displayAthletesList() {
       <td>
         <div class="d-flex align-items-center">
           <div class="athlete-avatar me-2">
-            <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 12px;">
-              ${getInitials(athlete.name)}
-            </div>
+             <img src="${athlete.profile_image}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Avatar">
           </div>
           <span>${athlete.name}</span>
         </div>
       </td>
       <td>${athlete.email}</td>
       <td><span class="badge bg-${getStatusColor(athlete.status)}">${athlete.status}</span></td>
-      <td><small>${athlete.last_activity}</small></td>
       <td>
-        <div class="progress" style="height: 8px; width: 80px;">
-          <div class="progress-bar bg-${getComplianceColor(athlete.compliance)}" style="width: ${athlete.compliance}%"></div>
+        <div class="d-flex align-items-center">
+          <div class="progress me-2" style="height: 8px; width: 60px;">
+            <div class="progress-bar bg-${getReadinessColor(athlete.readiness_score)}" style="width: ${athlete.readiness_score || 0}%"></div>
+          </div>
+          <small>${athlete.readiness_score || 'N/A'}${athlete.readiness_score && athlete.readiness_score !== 'No Data' ? '%' : ''}</small>
         </div>
-        <small>${athlete.compliance}%</small>
       </td>
-      <td><span class="badge bg-info">View</span></td>
+      <td><span class="badge bg-${getRiskColor(athlete.injury_risk)}">${athlete.injury_risk || 'No Data'}</span></td>
+      <td><small>${athlete.last_activity}</small></td>
       <td onclick="event.stopPropagation();">
         <div class="btn-group btn-group-sm">
           <button class="btn btn-outline-warning" onclick="editAthlete(${athlete.id})">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-outline-danger" onclick="deleteAthlete(${athlete.id})">
-            <i class="bi bi-trash"></i>
+          <button class="btn btn-outline-danger" onclick="unassignAthlete(${athlete.id})">
+            <i class="bi bi-x-circle"></i>
           </button>
         </div>
       </td>
@@ -583,7 +755,7 @@ function displayAthletesList() {
   `).join('');
 }
 
-// Get filtered athletes based on current filters
+// Get filtered athletes based on current filters (unchanged)
 function getFilteredAthletes() {
   let filtered = [...athletes];
   
@@ -602,33 +774,33 @@ function getFilteredAthletes() {
     filtered = filtered.filter(a => a.status === statusFilter);
   }
   
-  // Compliance filter
-  const complianceFilter = document.getElementById('complianceFilter').value;
-  if (complianceFilter) {
-    filtered = filtered.filter(a => {
-      if (complianceFilter === 'high') return a.compliance >= 80;
-      if (complianceFilter === 'medium') return a.compliance >= 50 && a.compliance < 80;
-      if (complianceFilter === 'low') return a.compliance < 50;
-      return true;
-    });
+  // Risk filter
+  const riskFilter = document.getElementById('riskFilter').value;
+  if (riskFilter) {
+    filtered = filtered.filter(a => a.injury_risk === riskFilter);
   }
   
-  // Activity filter
-  const activityFilter = document.getElementById('activityFilter').value;
-  if (activityFilter) {
-    // This would require parsing the last_activity field
-    // Simplified implementation for now
+  // Readiness filter
+  const readinessFilter = document.getElementById('readinessFilter').value;
+  if (readinessFilter) {
+    filtered = filtered.filter(a => {
+      const score = a.readiness_score;
+      if (readinessFilter === 'high') return score && score >= 80;
+      if (readinessFilter === 'medium') return score && score >= 50 && score < 80;
+      if (readinessFilter === 'low') return score && score < 50;
+      return true;
+    });
   }
   
   return filtered;
 }
 
-// Filter athletes
+// Filter athletes (unchanged)
 function filterAthletes() {
   displayAthletes();
 }
 
-// Toggle between grid and list view
+// Toggle between grid and list view (unchanged)
 function toggleView(view) {
   currentView = view;
   
@@ -650,21 +822,29 @@ function toggleView(view) {
   displayAthletes();
 }
 
-// Update dashboard stats
+// Update dashboard stats (unchanged)
 function updateStats() {
   const totalAthletes = athletes.length;
   const activeAthletes = athletes.filter(a => a.status === 'active').length;
-  const avgCompliance = athletes.length > 0 ? 
-    Math.round(athletes.reduce((sum, a) => sum + a.compliance, 0) / athletes.length) : 0;
-  const needAttention = athletes.filter(a => a.last_activity.includes('week') || a.last_activity === 'N/A').length;
+  
+  const athletesWithReadiness = athletes.filter(a => a.readiness_score != null && a.readiness_score !== 'No Data');
+  const avgReadiness = athletesWithReadiness.length > 0 ? 
+    Math.round(athletesWithReadiness.reduce((sum, a) => sum + a.readiness_score, 0) / athletesWithReadiness.length) : 0;
+  
+  const highRiskCount = athletes.filter(a => a.injury_risk === 'high').length;
+  
+  const needAttention = athletes.filter(a => 
+      !a.readiness_score || a.readiness_score === 'No Data' || a.readiness_score < 50
+  ).length;
   
   document.getElementById('totalAthletes').textContent = totalAthletes;
   document.getElementById('activeAthletes').textContent = `${activeAthletes} active`;
-  document.getElementById('avgCompliance').textContent = `${avgCompliance}%`;
+  document.getElementById('avgReadiness').textContent = `${avgReadiness}%`;
+  document.getElementById('highRiskCount').textContent = highRiskCount;
   document.getElementById('needAttention').textContent = needAttention;
 }
 
-// Add new athlete
+// Add new athlete (unchanged)
 function addAthlete() {
   document.getElementById('athleteForm').reset();
   document.getElementById('athleteId').value = '';
@@ -674,7 +854,7 @@ function addAthlete() {
   new bootstrap.Modal(document.getElementById('athleteModal')).show();
 }
 
-// Edit athlete
+// Edit athlete (unchanged)
 function editAthlete(id) {
   fetch(`/coach/athlete/${id}`, {
     headers: {
@@ -701,13 +881,12 @@ function editAthlete(id) {
   });
 }
 
-// Save athlete
+// Save athlete (unchanged)
 function saveAthlete() {
   const id = document.getElementById('athleteId').value;
   const password = document.getElementById('athletePassword').value;
   const passwordConfirm = document.getElementById('athletePasswordConfirm').value;
   
-  // Validate passwords for new athletes
   if (!id && password !== passwordConfirm) {
     showAlert('Passwords do not match', 'warning');
     return;
@@ -727,7 +906,6 @@ function saveAthlete() {
     data.password = password;
   }
   
-  // Show loading state
   document.getElementById('saveButtonText').textContent = 'Saving...';
   document.getElementById('saveSpinner').classList.remove('d-none');
   
@@ -759,9 +937,9 @@ function saveAthlete() {
   });
 }
 
-// Delete athlete
-function deleteAthlete(id) {
-  if (!confirm('Are you sure you want to remove this athlete? This action cannot be undone.')) {
+// Unassign athlete (unchanged)
+function unassignAthlete(id) {
+  if (!confirm('Are you sure you want to unassign this athlete? The admin can reassign them to another coach later.')) {
     return;
   }
   
@@ -777,72 +955,159 @@ function deleteAthlete(id) {
     loadAthletes();
   })
   .catch(error => {
-    showAlert('Failed to remove athlete', 'danger');
+    showAlert('Failed to unassign athlete', 'danger');
   });
 }
 
-// View athlete details
+// View athlete details (unchanged)
 function viewAthleteDetails(id) {
   currentAthleteId = id;
   
+  resetDetailsModal();
+
   fetch(`/coach/athlete/${id}/details`, {
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('access_token')
     }
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
   .then(data => {
+    currentAthleteName = data.name; 
+    
     populateAthleteDetails(data);
     loadAthleteProgress(id);
     loadAthleteWorkouts(id);
-    loadAthletePlans(id);
     
     new bootstrap.Modal(document.getElementById('athleteDetailsModal')).show();
   })
   .catch(error => {
-    showAlert('Failed to load athlete details', 'danger');
+    console.error('Error loading athlete details:', error);
+    showAlert('Failed to load athlete details. Please try again later.', 'danger');
   });
 }
 
-// Populate athlete details modal
-function populateAthleteDetails(data) {
-  document.getElementById('detailAthleteName').textContent = data.name;
-  document.getElementById('detailAthleteNameFull').textContent = data.name;
-  document.getElementById('detailAthleteEmail').textContent = data.email;
-  document.getElementById('detailAthleteStatus').className = `badge bg-${getStatusColor(data.status)}`;
-  document.getElementById('detailAthleteStatus').textContent = data.status;
-  
-  // Set avatar
-  const avatar = document.getElementById('detailAthleteAvatar');
-  avatar.src = data.profile_image || 'https://via.placeholder.com/100';
-  
-  // Set profile stats
-  document.getElementById('detailAge').textContent = data.age || '-';
-  document.getElementById('detailWeight').textContent = data.weight || '-';
-  document.getElementById('detailHeight').textContent = data.height || '-';
-  
-  // Calculate BMI
-  if (data.weight && data.height) {
-    const bmi = (data.weight / Math.pow(data.height / 100, 2)).toFixed(1);
-    document.getElementById('detailBMI').textContent = bmi;
-  } else {
+function resetDetailsModal() {
+    document.getElementById('detailAthleteAvatar').src = '';
+    document.getElementById('detailAthleteName').textContent = '';
+    document.getElementById('detailAthleteNameFull').textContent = '';
+    document.getElementById('detailAthleteEmail').textContent = '';
+    document.getElementById('detailAthleteStatus').textContent = '';
+    document.getElementById('detailAge').textContent = '-';
+    document.getElementById('detailWeight').textContent = '-';
+    document.getElementById('detailHeight').textContent = '-';
     document.getElementById('detailBMI').textContent = '-';
+
+    if(progressChart) {
+        progressChart.destroy();
+    }
+    document.getElementById('progressChart').innerHTML = '';
+}
+
+// Populate athlete details modal (unchanged)
+function populateAthleteDetails(data) {
+  const detailAthleteName = document.getElementById('detailAthleteName');
+  if (detailAthleteName) detailAthleteName.textContent = data.name;
+
+  const detailAthleteNameFull = document.getElementById('detailAthleteNameFull');
+  if (detailAthleteNameFull) detailAthleteNameFull.textContent = data.name;
+
+  const detailAthleteEmail = document.getElementById('detailAthleteEmail');
+  if (detailAthleteEmail) detailAthleteEmail.textContent = data.email;
+
+  const detailAthleteStatus = document.getElementById('detailAthleteStatus');
+  if (detailAthleteStatus) {
+      detailAthleteStatus.className = `badge bg-${getStatusColor(data.status)}`;
+      detailAthleteStatus.textContent = data.status;
   }
   
-  // Set compliance
+  const avatar = document.getElementById('detailAthleteAvatar');
+  if (avatar) avatar.src = data.profile_image || '/static/images/default.jpeg';
+  
+  const detailAge = document.getElementById('detailAge');
+  if (detailAge) detailAge.textContent = data.age || '-';
+
+  const detailWeight = document.getElementById('detailWeight');
+  if (detailWeight) detailWeight.textContent = data.weight || '-';
+
+  const detailHeight = document.getElementById('detailHeight');
+  if (detailHeight) detailHeight.textContent = data.height || '-';
+  
+  const detailBMI = document.getElementById('detailBMI');
+  if (detailBMI) {
+    if (data.weight && data.height) {
+      const bmi = (data.weight / Math.pow(data.height / 100, 2)).toFixed(1);
+      detailBMI.textContent = bmi;
+    } else {
+      detailBMI.textContent = '-';
+    }
+  }
+  
+  const mlInsights = data.ml_insights || {};
+  const readiness = data.readiness || {};
+  
+  const readinessScore = mlInsights.readiness_score || readiness.score || 0;
+  const mlReadinessBar = document.getElementById('mlReadinessBar');
+  if (mlReadinessBar) {
+      mlReadinessBar.style.width = `${readinessScore || 0}%`; 
+      mlReadinessBar.textContent = `${readinessScore || 'N/A'}${readinessScore && readinessScore !== 'No Data' ? '%' : ''}`;
+      mlReadinessBar.className = `progress-bar bg-${getReadinessColor(readinessScore)}`;
+  }
+  
+  const injuryRiskBadge = document.getElementById('mlInjuryRisk');
+  const injuryRisk = readiness.injury_risk || 'No Data';
+  if (injuryRiskBadge) {
+      injuryRiskBadge.textContent = injuryRisk;
+      injuryRiskBadge.className = `badge bg-${getRiskColor(injuryRisk)}`;
+  }
+  
+  const performanceBadge = document.getElementById('mlPerformance');
+  const performanceClass = mlInsights.performance_class;
+  if (performanceBadge) {
+      if (performanceClass && performanceClass !== 'No Data' && performanceClass !== 0) {
+        const performanceText = ['Taper', 'Build', 'Peak'][performanceClass] || 'Unknown';
+        performanceBadge.textContent = performanceText;
+        performanceBadge.className = `badge bg-${['warning', 'info', 'success'][performanceClass] || 'secondary'}`;
+      } else {
+        performanceBadge.textContent = 'No Data';
+        performanceBadge.className = 'badge bg-secondary';
+      }
+  }
+  
+  const mlInjurySeverity = document.getElementById('mlInjurySeverity');
+  if (mlInjurySeverity) mlInjurySeverity.textContent = mlInsights.injury_severity || 'No data available';
+  
+  const mlRecovery = document.getElementById('mlRecovery');
+  if (mlRecovery) mlRecovery.textContent = mlInsights.recovery_success ? 
+    `${mlInsights.recovery_success}% chance of recovery` : 'No data available';
+  
+  const mlPeriodization = document.getElementById('mlPeriodization');
+  if (mlPeriodization) mlPeriodization.textContent = mlInsights.periodization_recommendation || 'No recommendation available';
+  
+  const mlRecoveryPrediction = document.getElementById('mlRecoveryPrediction');
+  if (mlRecoveryPrediction) mlRecoveryPrediction.textContent = readiness.recovery_prediction || 'No prediction available';
+  
+  const mlLastUpdate = document.getElementById('mlLastUpdate');
+  if (mlLastUpdate) mlLastUpdate.textContent = readiness.date || 'Never';
+  
   const complianceBar = document.getElementById('detailComplianceBar');
-  complianceBar.style.width = `${data.compliance}%`;
-  complianceBar.textContent = `${data.compliance}%`;
-  complianceBar.className = `progress-bar bg-${getComplianceColor(data.compliance)}`;
+  if (complianceBar) {
+      complianceBar.style.width = `${data.compliance}%`;
+      complianceBar.textContent = `${data.compliance}%`;
+      complianceBar.className = `progress-bar bg-${getComplianceColor(data.compliance)}`;
+  }
   
-  // Set last activity
-  document.getElementById('detailLastActivity').textContent = data.last_activity || 'No recent activity';
+  const detailLastActivity = document.getElementById('detailLastActivity');
+  if (detailLastActivity) detailLastActivity.textContent = data.last_activity || 'No recent activity';
   
-  // Load recent activity
   loadRecentActivity(data.recent_activities || []);
 }
 
-// Load athlete progress chart
+// Load athlete progress chart (unchanged)
 function loadAthleteProgress(athleteId) {
   fetch(`/coach/athlete/${athleteId}/progress`, {
     headers: {
@@ -858,7 +1123,7 @@ function loadAthleteProgress(athleteId) {
   });
 }
 
-// Render progress chart
+// Render progress chart with ML data (unchanged)
 function renderProgressChart(data) {
   const ctx = document.getElementById('progressChart');
   
@@ -876,7 +1141,8 @@ function renderProgressChart(data) {
         borderColor: '#4154f1',
         backgroundColor: 'rgba(65, 84, 241, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
+        yAxisID: 'y'
       }, {
         label: 'Workouts Completed',
         data: data.workouts || [],
@@ -885,6 +1151,22 @@ function renderProgressChart(data) {
         tension: 0.4,
         fill: true,
         yAxisID: 'y1'
+      }, {
+        label: 'Readiness Score (%)',
+        data: data.readiness_scores || [],
+        borderColor: '#ff6384',
+        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'y2'
+      }, {
+        label: 'Injury Risk Level',
+        data: data.injury_risks || [],
+        borderColor: '#ff9f40',
+        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+        tension: 0.4,
+        fill: false,
+        yAxisID: 'y3'
       }]
     },
     options: {
@@ -898,22 +1180,42 @@ function renderProgressChart(data) {
         y: {
           type: 'linear',
           display: true,
-          position: 'left'
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Weight (kg)'
+          }
         },
         y1: {
           type: 'linear',
           display: true,
           position: 'right',
+          title: {
+            display: true,
+            text: 'Workouts'
+          },
           grid: {
             drawOnChartArea: false
           }
+        },
+        y2: {
+          type: 'linear',
+          display: false,
+          min: 0,
+          max: 100
+        },
+        y3: {
+          type: 'linear',
+          display: false,
+          min: 0,
+          max: 3
         }
       }
     }
   });
 }
 
-// Load athlete workouts
+// Load athlete workouts (unchanged)
 function loadAthleteWorkouts(athleteId) {
   fetch(`/coach/athlete/${athleteId}/workouts`, {
     headers: {
@@ -929,120 +1231,187 @@ function loadAthleteWorkouts(athleteId) {
   });
 }
 
-// Display athlete workouts
+// Display athlete workouts (unchanged)
 function displayAthleteWorkouts(workouts) {
   const container = document.getElementById('athleteWorkouts');
   
-  if (workouts.length === 0) {
-    container.innerHTML = '<p class="text-muted text-center py-4">No workout history found</p>';
-    return;
-  }
-  
-  container.innerHTML = workouts.map(workout => `
-    <div class="card mb-2">
-      <div class="card-body p-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="mb-1">${workout.title || 'Workout'}</h6>
-            <small class="text-muted">${workout.date} • ${workout.duration || 0} mins</small>
-          </div>
-          <div class="text-end">
-            <span class="badge bg-${workout.completion_status === 'completed' ? 'success' : 'warning'}">
-              ${workout.completion_status}
-            </span>
-            <br>
-            <small class="text-muted">${workout.calories_burned || 0} cal</small>
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-// Load athlete plans
-function loadAthletePlans(athleteId) {
-  fetch(`/coach/athlete/${athleteId}/plans`, {
-    headers: {
-      'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+  if (container) {
+    if (workouts.length === 0) {
+      container.innerHTML = '<p class="text-muted text-center py-4">No workout history found</p>';
+      return;
     }
-  })
-  .then(response => response.json())
-  .then(data => {
-    displayAthletePlans(data);
-  })
-  .catch(error => {
-    console.error('Error loading plans:', error);
-  });
-}
-
-// Display athlete plans
-function displayAthletePlans(plans) {
-  const container = document.getElementById('athletePlans');
-  
-  if (plans.length === 0) {
-    container.innerHTML = `
-      <div class="text-center py-4">
-        <p class="text-muted">No training plans assigned</p>
-        <button class="btn btn-primary btn-sm" onclick="assignPlan()">
-          <i class="bi bi-plus"></i> Assign Plan
-        </button>
-      </div>
-    `;
-    return;
-  }
-  
-  container.innerHTML = plans.map(plan => `
-    <div class="card mb-2">
-      <div class="card-body p-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="mb-1">${plan.title}</h6>
-            <small class="text-muted">${plan.start_date} - ${plan.end_date}</small>
+    
+    container.innerHTML = workouts.map(workout => `
+      <div class="card mb-2">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${workout.title || 'Workout'}</h6>
+              <small class="text-muted">${workout.date} • ${workout.duration || 0} mins</small>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-${workout.completion_status === 'completed' ? 'success' : 'warning'}">
+                ${workout.completion_status}
+              </span>
+              <br>
+              <small class="text-muted">${workout.calories_burned || 0} cal</small>
+            </div>
           </div>
-          <span class="badge bg-${plan.status === 'active' ? 'success' : 'secondary'}">
-            ${plan.status}
-          </span>
         </div>
       </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
 }
 
-// Load recent activity
+// Load recent activity (unchanged)
 function loadRecentActivity(activities) {
   const container = document.getElementById('recentActivity');
   
-  if (activities.length === 0) {
-    container.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
-    return;
+  if (container) {
+    if (activities.length === 0) {
+      container.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
+      return;
+    }
+    
+    container.innerHTML = activities.map(activity => `
+      <div class="d-flex align-items-start mb-3">
+        <div class="activity-icon me-3">
+          <i class="bi ${activity.icon} text-primary"></i>
+        </div>
+        <div class="flex-grow-1">
+          <p class="mb-0">${activity.description}</p>
+          <small class="text-muted">${activity.timestamp}</small>
+        </div>
+      </div>
+    `).join('');
   }
-  
-  container.innerHTML = activities.map(activity => `
-    <div class="d-flex align-items-start mb-3">
-      <div class="activity-icon me-3">
-        <i class="bi ${activity.icon} text-primary"></i>
-      </div>
-      <div class="flex-grow-1">
-        <p class="mb-0">${activity.description}</p>
-        <small class="text-muted">${activity.timestamp}</small>
-      </div>
-    </div>
-  `).join('');
 }
 
-// Edit athlete from details modal
+// Edit athlete from details modal (unchanged)
 function editAthleteFromDetails() {
   bootstrap.Modal.getInstance(document.getElementById('athleteDetailsModal')).hide();
   editAthlete(currentAthleteId);
 }
 
-// Assign plan to athlete
-function assignPlan() {
-  // This would open a plan assignment modal
-  showAlert('Plan assignment feature coming soon', 'info');
+
+// --- New ML Input Modal Functions ---
+
+function openMLInputModal() {
+    if (!currentAthleteId) {
+        showAlert('Please select an athlete first.', 'warning');
+        return;
+    }
+    
+    // Set the title of the new modal
+    document.getElementById('mlInputAthleteName').textContent = currentAthleteName;
+    
+    // Show the ML Input Modal and hide the details modal
+    bootstrap.Modal.getInstance(document.getElementById('athleteDetailsModal')).hide();
+    new bootstrap.Modal(document.getElementById('mlInputModal')).show();
 }
 
-// Utility functions
+function submitMLData() {
+    // --- 1. Get values from ALL 15 INPUT FIELDS ---
+    const sleepHours = document.getElementById('inputSleepHours').value;
+    const heartRate = document.getElementById('inputHeartRate').value;
+    const muscleTension = document.getElementById('inputMuscleTension').value;
+    const bodyTemp = document.getElementById('inputBodyTemp').value;
+    const breathingRate = document.getElementById('inputBreathingRate').value;
+    const systolicBP = document.getElementById('inputSystolicBP').value;
+    const diastolicBP = document.getElementById('inputDiastolicBP').value;
+    const trainingDuration = document.getElementById('inputTrainingDuration').value;
+    const trainingDays = document.getElementById('inputTrainingDays').value;
+    const recoveryDays = document.getElementById('inputRecoveryDays').value;
+    const dietaryIntake = document.getElementById('inputDietaryIntake').value;
+    const intensity = document.getElementById('inputIntensity').value;
+    const trainingType = document.getElementById('inputTrainingType').value;
+    const timeInterval = document.getElementById('inputTimeInterval').value;
+    const trainingPhase = document.getElementById('inputTrainingPhase').value;
+    
+    if (!currentAthleteId) {
+        showAlert('Error: Athlete ID is missing.', 'danger');
+        return;
+    }
+
+    // Helper to safely parse and default numeric values
+    const safeNum = (val, defaultValue = 0) => {
+        const parsed = parseFloat(val);
+        // Ensure that even empty strings are treated as the default value (0)
+        return val === "" || isNaN(parsed) ? defaultValue : parsed;
+    };
+
+    // Helper to safely default string values
+    const safeStr = (val, defaultValue = 'N/A') => val || defaultValue;
+
+    // --- 2. Build the complete JSON payload ---
+    const payload = {
+        // Core Biometrics and Training Metrics (All 15 expected features)
+        "heart_rate": safeNum(heartRate, 120),
+        "sleep_hours": safeNum(sleepHours, 7.5),
+        "Muscle_Tension_(MT)": safeNum(muscleTension, 0.5),
+        "Body_Temperature_(BT)": safeNum(bodyTemp, 36.5),
+        "Breathing_Rate_(BR)": safeNum(breathingRate, 16),
+        "Blood_Pressure_Systolic_(BP)": safeNum(systolicBP, 120),
+        "Blood_Pressure_Diastolic_(BP)": safeNum(diastolicBP, 80),
+        "Training_Duration_(TD)": safeNum(trainingDuration, 60),
+        "training_days_per_week": safeNum(trainingDays, 5),
+        "recovery_days_per_week": safeNum(recoveryDays, 2),
+        "dietary_intake": safeNum(dietaryIntake, 2500),
+
+        // Categorical/String Features
+        "Training_Intensity_(TI)": safeStr(intensity, "Medium"),
+        "Training_Type_(TT)": safeStr(trainingType, "Cardio"),
+        "Time_Interval_(TI)": safeStr(timeInterval, "Morning"),
+        "Phase_of_Training_(PT)": safeStr(trainingPhase, "Build"),
+
+        // Redundant/Calculated Features required by model (often safe to use 0/placeholders if input is sparse)
+        "Heart_Rate_(HR)": safeNum(heartRate, 120), // Reused
+        "Wavelet_Features_(WF)": 0.5, 
+        "Feature_Weights_(FW)": 0.9  
+    };
+
+    // --- 3. Send Request ---
+    document.getElementById('mlSaveButtonText').innerHTML = '<i class="bi bi-gear-wide-connected"></i> Predicting...';
+    document.getElementById('mlSaveSpinner').classList.remove('d-none');
+    
+    fetch(`/coach/athlete/${currentAthleteId}/predict-manual`, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            // Attempt to read error message from server
+            return response.json().catch(() => {
+                throw new Error("Server returned an error and could not provide details.");
+            }).then(err => {
+                throw new Error(err.error || err.msg || "Unknown Server Error.");
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showAlert('Prediction successfully generated and records stored!', 'success');
+        
+        bootstrap.Modal.getInstance(document.getElementById('mlInputModal')).hide();
+        loadAthletes();
+        // Reload details modal to show updated data
+        viewAthleteDetails(currentAthleteId); 
+    })
+    .catch(error => {
+        console.error('Prediction Failure:', error);
+        showAlert(`Prediction Failed: ${error.message}`, 'danger');
+    })
+    .finally(() => {
+        document.getElementById('mlSaveButtonText').innerHTML = '<i class="bi bi-lightning-charge"></i> Run Prediction';
+        document.getElementById('mlSaveSpinner').classList.add('d-none');
+    });
+}
+
+// Utility functions (unchanged)
 function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
@@ -1051,7 +1420,8 @@ function getStatusColor(status) {
   const colors = {
     'active': 'success',
     'pending': 'warning',
-    'suspended': 'danger'
+    'suspended': 'danger',
+    'unassigned': 'secondary'
   };
   return colors[status] || 'secondary';
 }
@@ -1060,6 +1430,30 @@ function getComplianceColor(compliance) {
   if (compliance >= 80) return 'success';
   if (compliance >= 50) return 'warning';
   return 'danger';
+}
+
+function getReadinessColor(score) {
+  if (!score || score === 'No Data') return 'secondary';
+  if (score >= 80) return 'success';
+  if (score >= 50) return 'info';
+  return 'danger';
+}
+
+function getRiskColor(risk) {
+  const colors = {
+    'low': 'success',
+    'medium': 'warning',
+    'high': 'danger',
+    'unknown': 'secondary',
+    'No Data': 'secondary'
+  };
+  return colors[risk] || 'secondary';
+}
+
+function getCardBorderClass(risk) {
+  if (risk === 'high') return 'border-danger';
+  if (risk === 'medium') return 'border-warning';
+  return '';
 }
 
 function showAlert(message, type = 'info') {
@@ -1084,69 +1478,4 @@ function showAlert(message, type = 'info') {
   }, 4000);
 }
 </script>
-
-<style>
-/* Nice Admin Compatible Styles */
-.athletes-card .card-icon { background: linear-gradient(90deg, #4154f1, #2678c7); }
-.compliance-card .card-icon { background: linear-gradient(90deg, #17a2b8, #20c997); }
-.workouts-card .card-icon { background: linear-gradient(90deg, #ffc107, #fd7e14); }
-.alerts-card .card-icon { background: linear-gradient(90deg, #dc3545, #fd7e14); }
-
-.athlete-card {
-  transition: all 0.3s ease;
-  border: 1px solid #e1e5e9;
-}
-
-.athlete-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-}
-
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #4154f1, #2678c7);
-}
-
-.athlete-avatar {
-  transition: all 0.3s ease;
-}
-
-.athlete-card:hover .athlete-avatar {
-  transform: scale(1.1);
-}
-
-.nav-tabs-bordered {
-  border-bottom: 1px solid #dee2e6;
-}
-
-.nav-tabs-bordered .nav-link {
-  border: 1px solid transparent;
-  border-bottom: 2px solid transparent;
-}
-
-.nav-tabs-bordered .nav-link:hover {
-  border-color: #e9ecef #e9ecef #dee2e6;
-}
-
-.nav-tabs-bordered .nav-link.active {
-  color: #4154f1;
-  background-color: #fff;
-  border-color: #dee2e6 #dee2e6 #fff;
-}
-
-.activity-icon {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f1f3ff;
-  border-radius: 50%;
-}
-
-@media (max-width: 768px) {
-  .athlete-card {
-    margin-bottom: 1rem;
-  }
-}
-</style>
 {% endblock %}
