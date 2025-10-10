@@ -335,7 +335,6 @@ def get_athlete_details(athlete_id):
     identity = get_jwt_identity()
     if not is_coach(identity):
         return jsonify({"msg": "Unauthorized"}), 403
-
     link = CoachAthlete.query.filter_by(
         coach_id=identity,
         athlete_id=athlete_id
@@ -424,6 +423,7 @@ def get_athlete_details(athlete_id):
             "date": latest_readiness.date.isoformat() if latest_readiness else None
         }
     })
+
 # ================================
 # Delete/Remove Athlete (FINAL)
 # ================================
