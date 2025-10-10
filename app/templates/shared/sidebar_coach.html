@@ -21,16 +21,7 @@
           </a>
         </li>
         
-        <li>
-          <a href="{{ url_for('coach.athlete_compliance_view') }}">
-            <i class="bi bi-circle"></i><span>Compliance</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('coach.athlete_details_view') }}">
-            <i class="bi bi-circle"></i><span>Athlete Details</span>
-          </a>
-        </li>
+      
       </ul>
     </li>
 
@@ -67,53 +58,19 @@
       <ul id="workouts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
           <a href="{{ url_for('coach.create_workout_view') }}">
-            <i class="bi bi-circle"></i><span>Create Workout</span>
+            <i class="bi bi-circle"></i><span>Manage Workouts</span>
           </a>
         </li>
-        <li>
-          <a href="{{ url_for('coach.workout_list_view') }}">    
-            <i class="bi bi-circle"></i><span>Workout List</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('coach.track_progress_view') }}">
-            <i class="bi bi-circle"></i><span>Track Progress</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('coach.progress_tracking_view') }}">
-            <i class="bi bi-circle"></i><span>Progress Tracking</span>
-          </a>
-        </li>
+    
       </ul>
     </li>
 
 
     <!-- Feedback -->
-    <li class="nav-item">
-      <a class="nav-link collapsed" data-bs-target="#feedback-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-chat-dots"></i><span>Feedback</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <ul id="feedback-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-        <li><a href="{{ url_for('coach.give_feedback_view') }}"><i class="bi bi-circle"></i><span>Give Feedback</span></a></li>
-        <li><a href="{{ url_for('coach.view_feedback_view') }}"><i class="bi bi-circle"></i><span>View Feedback</span></a></li>
-        <li><a href="{{ url_for('coach.select_athlete_for_feedback') }}"><i class="bi bi-circle"></i><span>Select Feedback</span></a></li>
-      </ul>
-    </li>
+   
 
     <!-- Reports -->
-    <li class="nav-item">
-      <a class="nav-link collapsed" href="{{ url_for('coach.assessments_reports_view') }}">
-        <i class="bi bi-bar-chart"></i><span>Assessments & Reports</span>
-      </a>
-    </li>
-
-    <!-- Communication -->
-    <li class="nav-item">
-      <a class="nav-link collapsed" href="{{ url_for('coach.communication_view') }}">
-        <i class="bi bi-envelope"></i><span>Communication</span>
-      </a>
-    </li>
+   
 
   </ul>
 </aside>
