@@ -13,7 +13,6 @@
 </div>
 
 <section class="section">
-  <!-- Quick Stats -->
   <div class="row mb-4">
     <div class="col-xxl-3 col-md-6">
       <div class="card info-card athletes-card">
@@ -84,7 +83,6 @@
     </div>
   </div>
 
-  <!-- Filter and Search Bar -->
   <div class="row mb-3">
     <div class="col-12">
       <div class="card">
@@ -107,9 +105,8 @@
               <label class="form-label">Injury Risk</label>
               <select id="riskFilter" class="form-select" onchange="filterAthletes()">
                 <option value="">All Levels</option>
-                <option value="high">High Risk</option>
-                <option value="medium">Medium Risk</option>
-                <option value="low">Low Risk</option>
+                <option value="High">High Risk</option>
+                <option value="Low">Low Risk</option>
               </select>
             </div>
             <div class="col-md-2">
@@ -137,7 +134,6 @@
     </div>
   </div>
 
-  <!-- Athletes Grid/List View -->
   <div class="row mb-3">
     <div class="col-12">
       <div class="card">
@@ -154,12 +150,9 @@
             </div>
           </div>
 
-          <!-- Grid View -->
           <div id="athletesGrid" class="row g-3">
-            <!-- Athletes cards will be populated here -->
-          </div>
+            </div>
 
-          <!-- List View (hidden by default) -->
           <div id="athletesList" class="table-responsive" style="display: none;">
             <table class="table table-hover datatable" id="athletesTable">
               <thead>
@@ -174,8 +167,7 @@
                 </tr>
               </thead>
               <tbody id="athletesTableBody">
-                <!-- Table rows will be populated here -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </div>
@@ -184,7 +176,6 @@
   </div>
 </section>
 
-<!-- Add/Edit Athlete Modal -->
 <div class="modal fade" id="athleteModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -266,6 +257,29 @@
               </div>
             </div>
           </div>
+
+          <hr>
+          <h6 class="mb-3 text-primary">Key Performance Metrics</h6>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Previous Injuries</label>
+                <input type="number" class="form-control" id="athletePreviousInjuries">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Training Intensity</label>
+                <input type="number" step="0.1" class="form-control" id="athleteTrainingIntensity">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Recovery Time (Days)</label>
+                <input type="number" step="0.1" class="form-control" id="athleteRecoveryTime">
+              </div>
+            </div>
+          </div>
         </form>
       </div>
       <div class="modal-footer">
@@ -279,7 +293,6 @@
   </div>
 </div>
 
-<!-- Athlete Details Modal -->
 <div class="modal fade" id="athleteDetailsModal" tabindex="-1">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
@@ -291,7 +304,6 @@
       </div>
       <div class="modal-body">
         <div class="row">
-          <!-- Left Column: Profile Info -->
           <div class="col-md-4">
             <div class="card">
               <div class="card-body text-center">
@@ -304,7 +316,6 @@
                 
                 <hr>
                 
-                <!-- ML Model Insights -->
                 <div class="alert alert-info mb-3">
                   <h6 class="mb-2"><i class="bi bi-cpu"></i> ML Insights</h6>
                   <div class="mb-2">
@@ -318,8 +329,8 @@
                     <span id="mlInjuryRisk" class="badge bg-secondary">N/A</span>
                   </div>
                   <div class="d-flex justify-content-between">
-                    <small><strong>Performance:</strong></small>
-                    <span id="mlPerformance" class="badge bg-secondary">N/A</span>
+                    <small><strong>Injury Probability:</strong></small>
+                    <span id="mlInjuryProbability" class="badge bg-secondary">N/A</span>
                   </div>
                 </div>
                 
@@ -336,19 +347,24 @@
                   <div class="stat-item mb-2">
                     <strong>BMI:</strong> <span id="detailBMI">-</span>
                   </div>
+                  <div class="stat-item mb-2">
+                    <strong>Training Intensity:</strong> <span id="detailTrainingIntensity">-</span>
+                  </div>
+                  <div class="stat-item mb-2">
+                    <strong>Recovery Time:</strong> <span id="detailRecoveryTime">-</span> days
+                  </div>
+                  <div class="stat-item mb-2">
+                    <strong>Previous Injuries:</strong> <span id="detailPreviousInjuries">-</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Right Column: Tabs -->
           <div class="col-md-8">
             <ul class="nav nav-tabs nav-tabs-bordered" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview-tab">Overview</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ml-insights-tab">ML Insights</button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#progress-tab">Progress</button>
@@ -359,7 +375,6 @@
             </ul>
 
             <div class="tab-content pt-3">
-              <!-- Overview Tab -->
               <div class="tab-pane fade show active" id="overview-tab">
                 <div class="row">
                   <div class="col-md-6">
@@ -388,58 +403,18 @@
                   <div class="card-body">
                     <h6 class="card-title">Recent Activity</h6>
                     <div id="recentActivity">
-                      <!-- Recent activities will be loaded here -->
-                    </div>
+                      </div>
                   </div>
                 </div>
               </div>
 
-              <!-- ML Insights Tab -->
-              <div class="tab-pane fade" id="ml-insights-tab">
-                <div class="card">
-                  <div class="card-body">
-                    <h6 class="card-title"><i class="bi bi-cpu"></i> Machine Learning Insights</h6>
-                    
-                    <div class="row mb-3">
-                      <div class="col-md-6">
-                        <div class="alert alert-primary">
-                          <h6>Injury Severity Prediction</h6>
-                          <p id="mlInjurySeverity" class="mb-0">-</p>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="alert alert-success">
-                          <h6>Recovery Success</h6>
-                          <p id="mlRecovery" class="mb-0">-</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="alert alert-warning">
-                      <h6><i class="bi bi-lightbulb"></i> Periodization Recommendation</h6>
-                      <p id="mlPeriodization" class="mb-0">-</p>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                      <h6>Recovery Prediction</h6>
-                      <p id="mlRecoveryPrediction" class="mb-0">-</p>
-                    </div>
-                    
-                    <small class="text-muted">Last updated: <span id="mlLastUpdate">-</span></small>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Progress Tab -->
               <div class="tab-pane fade" id="progress-tab">
                 <canvas id="progressChart" width="100" height="50"></canvas>
               </div>
 
-              <!-- Workouts Tab -->
               <div class="tab-pane fade" id="workouts-tab">
                 <div id="athleteWorkouts">
-                  <!-- Workout history will be loaded here -->
-                </div>
+                  </div>
               </div>
             </div>
           </div>
@@ -450,134 +425,10 @@
         <button type="button" class="btn btn-warning" onclick="editAthleteFromDetails()">
           <i class="bi bi-pencil"></i> Edit Profile
         </button>
-        <button type="button" class="btn btn-primary" onclick="openMLInputModal()">
-          <i class="bi bi-cpu"></i> Input ML Data
-        </button>
       </div>
     </div>
   </div>
 </div>
-
-<!-- 🆕 New Modal: Manual ML Data Input -->
-<div class="modal fade" id="mlInputModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-pencil-square"></i> Manual ML Data Input for <span id="mlInputAthleteName"></span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted">Enter the latest biometric and training data to update the ML prediction score.</p>
-                <form id="mlDataForm">
-                    <div class="row g-3">
-                        <!-- Left Column: Core Biometrics (heart_rate, sleep_hours, Muscle_Tension_(MT), Body_Temperature_(BT)) -->
-                        <div class="col-md-4">
-                            <h6 class="mb-3 text-primary">Physiological Data</h6>
-                            <div class="mb-3">
-                                <label class="form-label">Sleep Hours</label>
-                                <input type="number" step="0.1" class="form-control" id="inputSleepHours" value="7.5">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Heart Rate (Avg. BPM)</label>
-                                <input type="number" step="1" class="form-control" id="inputHeartRate" value="120">
-                            </div>
-                             <div class="mb-3">
-                                <label class="form-label">Muscle Tension (0.0 - 1.0)</label>
-                                <input type="number" step="0.1" class="form-control" id="inputMuscleTension" value="0.5">
-                            </div>
-                             <div class="mb-3">
-                                <label class="form-label">Body Temperature (C)</label>
-                                <input type="number" step="0.1" class="form-control" id="inputBodyTemp" value="36.5">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Breathing Rate (BPM)</label>
-                                <input type="number" step="1" class="form-control" id="inputBreathingRate" value="16">
-                            </div>
-                        </div>
-
-                        <!-- Middle Column: Training Metrics (Duration, Days, Intensity, Type) -->
-                        <div class="col-md-4">
-                            <h6 class="mb-3 text-primary">Training Metrics</h6>
-                             <div class="mb-3">
-                                <label class="form-label">Training Duration (Mins)</label>
-                                <input type="number" step="1" class="form-control" id="inputTrainingDuration" value="60">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Training Days / Week</label>
-                                <input type="number" step="1" class="form-control" id="inputTrainingDays" value="5">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Recovery Days / Week</label>
-                                <input type="number" step="1" class="form-control" id="inputRecoveryDays" value="2">
-                            </div>
-                             <div class="mb-3">
-                                <label class="form-label">Training Intensity</label>
-                                <select class="form-select" id="inputIntensity">
-                                    <option value="Low">Low</option>
-                                    <option value="Medium" selected>Medium</option>
-                                    <option value="High">High</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Training Type</label>
-                                <select class="form-select" id="inputTrainingType">
-                                    <option value="Cardio" selected>Cardio</option>
-                                    <option value="Strength">Strength</option>
-                                    <option value="Endurance">Endurance</option>
-                                    <option value="Restorative">Restorative</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Other (BP, Intake, Phase, Time) -->
-                        <div class="col-md-4">
-                            <h6 class="mb-3 text-primary">Progress & Phase</h6>
-                             <div class="mb-3">
-                                <label class="form-label">Dietary Intake (Calories)</label>
-                                <input type="number" step="1" class="form-control" id="inputDietaryIntake" value="2500">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Blood Pressure (Systolic)</label>
-                                <input type="number" step="1" class="form-control" id="inputSystolicBP" value="120">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Blood Pressure (Diastolic)</label>
-                                <input type="number" step="1" class="form-control" id="inputDiastolicBP" value="80">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Phase of Training</label>
-                                <select class="form-select" id="inputTrainingPhase">
-                                    <option value="Taper">Taper</option>
-                                    <option value="Build" selected>Build</option>
-                                    <option value="Peak">Peak</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Time Interval</label>
-                                <select class="form-select" id="inputTimeInterval">
-                                    <option value="Morning" selected>Morning</option>
-                                    <option value="Afternoon">Afternoon</option>
-                                    <option value="Evening">Evening</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitMLData()">
-                    <span id="mlSaveButtonText"><i class="bi bi-lightning-charge"></i> Run Prediction</span>
-                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="mlSaveSpinner"></div>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
 {% endblock %}
 
 {% block scripts %}
@@ -589,7 +440,7 @@ let athletes = [];
 let currentView = 'grid';
 let currentAthleteId = null;
 let progressChart = null;
-let currentAthleteName = ''; // To store the name for the new modal
+let currentAthleteName = ''; 
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -669,7 +520,6 @@ function displayAthletesGrid() {
             <span class="badge bg-${getStatusColor(athlete.status)}">${athlete.status}</span>
           </div>
 
-          <!-- ML Insights Card -->
           <div class="mb-3 p-2 bg-light rounded">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <small class="text-muted"><i class="bi bi-activity"></i> Readiness</small>
@@ -777,7 +627,7 @@ function getFilteredAthletes() {
   // Risk filter
   const riskFilter = document.getElementById('riskFilter').value;
   if (riskFilter) {
-    filtered = filtered.filter(a => a.injury_risk === riskFilter);
+    filtered = filtered.filter(a => a.injury_risk && a.injury_risk.toLowerCase() === riskFilter.toLowerCase());
   }
   
   // Readiness filter
@@ -831,7 +681,7 @@ function updateStats() {
   const avgReadiness = athletesWithReadiness.length > 0 ? 
     Math.round(athletesWithReadiness.reduce((sum, a) => sum + a.readiness_score, 0) / athletesWithReadiness.length) : 0;
   
-  const highRiskCount = athletes.filter(a => a.injury_risk === 'high').length;
+  const highRiskCount = athletes.filter(a => a.injury_risk === 'High').length;
   
   const needAttention = athletes.filter(a => 
       !a.readiness_score || a.readiness_score === 'No Data' || a.readiness_score < 50
@@ -844,17 +694,20 @@ function updateStats() {
   document.getElementById('needAttention').textContent = needAttention;
 }
 
-// Add new athlete (unchanged)
+// Add new athlete
 function addAthlete() {
   document.getElementById('athleteForm').reset();
   document.getElementById('athleteId').value = '';
   document.getElementById('passwordField').style.display = '';
   document.getElementById('athleteModalLabel').textContent = 'Add New Athlete';
   
+  // Ensure ML-related fields are visible for a new athlete
+  document.getElementById('athletePreviousInjuries').closest('.row').style.display = 'flex';
+  
   new bootstrap.Modal(document.getElementById('athleteModal')).show();
 }
 
-// Edit athlete (unchanged)
+// Edit athlete (now fetches all profile data, including ML-related)
 function editAthlete(id) {
   fetch(`/coach/athlete/${id}`, {
     headers: {
@@ -871,6 +724,10 @@ function editAthlete(id) {
     document.getElementById('athleteWeight').value = data.weight || '';
     document.getElementById('athleteHeight').value = data.height || '';
     document.getElementById('athleteTeam').value = data.team || '';
+    document.getElementById('athletePreviousInjuries').value = data.previous_injuries || '';
+    document.getElementById('athleteTrainingIntensity').value = data.training_intensity || '';
+    document.getElementById('athleteRecoveryTime').value = data.recovery_time || '';
+
     document.getElementById('passwordField').style.display = 'none';
     document.getElementById('athleteModalLabel').textContent = 'Edit Athlete';
     
@@ -881,7 +738,7 @@ function editAthlete(id) {
   });
 }
 
-// Save athlete (unchanged)
+// Save athlete (now sends all data, including ML-related)
 function saveAthlete() {
   const id = document.getElementById('athleteId').value;
   const password = document.getElementById('athletePassword').value;
@@ -899,7 +756,10 @@ function saveAthlete() {
     gender: document.getElementById('athleteGender').value || null,
     weight: document.getElementById('athleteWeight').value || null,
     height: document.getElementById('athleteHeight').value || null,
-    team: document.getElementById('athleteTeam').value || null
+    team: document.getElementById('athleteTeam').value || null,
+    previous_injuries: document.getElementById('athletePreviousInjuries').value || null,
+    training_intensity: document.getElementById('athleteTrainingIntensity').value || null,
+    recovery_time: document.getElementById('athleteRecoveryTime').value || null
   };
   
   if (!id) {
@@ -1001,6 +861,9 @@ function resetDetailsModal() {
     document.getElementById('detailWeight').textContent = '-';
     document.getElementById('detailHeight').textContent = '-';
     document.getElementById('detailBMI').textContent = '-';
+    document.getElementById('detailTrainingIntensity').textContent = '-';
+    document.getElementById('detailRecoveryTime').textContent = '-';
+    document.getElementById('detailPreviousInjuries').textContent = '-';
 
     if(progressChart) {
         progressChart.destroy();
@@ -1008,7 +871,7 @@ function resetDetailsModal() {
     document.getElementById('progressChart').innerHTML = '';
 }
 
-// Populate athlete details modal (unchanged)
+// Populate athlete details modal (now shows ML-related data)
 function populateAthleteDetails(data) {
   const detailAthleteName = document.getElementById('detailAthleteName');
   if (detailAthleteName) detailAthleteName.textContent = data.name;
@@ -1046,6 +909,15 @@ function populateAthleteDetails(data) {
       detailBMI.textContent = '-';
     }
   }
+
+  const detailTrainingIntensity = document.getElementById('detailTrainingIntensity');
+  if (detailTrainingIntensity) detailTrainingIntensity.textContent = data.training_intensity || '-';
+
+  const detailRecoveryTime = document.getElementById('detailRecoveryTime');
+  if (detailRecoveryTime) detailRecoveryTime.textContent = data.recovery_time || '-';
+
+  const detailPreviousInjuries = document.getElementById('detailPreviousInjuries');
+  if (detailPreviousInjuries) detailPreviousInjuries.textContent = data.previous_injuries || '-';
   
   const mlInsights = data.ml_insights || {};
   const readiness = data.readiness || {};
@@ -1064,35 +936,13 @@ function populateAthleteDetails(data) {
       injuryRiskBadge.textContent = injuryRisk;
       injuryRiskBadge.className = `badge bg-${getRiskColor(injuryRisk)}`;
   }
-  
-  const performanceBadge = document.getElementById('mlPerformance');
-  const performanceClass = mlInsights.performance_class;
-  if (performanceBadge) {
-      if (performanceClass && performanceClass !== 'No Data' && performanceClass !== 0) {
-        const performanceText = ['Taper', 'Build', 'Peak'][performanceClass] || 'Unknown';
-        performanceBadge.textContent = performanceText;
-        performanceBadge.className = `badge bg-${['warning', 'info', 'success'][performanceClass] || 'secondary'}`;
-      } else {
-        performanceBadge.textContent = 'No Data';
-        performanceBadge.className = 'badge bg-secondary';
-      }
+
+  const injuryProbabilityBadge = document.getElementById('mlInjuryProbability');
+  const injuryProbability = mlInsights.injury_probability ? `${(mlInsights.injury_probability * 100).toFixed(1)}%` : 'N/A';
+  if (injuryProbabilityBadge) {
+      injuryProbabilityBadge.textContent = injuryProbability;
+      injuryProbabilityBadge.className = `badge bg-${getRiskColor(injuryRisk)}`;
   }
-  
-  const mlInjurySeverity = document.getElementById('mlInjurySeverity');
-  if (mlInjurySeverity) mlInjurySeverity.textContent = mlInsights.injury_severity || 'No data available';
-  
-  const mlRecovery = document.getElementById('mlRecovery');
-  if (mlRecovery) mlRecovery.textContent = mlInsights.recovery_success ? 
-    `${mlInsights.recovery_success}% chance of recovery` : 'No data available';
-  
-  const mlPeriodization = document.getElementById('mlPeriodization');
-  if (mlPeriodization) mlPeriodization.textContent = mlInsights.periodization_recommendation || 'No recommendation available';
-  
-  const mlRecoveryPrediction = document.getElementById('mlRecoveryPrediction');
-  if (mlRecoveryPrediction) mlRecoveryPrediction.textContent = readiness.recovery_prediction || 'No prediction available';
-  
-  const mlLastUpdate = document.getElementById('mlLastUpdate');
-  if (mlLastUpdate) mlLastUpdate.textContent = readiness.date || 'Never';
   
   const complianceBar = document.getElementById('detailComplianceBar');
   if (complianceBar) {
@@ -1108,9 +958,7 @@ function populateAthleteDetails(data) {
 }
 
 
-
-  
-// Load athlete progress chart (unchanged)
+// Load athlete progress chart
 function loadAthleteProgress(athleteId) {
   fetch(`/coach/athlete/${athleteId}/progress`, {
     headers: {
@@ -1126,7 +974,7 @@ function loadAthleteProgress(athleteId) {
   });
 }
 
-// Render progress chart with ML data (unchanged)
+// Render progress chart with ML data
 function renderProgressChart(data) {
   const ctx = document.getElementById('progressChart');
   
@@ -1218,7 +1066,7 @@ function renderProgressChart(data) {
   });
 }
 
-// Load athlete workouts (unchanged)
+// Load athlete workouts
 function loadAthleteWorkouts(athleteId) {
   fetch(`/coach/athlete/${athleteId}/workouts`, {
     headers: {
@@ -1234,7 +1082,7 @@ function loadAthleteWorkouts(athleteId) {
   });
 }
 
-// Display athlete workouts (unchanged)
+// Display athlete workouts
 function displayAthleteWorkouts(workouts) {
   const container = document.getElementById('athleteWorkouts');
   
@@ -1266,7 +1114,7 @@ function displayAthleteWorkouts(workouts) {
   }
 }
 
-// Load recent activity (unchanged)
+// Load recent activity
 function loadRecentActivity(activities) {
   const container = document.getElementById('recentActivity');
   
@@ -1296,124 +1144,6 @@ function editAthleteFromDetails() {
   editAthlete(currentAthleteId);
 }
 
-
-// --- New ML Input Modal Functions ---
-
-function openMLInputModal() {
-    if (!currentAthleteId) {
-        showAlert('Please select an athlete first.', 'warning');
-        return;
-    }
-    
-    // Set the title of the new modal
-    document.getElementById('mlInputAthleteName').textContent = currentAthleteName;
-    
-    // Show the ML Input Modal and hide the details modal
-    bootstrap.Modal.getInstance(document.getElementById('athleteDetailsModal')).hide();
-    new bootstrap.Modal(document.getElementById('mlInputModal')).show();
-}
-
-function submitMLData() {
-    // --- 1. Get values from ALL 15 INPUT FIELDS ---
-    const sleepHours = document.getElementById('inputSleepHours').value;
-    const heartRate = document.getElementById('inputHeartRate').value;
-    const muscleTension = document.getElementById('inputMuscleTension').value;
-    const bodyTemp = document.getElementById('inputBodyTemp').value;
-    const breathingRate = document.getElementById('inputBreathingRate').value;
-    const systolicBP = document.getElementById('inputSystolicBP').value;
-    const diastolicBP = document.getElementById('inputDiastolicBP').value;
-    const trainingDuration = document.getElementById('inputTrainingDuration').value;
-    const trainingDays = document.getElementById('inputTrainingDays').value;
-    const recoveryDays = document.getElementById('inputRecoveryDays').value;
-    const dietaryIntake = document.getElementById('inputDietaryIntake').value;
-    const intensity = document.getElementById('inputIntensity').value;
-    const trainingType = document.getElementById('inputTrainingType').value;
-    const timeInterval = document.getElementById('inputTimeInterval').value;
-    const trainingPhase = document.getElementById('inputTrainingPhase').value;
-    
-    if (!currentAthleteId) {
-        showAlert('Error: Athlete ID is missing.', 'danger');
-        return;
-    }
-
-    // Helper to safely parse and default numeric values
-    const safeNum = (val, defaultValue = 0) => {
-        const parsed = parseFloat(val);
-        // Ensure that even empty strings are treated as the default value (0)
-        return val === "" || isNaN(parsed) ? defaultValue : parsed;
-    };
-
-    // Helper to safely default string values
-    const safeStr = (val, defaultValue = 'N/A') => val || defaultValue;
-
-    // --- 2. Build the complete JSON payload ---
-    const payload = {
-        // Core Biometrics and Training Metrics (All 15 expected features)
-        "heart_rate": safeNum(heartRate, 120),
-        "sleep_hours": safeNum(sleepHours, 7.5),
-        "Muscle_Tension_(MT)": safeNum(muscleTension, 0.5),
-        "Body_Temperature_(BT)": safeNum(bodyTemp, 36.5),
-        "Breathing_Rate_(BR)": safeNum(breathingRate, 16),
-        "Blood_Pressure_Systolic_(BP)": safeNum(systolicBP, 120),
-        "Blood_Pressure_Diastolic_(BP)": safeNum(diastolicBP, 80),
-        "Training_Duration_(TD)": safeNum(trainingDuration, 60),
-        "training_days_per_week": safeNum(trainingDays, 5),
-        "recovery_days_per_week": safeNum(recoveryDays, 2),
-        "dietary_intake": safeNum(dietaryIntake, 2500),
-
-        // Categorical/String Features
-        "Training_Intensity_(TI)": safeStr(intensity, "Medium"),
-        "Training_Type_(TT)": safeStr(trainingType, "Cardio"),
-        "Time_Interval_(TI)": safeStr(timeInterval, "Morning"),
-        "Phase_of_Training_(PT)": safeStr(trainingPhase, "Build"),
-
-        // Redundant/Calculated Features required by model (often safe to use 0/placeholders if input is sparse)
-        "Heart_Rate_(HR)": safeNum(heartRate, 120), // Reused
-        "Wavelet_Features_(WF)": 0.5, 
-        "Feature_Weights_(FW)": 0.9  
-    };
-
-    // --- 3. Send Request ---
-    document.getElementById('mlSaveButtonText').innerHTML = '<i class="bi bi-gear-wide-connected"></i> Predicting...';
-    document.getElementById('mlSaveSpinner').classList.remove('d-none');
-    
-    fetch(`/coach/athlete/${currentAthleteId}/predict-manual`, {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => {
-        if (!response.ok) {
-            // Attempt to read error message from server
-            return response.json().catch(() => {
-                throw new Error("Server returned an error and could not provide details.");
-            }).then(err => {
-                throw new Error(err.error || err.msg || "Unknown Server Error.");
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        showAlert('Prediction successfully generated and records stored!', 'success');
-        
-        bootstrap.Modal.getInstance(document.getElementById('mlInputModal')).hide();
-        loadAthletes();
-        // Reload details modal to show updated data
-        viewAthleteDetails(currentAthleteId); 
-    })
-    .catch(error => {
-        console.error('Prediction Failure:', error);
-        showAlert(`Prediction Failed: ${error.message}`, 'danger');
-    })
-    .finally(() => {
-        document.getElementById('mlSaveButtonText').innerHTML = '<i class="bi bi-lightning-charge"></i> Run Prediction';
-        document.getElementById('mlSaveSpinner').classList.add('d-none');
-    });
-}
-
 // Utility functions (unchanged)
 function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -1436,7 +1166,7 @@ function getComplianceColor(compliance) {
 }
 
 function getReadinessColor(score) {
-  if (!score || score === 'No Data') return 'secondary';
+  if (score === null || score === 'No Data' || score === 0) return 'secondary';
   if (score >= 80) return 'success';
   if (score >= 50) return 'info';
   return 'danger';
@@ -1445,8 +1175,11 @@ function getReadinessColor(score) {
 function getRiskColor(risk) {
   const colors = {
     'low': 'success',
+    'Low': 'success',
     'medium': 'warning',
+    'Medium': 'warning',
     'high': 'danger',
+    'High': 'danger',
     'unknown': 'secondary',
     'No Data': 'secondary'
   };
@@ -1454,8 +1187,8 @@ function getRiskColor(risk) {
 }
 
 function getCardBorderClass(risk) {
-  if (risk === 'high') return 'border-danger';
-  if (risk === 'medium') return 'border-warning';
+  if (risk && risk.toLowerCase() === 'high') return 'border-danger';
+  if (risk && risk.toLowerCase() === 'medium') return 'border-warning';
   return '';
 }
 

@@ -9,376 +9,125 @@
       <li class="breadcrumb-item active">Coach Dashboard</li>
     </ol>
   </nav>
-</div><!-- End Page Title -->
-
-<section class="section dashboard">
+</div><section class="section dashboard">
   <div class="row">
 
-    <!-- Filters Bar -->
-    <div class="col-12">
-      <div class="card">
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card athletes-card">
         <div class="card-body">
-          <h5 class="card-title">Filters</h5>
-          <form id="filtersForm" class="row g-3 align-items-center">
-            <div class="col-md-4">
-              <label for="athleteSelect" class="form-label">Select Athlete</label>
-              <select id="athleteSelect" class="form-select"></select>
+          <h5 class="card-title">Total Athletes</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-people"></i>
             </div>
-            <div class="col-md-3">
-              <label for="dateRange" class="form-label">Time Range</label>
-              <select id="dateRange" class="form-select">
-                <option value="week">Last Week</option>
-                <option value="month" selected>Last Month</option>
-                <option value="3months">Last 3 Months</option>
-              </select>
+            <div class="ps-3">
+              <h6>{{ total_athletes }}</h6>
+              <span class="text-success small pt-1 fw-bold">{{ active_athletes }} active</span>
             </div>
-            <div class="col-md-3">
-              <label for="progressType" class="form-label">Progress Type</label>
-              <select id="progressType" class="form-select">
-                <option value="performance">Performance</option>
-                <option value="weight">Weight</option>
-                <option value="nutrition">Nutrition</option>
-              </select>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary w-100">Apply</button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
-    </div><!-- End Filters Bar -->
+    </div>
 
-    <!-- Left side columns -->
-    <div class="col-lg-8">
-      <div class="row">
-
-        <!-- Quick Stats Cards -->
-        <div class="col-xxl-3 col-md-6">
-          <div class="card info-card">
-            <div class="card-body">
-              <h5 class="card-title">Total Sessions <span>| Selected Period</span></h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-activity"></i>
-                </div>
-                <div class="ps-3">
-                  <h6 id="workoutsCount">-</h6>
-                  <span class="text-muted small pt-1">Completed Workouts</span>
-                </div>
-              </div>
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card readiness-card">
+        <div class="card-body">
+          <h5 class="card-title">Avg. Readiness</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-heart-pulse"></i>
+            </div>
+            <div class="ps-3">
+              <h6>{{ avg_readiness if avg_readiness != "N/A" else "N/A" }}%</h6>
+              <span class="text-info small pt-1">Team average</span>
             </div>
           </div>
         </div>
-
-        <div class="col-xxl-3 col-md-6">
-          <div class="card info-card">
-            <div class="card-body">
-              <h5 class="card-title">Compliance Rate <span>| %</span></h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-check2-circle"></i>
-                </div>
-                <div class="ps-3">
-                  <h6 id="complianceRate">-</h6>
-                  <span id="complianceLabel" class="text-muted small pt-1">-</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-xxl-3 col-md-6">
-          <div class="card info-card">
-            <div class="card-body">
-              <h5 class="card-title">Avg Readiness <span>| Score</span></h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-heart-pulse"></i>
-                </div>
-                <div class="ps-3">
-                  <h6 id="avgReadiness">-</h6>
-                  <span class="text-muted small pt-1">Out of 10</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-xxl-3 col-md-6">
-          <div class="card info-card">
-            <div class="card-body">
-              <h5 class="card-title">Injury Alerts</h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-danger">
-                  <i class="bi bi-exclamation-triangle text-white"></i>
-                </div>
-                <div class="ps-3">
-                  <h6 id="injuryAlerts">-</h6>
-                  <span class="text-danger small pt-1 fw-bold">High Risk Alerts</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- End Quick Stats Cards -->
-
-        <!-- Progress Monitoring: Graphs -->
-        <div class="col-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Progress Analytics</h5>
-              <canvas id="progressChart" style="max-height: 400px;"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Workout Logs Table -->
-        <div class="col-12">
-          <div class="card recent-sales overflow-auto">
-            <div class="card-body">
-              <h5 class="card-title">Workout & Nutrition Logs</h5>
-              <table id="logsTable" class="table table-borderless datatable">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Details</th>
-                    <th>Metric</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-        </div><!-- End Workout Logs Table -->
-
       </div>
-    </div><!-- End Left side columns -->
+    </div>
 
-    <!-- Right side columns -->
-    <div class="col-lg-4">
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card risk-card">
+        <div class="card-body">
+          <h5 class="card-title">Total Workouts</h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-person-walking"></i>
+            </div>
+            <div class="ps-3">
+              <h6>{{ total_workouts }}</h6>
+              <span class="text-primary small pt-1 fw-bold">All-time logs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <!-- Workout Plans Section -->
-      <div class="card">
+    <div class="col-xxl-3 col-md-6">
+      <div class="card info-card alerts-card">
         <div class="card-body">
           <h5 class="card-title">Training Plans</h5>
-          <div id="plansList" class="list-group">
-            <!-- Plans will be loaded here -->
-          </div>
-          <div class="d-grid gap-2 mt-3">
-            <button onclick="createPlan()" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Create New Plan</button>
-            <button onclick="duplicatePlan()" class="btn btn-secondary"><i class="bi bi-files"></i> Duplicate Plan</button>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="ps-3">
+              <h6>{{ total_plans }}</h6>
+              <span class="text-info small pt-1 fw-bold">Total plans created</span>
+            </div>
           </div>
         </div>
-      </div><!-- End Plans Card -->
-
-      <!-- Communication & Feedback Section -->
+      </div>
+    </div>
+    <div class="col-12">
       <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Messages & Feedback</h5>
-          <div id="activityFeed" class="activity"></div>
-          <div class="d-grid gap-2 mt-3">
-            <button onclick="sendMessage()" class="btn btn-primary"><i class="bi bi-chat-dots"></i> Send Message</button>
-            <button onclick="giveFeedback()" class="btn btn-secondary"><i class="bi bi-pencil-square"></i> Add Feedback</button>
+        <div class="card-body pb-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title">Athletes Needing Attention</h5>
+            <span class="badge bg-danger">{{ attention_needed_athletes|length }} Athletes</span>
           </div>
+          <p class="small fst-italic">Players with low readiness or high injury risk.</p>
+          {% if attention_needed_athletes|length > 0 %}
+          <div class="list-group list-group-flush">
+            {% for athlete in attention_needed_athletes %}
+            <a href="{{ url_for('coach_bp.get_athlete_details', athlete_id=athlete.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">{{ athlete.name }}</h6>
+                <small class="text-muted">Readiness: 
+                  {% if athlete.readiness_score and athlete.readiness_score != 'No Data' %}
+                    <span class="badge bg-{{ 'danger' if athlete.readiness_score < 50 else 'warning' if athlete.readiness_score < 80 else 'success' }}">{{ athlete.readiness_score }}%</span>
+                  {% else %}
+                    <span class="badge bg-secondary">N/A</span>
+                  {% endif %}
+                </small>
+                <small class="text-muted ms-2">Injury Risk: 
+                  {% if athlete.injury_risk and athlete.injury_risk != 'No Data' %}
+                    <span class="badge bg-{{ 'danger' if athlete.injury_risk == 'High' else 'success' }}">{{ athlete.injury_risk }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">N/A</span>
+                  {% endif %}
+                </small>
+              </div>
+              <i class="bi bi-arrow-right"></i>
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center p-4">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+            <p class="mt-2 text-muted">All athletes are in good standing.</p>
+          </div>
+          {% endif %}
         </div>
-      </div><!-- End Communication Section -->
-
-    </div><!-- End Right side columns -->
-
-  </div>
+      </div>
+    </div>
+    </div>
 </section>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
-let chart;
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadAthletes();
-  loadPlans();
-
-  document.getElementById("filtersForm").addEventListener("submit", e => {
-    e.preventDefault();
-    loadDashboardData();
-  });
-});
-
-function loadAthletes() {
-  fetch("/coach/athletes", { headers: authHeader() })
-    .then(r => r.json())
-    .then(data => {
-      const select = document.getElementById("athleteSelect");
-      select.innerHTML = "<option value='' disabled selected>Select an athlete</option>";
-      data.forEach(a => {
-        select.innerHTML += `<option value="${a.id}">${a.name}</option>`;
-      });
-    });
-}
-
-function loadPlans() {
-  const athleteId = document.getElementById("athleteSelect").value;
-  if (!athleteId) return;
-  fetch(`/coach/athlete/${athleteId}/plans`, { headers: authHeader() })
-    .then(r => r.json())
-    .then(data => {
-      const plansList = document.getElementById("plansList");
-      plansList.innerHTML = "";
-      data.forEach(plan => {
-        plansList.innerHTML += `
-          <div class="list-group-item">
-            <h6>${plan.title}</h6>
-            <p class="text-muted small">From ${plan.start} to ${plan.end} | ${plan.status}</p>
-            <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id})">Edit</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">Delete</button>
-          </div>`;
-      });
-    });
-}
-
-function loadDashboardData() {
-  const athleteId = document.getElementById("athleteSelect").value;
-  const range = document.getElementById("dateRange").value;
-  const progressType = document.getElementById("progressType").value;
-
-  if (!athleteId) {
-    alert("Please select an athlete.");
-    return;
-  }
-
-  fetch(`/coach/athlete/${athleteId}/progress?range=${range}&type=${progressType}`, { headers: authHeader() })
-    .then(r => r.json())
-    .then(data => {
-      // Update Stats
-      document.getElementById("workoutsCount").textContent = data.total_sessions;
-      document.getElementById("complianceRate").textContent = data.compliance + "%";
-      document.getElementById("complianceLabel").textContent = data.compliance_label;
-      document.getElementById("avgReadiness").textContent = data.avg_readiness + "/10";
-      document.getElementById("injuryAlerts").textContent = data.injury_alerts;
-
-      // Update Chart
-      updateChart(data.labels, data.values, data.secondary_values, progressType);
-
-      // Update Logs
-      const tbody = document.querySelector("#logsTable tbody");
-      tbody.innerHTML = "";
-      data.logs.forEach(log => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${log.date}</td>
-            <td>${log.type}</td>
-            <td>${log.details}</td>
-            <td>${log.metric}</td>
-            <td><span class="badge bg-${log.status_color}">${log.status}</span></td>
-            <td>
-              <a href="#" onclick="viewLog(${log.id})">View</a> |
-              <a href="#" onclick="addFeedback(${log.id})">Feedback</a>
-            </td>
-          </tr>`;
-      });
-
-      // Update Activity Feed
-      const feed = document.getElementById("activityFeed");
-      feed.innerHTML = "";
-      data.activities.forEach(act => {
-        feed.innerHTML += `
-          <div class="activity-item d-flex">
-            <div class="activite-label">${act.time}</div>
-            <i class='bi bi-circle-fill activity-badge text-${act.color} align-self-start'></i>
-            <div class="activity-content">${act.text}</div>
-          </div>`;
-      });
-    });
-}
-
-function updateChart(labels, values, secondary_values, type) {
-  if (chart) chart.destroy();
-  const datasets = [
-    { label: type.charAt(0).toUpperCase() + type.slice(1), data: values, borderColor: 'rgb(75, 192, 192)', fill: true }
-  ];
-  if (secondary_values) {
-    datasets.push({ label: 'Readiness Score', data: secondary_values, borderColor: 'rgb(255, 99, 132)', fill: true });
-  }
-  chart = new Chart(document.querySelector('#progressChart'), {
-    type: 'line',
-    data: { labels, datasets },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-function authHeader() {
-  return { "Authorization": "Bearer " + localStorage.getItem("access_token") };
-}
-
-function createPlan() {
-  const athleteId = document.getElementById("athleteSelect").value;
-  if (!athleteId) {
-    alert("Please select an athlete.");
-    return;
-  }
-  window.location.href = `/coach/create_plan?athlete_id=${athleteId}`;
-}
-
-function editPlan(planId) {
-  window.location.href = `/coach/plans/${planId}/edit`;
-}
-
-function deletePlan(planId) {
-  if (confirm("Are you sure you want to delete this plan?")) {
-    fetch(`/coach/plans/${planId}`, { method: 'DELETE', headers: authHeader() })
-      .then(r => r.json())
-      .then(data => {
-        alert(data.msg);
-        loadPlans();
-      });
-  }
-}
-
-function duplicatePlan() {
-  const athleteId = document.getElementById("athleteSelect").value;
-  if (!athleteId) {
-    alert("Please select an athlete.");
-    return;
-  }
-  const planId = prompt("Enter the Plan ID to duplicate:");
-  if (planId) {
-    fetch(`/coach/plans/${planId}/duplicate`, { method: 'POST', headers: authHeader() })
-      .then(r => r.json())
-      .then(data => {
-        alert(data.msg);
-        loadPlans();
-      });
-  }
-}
-
-function sendMessage() {
-  const athleteId = document.getElementById("athleteSelect").value;
-  if (!athleteId) {
-    alert("Please select an athlete.");
-    return;
-  }
-  window.location.href = `/coach/athlete/${athleteId}/send_message`;
-}
-
-function giveFeedback() {
-  const athleteId = document.getElementById("athleteSelect").value;
-  if (!athleteId) {
-    alert("Please select an athlete.");
-    return;
-  }
-  window.location.href = `/coach/athlete/${athleteId}/give_feedback`;
-}
-
-function viewLog(logId) {
-  window.location.href = `/coach/logs/${logId}`;
-}
-
-function addFeedback(logId) {
-  const athleteId = document.getElementById("athleteSelect").value;
-  window.location.href = `/coach/athlete/${athleteId}/give_feedback?log_id=${logId}`;
-}
+// لا يوجد JavaScript إضافي مطلوب لهذه الصفحة، حيث يتم عرض جميع البيانات من جهة الخادم.
 </script>
 {% endblock %}

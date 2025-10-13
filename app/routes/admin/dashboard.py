@@ -117,12 +117,12 @@ def dashboard():
         User.created_at >= six_months_ago,
         User.is_deleted == False
     ).group_by('year', 'month')\
-     .order_by('year', 'month')\
-     .all()
+    .order_by('year', 'month')\
+    .all()
     
     # Format growth data for Chart.js
     month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     
     growth_labels = []
     growth_data = []

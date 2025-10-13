@@ -12,6 +12,9 @@ class AthleteProfile(db.Model):
     team = db.Column(db.String(100))
     position = db.Column(db.String(100))
     pending_updates = db.Column(JSONB, server_default="{}", default=dict)
+    previous_injuries = db.Column(db.Text)
+    training_intensity = db.Column(db.String(50))
+    recovery_time = db.Column(db.String(50))
 
     user = db.relationship("User", back_populates="athlete_profile")
     goals = db.relationship("AthleteGoal", back_populates="athlete_profile")
