@@ -37,16 +37,7 @@
           </a>
         </li>
         
-        <li>
-          <a href="{{ url_for('coach.calendar_view') }}">
-            <i class="bi bi-circle"></i><span>Calendar</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('coach.coach_sessions_page') }}">
-            <i class="bi bi-circle"></i><span>Manage Booked Sessions</span>
-          </a>
-        </li>
+        
       </ul>
     </li>
 
@@ -57,7 +48,7 @@
       </a>
       <ul id="workouts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
-          <a href="{{ url_for('coach.create_workout_view') }}">
+          <a href="{{ url_for('coach.workout_management') }}">
             <i class="bi bi-circle"></i><span>Manage Workouts</span>
           </a>
         </li>

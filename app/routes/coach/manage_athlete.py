@@ -28,9 +28,9 @@ import joblib
 try:
     model_path = os.path.join(os.path.dirname(__file__), '..', 'prediction', 'models', 'injury_severity_pipeline.pkl')
     # طباعة المسار للتأكد من صحته أثناء التطوير
-    print(f"Loading ML model from: {model_path}")
+    # print(f"Loading ML model from: {model_path}")
     injury_model = joblib.load(model_path)
-    print("ML model loaded successfully.")
+    # print("ML model loaded successfully.")
 except FileNotFoundError:
     print(f"Error: The model file was not found at {model_path}. Please check the path.")
     injury_model = None

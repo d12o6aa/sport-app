@@ -159,16 +159,7 @@ def dashboard():
                 "type": activity_type
             })
         
-        print(f"Dashboard Stats:")
-        print(f"Total Athletes: {total_athletes_count}")
-        print(f"Active Athletes: {active_athletes_count}")
-        print(f"Avg Readiness: {avg_readiness}")
-        print(f"Total Workouts: {total_workouts_count}")
-        print(f"Total Plans: {total_plans_count}")
-        print(f"Team Completion Rate: {team_completion_rate}")
-        print(f"Attention Needed: {len(attention_needed_athletes)}")
-        print(f"Recent Activities: {len(recent_activities)}")
-        
+
         return render_template(
             "dashboard/coach_dashboard.html",
             total_athletes=total_athletes_count,
