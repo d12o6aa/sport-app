@@ -2,7 +2,6 @@
 
 {% block content %}
 <section class="section dashboard">
-  <!-- Header with Navigation -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center">
       <h5 class="m-0 me-3">Athletes Workout Management</h5>
@@ -21,7 +20,6 @@
     </button>
   </div>
 
-  <!-- Filters Row -->
   <div class="card mb-4">
     <div class="card-body p-3">
       <div class="row g-3">
@@ -67,7 +65,6 @@
     </div>
   </div>
 
-  <!-- Weekly Calendar -->
   <div class="card mb-4">
     <div class="card-body p-3">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -79,14 +76,11 @@
         </div>
       </div>
       <div class="row g-2" id="weeklyCalendar">
-        <!-- Calendar days will be inserted here -->
-      </div>
+        </div>
     </div>
   </div>
 
-  <!-- Stats Cards Row -->
   <div class="row g-3 mb-4">
-    <!-- Total Workouts -->
     <div class="col-md-3">
       <div class="card bg-gradient-primary text-white h-100">
         <div class="card-body p-3">
@@ -103,7 +97,6 @@
       </div>
     </div>
 
-    <!-- Active Athletes -->
     <div class="col-md-3">
       <div class="card bg-gradient-success text-white h-100">
         <div class="card-body p-3">
@@ -120,7 +113,6 @@
       </div>
     </div>
 
-    <!-- Total Duration -->
     <div class="col-md-3">
       <div class="card bg-gradient-info text-white h-100">
         <div class="card-body p-3">
@@ -137,7 +129,6 @@
       </div>
     </div>
 
-    <!-- Total Calories -->
     <div class="col-md-3">
       <div class="card bg-gradient-warning text-white h-100">
         <div class="card-body p-3">
@@ -155,9 +146,7 @@
     </div>
   </div>
 
-  <!-- Main Content Row -->
   <div class="row g-4">
-    <!-- Left Column - Workouts List -->
     <div class="col-md-8">
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -173,7 +162,6 @@
         </div>
         <div class="card-body p-2" style="max-height: 600px; overflow-y: auto;">
           <div id="workoutsList">
-            <!-- Workouts will be populated here -->
             <div class="text-center text-muted py-5">
               <i class="bi bi-activity fs-1"></i>
               <p class="mt-2">Loading workouts...</p>
@@ -183,9 +171,7 @@
       </div>
     </div>
 
-    <!-- Right Column - Athlete Stats & Calendar -->
     <div class="col-md-4">
-      <!-- Selected Athlete Stats -->
       <div class="card mb-3" id="athleteStatsCard" style="display: none;">
         <div class="card-header">
           <h6 class="mb-0" id="selectedAthleteName">Athlete Stats</h6>
@@ -230,19 +216,16 @@
         </div>
       </div>
 
-      <!-- Monthly Calendar -->
       <div class="card mb-3">
         <div class="card-header">
           <h6 class="mb-0" id="calendarMonth">Calendar</h6>
         </div>
         <div class="card-body p-2">
           <div id="monthlyCalendar" class="text-center">
-            <!-- Monthly calendar will be generated here -->
-          </div>
+            </div>
         </div>
       </div>
 
-      <!-- Quick Actions -->
       <div class="card">
         <div class="card-header">
           <h6 class="mb-0">Quick Actions</h6>
@@ -265,7 +248,6 @@
   </div>
 </section>
 
-<!-- Enhanced Workout Modal -->
 <div class="modal fade" id="workoutModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form id="workoutForm" class="modal-content" enctype="multipart/form-data">
@@ -276,7 +258,6 @@
       <div class="modal-body">
         <input type="hidden" id="workoutId">
         
-        <!-- Athlete Selection -->
         <div class="mb-3">
           <label class="form-label">Select Athlete <span class="text-danger">*</span></label>
           <select id="workoutAthleteId" class="form-select" required>
@@ -287,7 +268,6 @@
           </select>
         </div>
 
-        <!-- Basic Info Row -->
         <div class="row">
           <div class="col-md-8">
             <div class="mb-3">
@@ -304,12 +284,11 @@
           </div>
         </div>
 
-        <!-- Workout Type & Duration Row -->
         <div class="row">
           <div class="col-md-4">
             <div class="mb-3">
               <label class="form-label">Workout Type <span class="text-danger">*</span></label>
-              <select id="workoutType" class="form-select" required onchange="generateWorkoutImage()">
+              <select id="workoutType" class="form-select" required onchange="handleWorkoutTypeChange()">
                 <option value="strength">💪 Strength Training</option>
                 <option value="cardio">🏃 Cardio</option>
                 <option value="yoga">🧘 Yoga</option>
@@ -320,9 +299,18 @@
                 <option value="mobility">🤸 Mobility</option>
                 <option value="pilates">🤸‍♀️ Pilates</option>
                 <option value="boxing">🥊 Boxing</option>
+                <option value="other">✍️ Other (Specify)</option>
               </select>
             </div>
           </div>
+          <div class="col-md-8" id="customWorkoutTypeContainer" style="display: none;">
+             <div class="mb-3">
+                <label class="form-label">Custom Type Name <span class="text-danger">*</span></label>
+                <input id="customWorkoutType" type="text" class="form-control" placeholder="e.g., Agility Drills">
+              </div>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-md-4">
             <div class="mb-3">
               <label class="form-label">Duration (minutes) <span class="text-danger">*</span></label>
@@ -340,9 +328,19 @@
               </select>
             </div>
           </div>
+           <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select id="completionStatus" class="form-select">
+                <option value="completed">✅ Completed</option>
+                <option value="in_progress">⏳ In Progress</option>
+                <option value="partial">⚠️ Partial</option>
+                <option value="missed">❌ Missed</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <!-- Generated Image Preview -->
         <div class="row">
           <div class="col-12">
             <div class="mb-3">
@@ -359,82 +357,16 @@
           </div>
         </div>
 
-        <!-- Performance Metrics Row -->
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-12">
             <div class="mb-3">
               <label class="form-label">Calories Burned (estimated)</label>
               <input id="caloriesBurned" type="number" class="form-control" min="0" readonly>
               <small class="text-muted">Auto-calculated based on type, duration, and difficulty</small>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select id="completionStatus" class="form-select">
-                <option value="completed">✅ Completed</option>
-                <option value="in_progress">⏳ In Progress</option>
-                <option value="partial">⚠️ Partial</option>
-                <option value="missed">❌ Missed</option>
-              </select>
-            </div>
-          </div>
         </div>
-
-        <!-- Advanced Metrics (Collapsible) -->
-        <div class="accordion" id="advancedMetrics">
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                      data-bs-target="#collapseAdvanced" aria-expanded="false">
-                Advanced Metrics (Optional)
-              </button>
-            </h2>
-            <div id="collapseAdvanced" class="accordion-collapse collapse">
-              <div class="accordion-body">
-                <!-- Heart Rate Row -->
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Average Heart Rate</label>
-                      <input id="avgHeartRateInput" type="number" class="form-control" min="0" max="220" placeholder="150">
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Max Heart Rate</label>
-                      <input id="maxHeartRateInput" type="number" class="form-control" min="0" max="220" placeholder="180">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Training Effects Row -->
-                <div class="row">
-                  <div class="col-md-4">
-                    <div class="mb-3">
-                      <label class="form-label">Aerobic Effect (0-5)</label>
-                      <input id="aerobicEffect" type="number" class="form-control" min="0" max="5" step="0.1" placeholder="2.5">
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="mb-3">
-                      <label class="form-label">Anaerobic Effect (0-5)</label>
-                      <input id="anaerobicEffect" type="number" class="form-control" min="0" max="5" step="0.1" placeholder="1.2">
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="mb-3">
-                      <label class="form-label">Recovery Time (hours)</label>
-                      <input id="recoveryTimeInput" type="number" class="form-control" min="0" max="72" placeholder="24">
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Notes -->
+        
         <div class="mb-3 mt-3">
           <label class="form-label">Notes & Instructions</label>
           <textarea id="workoutNotes" class="form-control" rows="3" 
@@ -455,7 +387,6 @@
   </div>
 </div>
 
-<!-- Workout Detail Modal -->
 <div class="modal fade" id="workoutDetailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -464,8 +395,7 @@
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="workoutDetailContent">
-        <!-- Workout details will be populated here -->
-      </div>
+        </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button class="btn btn-primary" onclick="editWorkoutFromDetail()">
@@ -476,7 +406,6 @@
   </div>
 </div>
 
-<!-- Bulk Create Modal -->
 <div class="modal fade" id="bulkCreateModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -567,6 +496,7 @@ let currentFilters = {
   start_date: null,
   end_date: null
 };
+let allAthletes = []; // Store all athletes for the custom workout type dropdown
 
 // Workout type configurations
 const WORKOUT_CONFIGS = {
@@ -661,10 +591,16 @@ function formatDate(dateString) {
   });
 }
 
-// Image generation
 function generateWorkoutImage() {
   const workoutType = document.getElementById('workoutType').value;
-  const config = WORKOUT_CONFIGS[workoutType] || WORKOUT_CONFIGS.strength;
+  const customWorkoutType = document.getElementById('customWorkoutType').value;
+  const finalType = workoutType === 'other' ? customWorkoutType : workoutType;
+  
+  const config = WORKOUT_CONFIGS[finalType] || {
+    emoji: '📝', 
+    color: '#6c757d',
+    bgGradient: 'linear-gradient(135deg, #e2e2e2 0%, #c1c1c1 100%)'
+  };
   
   const canvas = document.createElement('canvas');
   canvas.width = 400;
@@ -684,7 +620,7 @@ function generateWorkoutImage() {
   
   ctx.font = 'bold 24px Arial';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(workoutType.charAt(0).toUpperCase() + workoutType.slice(1), 200, 200);
+  ctx.fillText(finalType.charAt(0).toUpperCase() + finalType.slice(1), 200, 200);
   
   const dataURL = canvas.toDataURL('image/png');
   document.getElementById('generatedImage').src = dataURL;
@@ -694,14 +630,13 @@ function generateWorkoutImage() {
   return dataURL;
 }
 
-// Calorie estimation
 function updateCaloriesEstimate() {
   const workoutType = document.getElementById('workoutType').value;
   const duration = parseInt(document.getElementById('plannedDuration').value) || 0;
   const difficulty = document.getElementById('difficultyLevel').value;
   
   if (workoutType && duration > 0) {
-    const config = WORKOUT_CONFIGS[workoutType] || WORKOUT_CONFIGS.strength;
+    const config = WORKOUT_CONFIGS[workoutType] || { caloriesPerMinute: 7 }; // Default for 'other'
     let caloriesPerMinute = config.caloriesPerMinute;
     
     const difficultyMultiplier = {
@@ -846,7 +781,9 @@ async function fetchWorkouts() {
     if (currentFilters.end_date) params.append('end_date', currentFilters.end_date);
     
     const response = await fetch(url + params.toString(), {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
     });
     
     if (!response.ok) throw new Error(await response.text() || 'Network error');
@@ -872,7 +809,6 @@ function applyFilters() {
   
   fetchWorkouts();
   
-  // Load athlete stats if specific athlete selected
   if (currentFilters.athlete_id) {
     loadAthleteStats(currentFilters.athlete_id);
   } else {
@@ -899,22 +835,21 @@ function clearFilters() {
 async function loadAthleteStats(athleteId) {
   try {
     const response = await fetch(`/coach/api/athletes/${athleteId}/stats`, {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
     });
     
     if (!response.ok) throw new Error('Failed to load stats');
     
     const stats = await response.json();
     
-    // Show stats card
     document.getElementById('athleteStatsCard').style.display = 'block';
     
-    // Get athlete name
     const athleteSelect = document.getElementById('athleteFilter');
     const athleteName = athleteSelect.options[athleteSelect.selectedIndex].text;
     document.getElementById('selectedAthleteName').textContent = `${athleteName} Stats`;
     
-    // Update stats
     document.getElementById('completionRate').textContent = `${stats.completion_rate}%`;
     document.getElementById('completionProgress').style.width = `${stats.completion_rate}%`;
     document.getElementById('athleteTotalWorkouts').textContent = stats.total_workouts;
@@ -947,7 +882,6 @@ function openAddWorkout(selectedDate = null) {
     document.getElementById('workoutDate').value = new Date().toISOString().split('T')[0];
   }
   
-  // Pre-select athlete if filtered
   if (currentFilters.athlete_id) {
     document.getElementById('workoutAthleteId').value = currentFilters.athlete_id;
   }
@@ -955,7 +889,10 @@ function openAddWorkout(selectedDate = null) {
   const modal = new bootstrap.Modal(document.getElementById('workoutModal'));
   modal.show();
   
-  setTimeout(() => generateWorkoutImage(), 100);
+  setTimeout(() => {
+    generateWorkoutImage();
+    updateCaloriesEstimate();
+  }, 100);
 }
 
 // Show workout details
@@ -970,7 +907,11 @@ function showWorkoutDetails(workoutId) {
   
   document.getElementById('detailModalTitle').textContent = workout.title;
   
-  const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+  const config = WORKOUT_CONFIGS[workout.workout_type] || { 
+    emoji: '📝',
+    color: '#6c757d',
+    bgGradient: 'linear-gradient(135deg, #e2e2e2 0%, #c1c1c1 100%)'
+  };
   
   document.getElementById('workoutDetailContent').innerHTML = `
     <div class="row">
@@ -1046,11 +987,20 @@ function editWorkoutFromDetail() {
   document.getElementById('workoutModalTitle').textContent = 'Edit Workout';
   document.getElementById('deleteWorkoutBtn').style.display = 'block';
   
-  // Populate form
   document.getElementById('workoutId').value = selectedWorkout.id;
   document.getElementById('workoutAthleteId').value = selectedWorkout.athlete_id;
   document.getElementById('workoutTitle').value = selectedWorkout.title || '';
-  document.getElementById('workoutType').value = selectedWorkout.workout_type || 'strength';
+  
+  // Set workout type and show custom field if needed
+  if(WORKOUT_CONFIGS[selectedWorkout.workout_type]) {
+    document.getElementById('workoutType').value = selectedWorkout.workout_type;
+    document.getElementById('customWorkoutTypeContainer').style.display = 'none';
+  } else {
+    document.getElementById('workoutType').value = 'other';
+    document.getElementById('customWorkoutTypeContainer').style.display = 'block';
+    document.getElementById('customWorkoutType').value = selectedWorkout.workout_type || '';
+  }
+
   document.getElementById('plannedDuration').value = selectedWorkout.planned_duration || selectedWorkout.actual_duration || 30;
   document.getElementById('caloriesBurned').value = selectedWorkout.calories_burned || 0;
   document.getElementById('difficultyLevel').value = selectedWorkout.difficulty_level || 'beginner';
@@ -1058,11 +1008,8 @@ function editWorkoutFromDetail() {
   document.getElementById('workoutDate').value = selectedWorkout.date || new Date().toISOString().split('T')[0];
   document.getElementById('workoutNotes').value = selectedWorkout.notes || '';
   
-  // Advanced metrics
   document.getElementById('avgHeartRateInput').value = selectedWorkout.avg_heart_rate || '';
   document.getElementById('maxHeartRateInput').value = selectedWorkout.max_heart_rate || '';
-  document.getElementById('aerobicEffect').value = selectedWorkout.training_effect?.aerobic || '';
-  document.getElementById('anaerobicEffect').value = selectedWorkout.training_effect?.anaerobic || '';
   document.getElementById('recoveryTimeInput').value = selectedWorkout.recovery_time || '';
   
   generateWorkoutImage();
@@ -1094,7 +1041,7 @@ function updateWorkoutsList() {
       <div class="text-center text-muted py-5">
         <i class="bi bi-calendar-x fs-1"></i>
         <p class="mt-2">No workouts found</p>
-        <button class="btn btn-primary btn-sm" onclick="openAddWorkout()">
+        <button class="btn btn-primary btn-sm mt-3" onclick="openAddWorkout()">
           <i class="bi bi-plus-lg me-1"></i> Create First Workout
         </button>
       </div>
@@ -1104,7 +1051,11 @@ function updateWorkoutsList() {
   
   if (currentView === 'list') {
     container.innerHTML = WORKOUTS.map(workout => {
-      const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+      const config = WORKOUT_CONFIGS[workout.workout_type] || { 
+        emoji: '📝',
+        color: '#6c757d',
+        bgGradient: 'linear-gradient(135deg, #e2e2e2 0%, #c1c1c1 100%)'
+      };
       const statusColor = workout.completion_status === 'completed' ? 'success' : 
                          workout.completion_status === 'in_progress' ? 'warning' : 
                          workout.completion_status === 'missed' ? 'danger' : 'secondary';
@@ -1142,7 +1093,11 @@ function updateWorkoutsList() {
     container.innerHTML = `
       <div class="row g-3 p-2">
         ${WORKOUTS.map(workout => {
-          const config = WORKOUT_CONFIGS[workout.workout_type] || WORKOUT_CONFIGS.strength;
+          const config = WORKOUT_CONFIGS[workout.workout_type] || { 
+            emoji: '📝',
+            color: '#6c757d',
+            bgGradient: 'linear-gradient(135deg, #e2e2e2 0%, #c1c1c1 100%)'
+          };
           const statusColor = workout.completion_status === 'completed' ? 'success' : 
                              workout.completion_status === 'in_progress' ? 'warning' : 
                              workout.completion_status === 'missed' ? 'danger' : 'secondary';
@@ -1189,7 +1144,6 @@ function setView(view) {
 document.getElementById('workoutForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  // Validate athlete selection
   const athleteId = document.getElementById('workoutAthleteId').value;
   if (!athleteId) {
     alertShow('Please select an athlete', 'warning');
@@ -1205,6 +1159,12 @@ document.getElementById('workoutForm').addEventListener('submit', async (e) => {
   formData.append('athlete_id', athleteId);
   formData.append('title', document.getElementById('workoutTitle').value);
   formData.append('workout_type', document.getElementById('workoutType').value);
+  
+  const customWorkoutTypeInput = document.getElementById('customWorkoutType');
+  if (document.getElementById('workoutType').value === 'other' && customWorkoutTypeInput.value) {
+    formData.append('custom_workout_type', customWorkoutTypeInput.value);
+  }
+  
   formData.append('planned_duration', document.getElementById('plannedDuration').value);
   formData.append('actual_duration', document.getElementById('plannedDuration').value);
   formData.append('calories_burned', document.getElementById('caloriesBurned').value || '0');
@@ -1212,24 +1172,6 @@ document.getElementById('workoutForm').addEventListener('submit', async (e) => {
   formData.append('completion_status', document.getElementById('completionStatus').value);
   formData.append('date', document.getElementById('workoutDate').value);
   formData.append('notes', document.getElementById('workoutNotes').value);
-  
-  const avgHR = document.getElementById('avgHeartRateInput').value;
-  const maxHR = document.getElementById('maxHeartRateInput').value;
-  const aerobicEffect = document.getElementById('aerobicEffect').value;
-  const anaerobicEffect = document.getElementById('anaerobicEffect').value;
-  const recoveryTime = document.getElementById('recoveryTimeInput').value;
-  
-  if (avgHR) formData.append('avg_heart_rate', avgHR);
-  if (maxHR) formData.append('max_heart_rate', maxHR);
-  if (recoveryTime) formData.append('recovery_time', recoveryTime);
-  
-  if (aerobicEffect || anaerobicEffect) {
-    const trainingEffects = {
-      aerobic: parseFloat(aerobicEffect) || 0,
-      anaerobic: parseFloat(anaerobicEffect) || 0
-    };
-    formData.append('training_effects', JSON.stringify(trainingEffects));
-  }
   
   const generatedImageDataURL = generateWorkoutImage();
   if (generatedImageDataURL) {
@@ -1246,7 +1188,9 @@ document.getElementById('workoutForm').addEventListener('submit', async (e) => {
     
     const response = await fetch(url, {
       method: method,
-      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      },
       body: formData
     });
     
@@ -1272,6 +1216,19 @@ document.getElementById('workoutForm').addEventListener('submit', async (e) => {
   }
 });
 
+function handleWorkoutTypeChange() {
+  const workoutType = document.getElementById('workoutType').value;
+  const customContainer = document.getElementById('customWorkoutTypeContainer');
+  if (workoutType === 'other') {
+    customContainer.style.display = 'block';
+  } else {
+    customContainer.style.display = 'none';
+  }
+  generateWorkoutImage();
+  updateCaloriesEstimate();
+}
+
+
 function resetForm() {
   document.getElementById('workoutForm').reset();
   editingWorkoutId = null;
@@ -1282,11 +1239,7 @@ function resetForm() {
   
   document.getElementById('generatedImage').style.display = 'none';
   document.getElementById('imagePlaceholder').style.display = 'flex';
-  
-  const advancedCollapse = document.getElementById('collapseAdvanced');
-  if (advancedCollapse.classList.contains('show')) {
-    bootstrap.Collapse.getInstance(advancedCollapse)?.hide();
-  }
+  document.getElementById('customWorkoutTypeContainer').style.display = 'none';
 }
 
 async function deleteWorkout() {
@@ -1297,7 +1250,9 @@ async function deleteWorkout() {
   try {
     const response = await fetch(`/coach/api/workouts/${editingWorkoutId}`, {
       method: 'DELETE',
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
     });
     
     const data = await response.json();
@@ -1360,7 +1315,9 @@ async function createBulkWorkouts() {
       
       const response = await fetch('/coach/api/workouts', {
         method: 'POST',
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
         body: formData
       });
       
@@ -1427,115 +1384,49 @@ function generateReport() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('workoutDate').value = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('workoutDate').value = today;
+  document.getElementById('bulkDate').value = today;
   
   fetchWorkouts();
   generateWeeklyCalendar();
   generateMonthlyCalendar();
   
-  document.getElementById('workoutType').addEventListener('change', () => {
-    generateWorkoutImage();
-    updateCaloriesEstimate();
-  });
-  
+  document.getElementById('workoutType').addEventListener('change', handleWorkoutTypeChange);
+  document.getElementById('customWorkoutType').addEventListener('input', generateWorkoutImage);
   document.getElementById('plannedDuration').addEventListener('input', updateCaloriesEstimate);
   document.getElementById('difficultyLevel').addEventListener('change', updateCaloriesEstimate);
   
   document.getElementById('workoutModal').addEventListener('hidden.bs.modal', resetForm);
   
-  setTimeout(() => generateWorkoutImage(), 500);
+  setTimeout(() => {
+    generateWorkoutImage();
+    updateCaloriesEstimate();
+  }, 500);
 });
 </script>
 
 <style>
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.bg-gradient-success {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-}
-
-.bg-gradient-info {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.bg-gradient-warning {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
+.bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.bg-gradient-success { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); }
+.bg-gradient-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.bg-gradient-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
 
 .workout-item:hover,
-.workout-card:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
-}
-
+.workout-card:hover { background-color: #f8f9fa; transform: translateY(-2px); transition: all 0.3s ease; }
 .calendar-day:hover,
-.calendar-mini-day:hover {
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.card {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  border: none;
-  transition: box-shadow 0.3s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-}
-
-.workout-card {
-  border-left: 4px solid #667eea;
-}
-
-#imagePreview {
-  transition: all 0.3s ease;
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-}
-
-.badge {
-  font-weight: 500;
-  padding: 0.35em 0.65em;
-}
-
-.calendar-day,
-.calendar-mini-day {
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.progress {
-  height: 8px;
-  border-radius: 10px;
-}
-
-.progress-bar {
-  border-radius: 10px;
-}
-
-@media (max-width: 768px) {
-  .col-md-8, .col-md-4 {
-    margin-bottom: 1rem;
-  }
-}
+.calendar-mini-day:hover { opacity: 0.8; transition: opacity 0.2s ease; }
+.card { box-shadow: 0 2px 4px rgba(0,0,0,0.08); border: none; transition: box-shadow 0.3s ease; }
+.card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
+.workout-card { border-left: 4px solid #667eea; }
+#imagePreview { transition: all 0.3s ease; }
+.form-control:focus, .form-select:focus { border-color: #667eea; box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); }
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+.btn-primary:hover { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3); }
+.badge { font-weight: 500; padding: 0.35em 0.65em; }
+.calendar-day, .calendar-mini-day { transition: all 0.2s ease; user-select: none; }
+.progress { height: 8px; border-radius: 10px; }
+.progress-bar { border-radius: 10px; }
+@media (max-width: 768px) { .col-md-8, .col-md-4 { margin-bottom: 1rem; } }
 </style>
 {% endblock %}

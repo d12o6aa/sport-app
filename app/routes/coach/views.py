@@ -24,11 +24,6 @@ def view_plan(plan_id):
 
 
 
-# ================== Dashboard ==================
-@coach_bp.route("/dashboard")
-@jwt_required()
-def dashboard_view():
-    return render_template("coach/dashboard.html")
 
 # ================== Athletes ==================
 @coach_bp.route("/manage_athletes")

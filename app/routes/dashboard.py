@@ -13,9 +13,9 @@ def dashboard():
     if role == 'admin':
         return redirect(url_for('admin.dashboard'))
     elif role == 'coach':
-        return render_template('dashboard/coach_dashboard.html')
+        return redirect(url_for('coach.dashboard'))
     elif role == 'athlete':
-        return render_template('dashboard/athlete_dashboard.html')
+        return redirect(url_for('athlete.dashboard'))
     else:
         abort(403)
         
