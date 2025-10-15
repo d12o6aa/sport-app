@@ -300,6 +300,7 @@ def reset_athlete_password(id):
     db.session.commit()
     return jsonify({"msg": "Password reset successfully"}), 200
 
+
 # ---------------- Toggle Status ----------------
 @athlete_bp.route("/toggle_status/<int:id>", methods=["PATCH"])
 @jwt_required()

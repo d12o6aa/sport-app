@@ -91,10 +91,6 @@ def view_coach_feedback():
     return render_template("athlete/view_coach_feedback.html")
 
 
-@athlete_bp.route("/workouts")
-@jwt_required()
-def workouts():
-    return render_template("athlete/workouts.html")
 
 @athlete_bp.route("/health")
 @jwt_required()

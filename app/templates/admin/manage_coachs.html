@@ -553,17 +553,34 @@ async function bulkChangeRole() {
   }
 }
 
-// Reset Password
-async function resetPassword(userId) {
-  if (!confirm("Reset this coach's password?")) return;
-  const res = await fetch(`/coach/reset_password/${userId}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
-  });
-  if (res.ok) {
-    showAlert("Password reset successful!", "success");
-  } else {
-    showAlert("Password reset failed", "danger");
+// Corrected function to reset a user's password
+async function resetPassword(id) {
+  if (!confirm("Are you sure you want to reset this user's password to the default?")) {
+    return;
+  }
+
+  try {
+    const url = `/api/auth/reset_password/${id}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.msg || "Failed to reset password.");
+    }
+
+    showAlert(data.msg, "success");
+    // You might want to reload the user list here if necessary
+  
+  } catch (error) {
+    console.error("API call failed:", error);
+    showAlert(error.message, "danger");
   }
 }
 </script>

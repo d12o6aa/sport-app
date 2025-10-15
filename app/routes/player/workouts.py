@@ -1,13 +1,13 @@
-from flask import request, jsonify, render_template
-from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
+from flask import Blueprint, request, jsonify, render_template, url_for
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-from app.models.workout_log import WorkoutLog
-from app.models.exercises import Exercise
-from app.models.workout_log_exercises import WorkoutLogExercise
+from app.models import WorkoutLog, AthleteProgress, Exercise, User
+from sqlalchemy import desc, func, and_, or_,cast, String
+from datetime import datetime, date, timedelta
 import os
 from werkzeug.utils import secure_filename
-from datetime import datetime, date, timedelta
 import json
+import traceback
 
 from . import athlete_bp
 
@@ -20,33 +20,27 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # =========================================================
-# API Endpoints
+# View Routes (Renders HTML Pages)
+# =========================================================
+
+@athlete_bp.route("/workouts")
+@jwt_required()
+def workout_hub_page():
+    return render_template("athlete/workout_hub.html")
+
+# =========================================================
+# API Endpoints for Data Fetching and Management
 # =========================================================
 
 @athlete_bp.route("/api/workouts", methods=["GET"])
-@jwt_required()  # Protect this endpoint
+@jwt_required()
 def get_workouts():
     try:
         athlete_id = get_jwt_identity()
-        
-        # Get date range parameters
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        workout_type = request.args.get('type')
-        
-        query = WorkoutLog.query.filter_by(athlete_id=athlete_id)
-        
-        if start_date:
-            query = query.filter(WorkoutLog.date >= datetime.strptime(start_date, '%Y-%m-%d').date())
-        if end_date:
-            query = query.filter(WorkoutLog.date <= datetime.strptime(end_date, '%Y-%m-%d').date())
-        if workout_type:
-            query = query.filter(WorkoutLog.workout_type == workout_type)
-            
-        workouts = query.order_by(WorkoutLog.date.desc(), WorkoutLog.logged_at.desc()).all()
-        
+        workouts = WorkoutLog.query.filter_by(athlete_id=athlete_id).order_by(desc(WorkoutLog.date), desc(WorkoutLog.logged_at)).all()
         return jsonify([workout.to_dict() for workout in workouts])
     except Exception as e:
+        print(f"Error in get_workouts: {e}")
         return jsonify({"msg": str(e)}), 400
 
 @athlete_bp.route("/api/workouts/create", methods=["POST"])
@@ -55,7 +49,6 @@ def handle_create_workout():
     try:
         athlete_id = get_jwt_identity()
         
-        # Handle file upload (if needed)
         image_url = None
         if 'image' in request.files:
             file = request.files['image']
@@ -66,15 +59,25 @@ def handle_create_workout():
         
         data = request.form
         
+        workout_type_value = data.get('workout_type', 'other')
+        custom_workout_type = data.get('custom_workout_type', None)
+        final_workout_type = custom_workout_type if workout_type_value == 'other' and custom_workout_type else workout_type_value
+
         new_workout = WorkoutLog(
             athlete_id=athlete_id,
             title=data.get("title", "New Custom Workout"),
-            workout_type=data.get("workout_type", "strength"),
+            workout_type=final_workout_type,
+            session_type="workout",
             difficulty_level=data.get("difficulty_level", "beginner"),
-            actual_duration=int(data.get("duration", 0)),
-            calories_burned=int(data.get("calories", 0)),
+            planned_duration=int(data.get("planned_duration", 0)),
+            actual_duration=int(data.get("actual_duration", 0)),
+            calories_burned=int(data.get("calories_burned", 0)),
+            avg_heart_rate=int(data.get("avg_heart_rate", 0)) if data.get("avg_heart_rate") else None,
+            max_heart_rate=int(data.get("max_heart_rate", 0)) if data.get("max_heart_rate") else None,
+            recovery_time=int(data.get("recovery_time", 0)) if data.get("recovery_time") else None,
             notes=data.get("notes"),
             image_url=image_url,
+            completion_status=data.get("completion_status", "completed"),
             date=datetime.strptime(data.get("date"), '%Y-%m-%d').date() if data.get("date") else date.today()
         )
         
@@ -88,6 +91,7 @@ def handle_create_workout():
         
     except Exception as e:
         db.session.rollback()
+        print(f"Error creating workout: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
 
 @athlete_bp.route("/api/workouts/<int:workout_id>", methods=["PUT"])
@@ -95,28 +99,26 @@ def handle_create_workout():
 def update_workout(workout_id):
     try:
         athlete_id = get_jwt_identity()
-        
         workout = WorkoutLog.query.filter_by(id=workout_id, athlete_id=athlete_id).first_or_404()
+        
         data = request.form
         
-        # Update fields
-        for field in ['title', 'workout_type', 'session_type', 'feedback', 'notes', 
-                     'completion_status', 'difficulty_level']:
+        workout_type_value = data.get('workout_type', 'other')
+        custom_workout_type = data.get('custom_workout_type', None)
+        final_workout_type = custom_workout_type if workout_type_value == 'other' and custom_workout_type else workout_type_value
+
+        for field in ['title', 'notes', 'completion_status', 'difficulty_level']:
             if data.get(field):
                 setattr(workout, field, data.get(field))
         
-        # Update numeric fields
-        for field in ['planned_duration', 'actual_duration', 'total_time', 'calories_burned', 
-                     'avg_heart_rate', 'max_heart_rate', 'recovery_time']:
-            if data.get(field):
-                setattr(workout, field, int(data.get(field)))
-        
-        # Update JSON fields
-        for field in ['hr_zones', 'training_effects', 'workout_details', 'metrics', 'heart_rate_data']:
-            if data.get(field):
-                setattr(workout, field.replace('_', '-'), json.loads(data.get(field))) # Assuming model has fields like workout_details, not workout-details
-        
-        # Handle file upload
+        workout.workout_type = final_workout_type
+        workout.planned_duration = int(data.get('planned_duration')) if data.get('planned_duration') else workout.planned_duration
+        workout.actual_duration = int(data.get('actual_duration')) if data.get('actual_duration') else workout.actual_duration
+        workout.calories_burned = int(data.get('calories_burned')) if data.get('calories_burned') else workout.calories_burned
+        workout.avg_heart_rate = int(data.get('avg_heart_rate')) if data.get('avg_heart_rate') else workout.avg_heart_rate
+        workout.max_heart_rate = int(data.get('max_heart_rate')) if data.get('max_heart_rate') else workout.max_heart_rate
+        workout.recovery_time = int(data.get('recovery_time')) if data.get('recovery_time') else workout.recovery_time
+
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename != '' and allowed_file(file.filename):
@@ -132,6 +134,7 @@ def update_workout(workout_id):
         
     except Exception as e:
         db.session.rollback()
+        print(f"Error updating workout: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
 
 @athlete_bp.route("/api/workouts/<int:workout_id>", methods=["DELETE"])
@@ -139,71 +142,47 @@ def update_workout(workout_id):
 def delete_workout(workout_id):
     try:
         athlete_id = get_jwt_identity()
-        
         workout = WorkoutLog.query.filter_by(id=workout_id, athlete_id=athlete_id).first_or_404()
         db.session.delete(workout)
         db.session.commit()
-        
         return jsonify({"msg": "Workout deleted successfully!"})
     except Exception as e:
         db.session.rollback()
+        print(f"Error deleting workout: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
-
-@athlete_bp.route("/api/workouts/stats", methods=["GET"])
+        
+@athlete_bp.route("/api/progress", methods=["GET"])
 @jwt_required()
-def get_workout_stats():
+def get_progress_data():
     try:
         athlete_id = get_jwt_identity()
+        days = request.args.get('days', 30, type=int)
+        start_date = datetime.utcnow() - timedelta(days=days)
+
+        workouts_data = WorkoutLog.query.filter_by(athlete_id=athlete_id).filter(
+            WorkoutLog.date >= start_date.date()
+        ).order_by(WorkoutLog.date).all()
         
-        end_date = date.today()
-        start_date = end_date - timedelta(days=30)
+        progress_data = AthleteProgress.query.filter_by(athlete_id=athlete_id).filter(
+            AthleteProgress.date >= start_date.date()
+        ).order_by(AthleteProgress.date).all()
         
-        if request.args.get('start_date'):
-            start_date = datetime.strptime(request.args.get('start_date'), '%Y-%m-%d').date()
-        if request.args.get('end_date'):
-            end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d').date()
+        dates = sorted(list(set([w.date.isoformat() for w in workouts_data] + [p.date.isoformat() for p in progress_data])))
         
-        workouts = WorkoutLog.query.filter(
-            WorkoutLog.athlete_id == athlete_id,
-            WorkoutLog.date >= start_date,
-            WorkoutLog.date <= end_date,
-            WorkoutLog.completion_status == 'completed'
-        ).all()
+        workout_map = {w.date.isoformat(): w for w in workouts_data}
+        progress_map = {p.date.isoformat(): p for p in progress_data}
         
-        total_workouts = len(workouts)
-        total_time = sum(w.actual_duration or 0 for w in workouts)
-        total_calories = sum(w.calories_burned or 0 for w in workouts)
-        avg_heart_rate = sum(w.avg_heart_rate or 0 for w in workouts if w.avg_heart_rate) / max(1, len([w for w in workouts if w.avg_heart_rate]))
-        
-        type_breakdown = {}
-        for workout in workouts:
-            wtype = workout.workout_type
-            if wtype not in type_breakdown:
-                type_breakdown[wtype] = {"count": 0, "time": 0, "calories": 0}
-            type_breakdown[wtype]["count"] += 1
-            type_breakdown[wtype]["time"] += workout.actual_duration or 0
-            type_breakdown[wtype]["calories"] += workout.calories_burned or 0
-        
-        recent_workouts = WorkoutLog.query.filter_by(
-            athlete_id=athlete_id
-        ).order_by(WorkoutLog.date.desc()).limit(7).all()
+        calories_burned = [workout_map.get(d).calories_burned or 0 for d in dates if d in workout_map]
+        weights = [progress_map.get(d).weight or 0 for d in dates if d in progress_map]
         
         return jsonify({
-            "period": {
-                "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat()
-            },
-            "summary": {
-                "total_workouts": total_workouts,
-                "total_time_minutes": total_time,
-                "total_calories": total_calories,
-                "avg_heart_rate": round(avg_heart_rate) if avg_heart_rate else 0
-            },
-            "type_breakdown": type_breakdown,
-            "recent_workouts": [w.to_dict() for w in recent_workouts]
+            "labels": dates,
+            "calories_burned": calories_burned,
+            "weights": weights
         })
-        
+
     except Exception as e:
+        print(f"Error in get_progress_data: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
 
 @athlete_bp.route("/api/workouts/filter", methods=["POST"])
@@ -232,10 +211,11 @@ def filter_workouts_api():
             elif duration_range == '60+':
                 query = query.filter(WorkoutLog.actual_duration >= 60)
         
-        workouts = query.order_by(WorkoutLog.date.desc()).all()
+        workouts = query.order_by(desc(WorkoutLog.date)).all()
         return jsonify([w.to_dict() for w in workouts])
         
     except Exception as e:
+        print(f"Error in filter_workouts_api: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
 
 @athlete_bp.route("/api/workouts/top", methods=["GET"])
@@ -255,54 +235,92 @@ def get_top_workouts_api():
         elif sort_by == 'duration':
             workouts = query.order_by(WorkoutLog.actual_duration.desc()).limit(10).all()
         else:  # recent
-            workouts = query.order_by(WorkoutLog.date.desc()).limit(10).all()
+            workouts = query.order_by(desc(WorkoutLog.date)).limit(10).all()
             
         return jsonify([w.to_dict() for w in workouts])
         
     except Exception as e:
+        print(f"Error in get_top_workouts_api: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
-
 @athlete_bp.route("/api/exercises", methods=["GET"])
 @jwt_required()
 def get_exercises():
     try:
-        body_part = request.args.get('body_part')
-        if not body_part:
+        body_parts_str = request.args.get('body_part')
+        if not body_parts_str:
             return jsonify({"msg": "Missing body part parameter"}), 400
         
-        exercises = Exercise.query.filter(Exercise.body_parts.ilike(f'%{body_part}%')).all()
+        body_parts = [part.strip().lower() for part in body_parts_str.split(',')]
+        
+        # Option 1: Using PostgreSQL's ?| operator correctly with text casting
+        # The ?| operator checks if any of the strings in an array exist as top-level keys
+        # We need to cast muscle_groups to text and use LIKE for flexible matching
+        
+        query = db.session.query(Exercise).filter(Exercise.is_active == True)
+        
+        # Build OR conditions for each body part
+        conditions = []
+        for body_part in body_parts:
+            # Cast JSON to text and use ILIKE for case-insensitive search
+            conditions.append(
+                cast(Exercise.muscle_groups, String).ilike(f'%{body_part}%')
+            )
+        
+        if conditions:
+            query = query.filter(or_(*conditions))
+        
+        exercises = query.all()
         
         return jsonify([ex.to_dict() for ex in exercises])
         
     except Exception as e:
-        return jsonify({"msg": str(e)}), 400
+        print(f"Error in get_exercises: {traceback.format_exc()}")
+        return jsonify({"msg": "An error occurred while fetching exercises."}), 400
 
-# =========================================================
-# View Routes (Renders HTML Pages)
-# =========================================================
 
-@athlete_bp.route("/workout/filter")
+# Alternative implementation if you need more precise JSON array matching:
+@athlete_bp.route("/api/exercises/precise", methods=["GET"])
 @jwt_required()
-def workout_filter_page():
-    return render_template("athlete/workout/filter.html")
-
-@athlete_bp.route("/workout/top-filter")
-@jwt_required()
-def workout_top_filter_page():
-    return render_template("athlete/workout/top_filter.html")
-
-@athlete_bp.route("/workout/body-workout")
-@jwt_required()
-def body_workout_page():
-    return render_template("athlete/workout/body_workout.html")
-
-@athlete_bp.route("/workout/create")
-@jwt_required()
-def create_workout_page():
-    return render_template("athlete/workout/create_workout.html")
-
-@athlete_bp.route("/workout/summary")
-@jwt_required()
-def workout_summary_page():
-    # This route would show a summary of a specific workout or overall stats
-    return render_template("athlete/workout/summary.html")
+def get_exercises_precise():
+    """
+    Alternative implementation using PostgreSQL's jsonb_array_elements
+    This is more precise but requires jsonb column type
+    """
+    try:
+        body_parts_str = request.args.get('body_part')
+        if not body_parts_str:
+            return jsonify({"msg": "Missing body part parameter"}), 400
+        
+        body_parts = [part.strip().lower() for part in body_parts_str.split(',')]
+        
+        # Use raw SQL for complex JSON operations
+        from sqlalchemy import text
+        
+        placeholders = ', '.join([f':body_part_{i}' for i in range(len(body_parts))])
+        
+        sql = text(f"""
+            SELECT DISTINCT e.*
+            FROM exercises e,
+                 jsonb_array_elements_text(e.muscle_groups) AS muscle_group
+            WHERE LOWER(muscle_group) IN ({placeholders})
+              AND e.is_active = true
+        """)
+        
+        # Create parameter dict
+        params = {f'body_part_{i}': body_part for i, body_part in enumerate(body_parts)}
+        
+        result = db.session.execute(sql, params)
+        exercises = result.fetchall()
+        
+        # Convert to dict manually since we used raw SQL
+        exercises_list = []
+        for row in exercises:
+            exercise = Exercise.query.get(row.id)
+            if exercise:
+                exercises_list.append(exercise.to_dict())
+        
+        return jsonify(exercises_list)
+        
+    except Exception as e:
+        print(f"Error in get_exercises_precise: {traceback.format_exc()}")
+        return jsonify({"msg": "An error occurred while fetching exercises."}), 400

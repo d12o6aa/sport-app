@@ -412,17 +412,34 @@ async function toggleActive(id) {
   }
 }
 
-// Reset Password
+// Corrected function to reset a user's password
 async function resetPassword(id) {
-  if (!confirm("Reset this athlete's password?")) return;
-  
-  const data = await apiFetch(`/athlete/reset_password/${id}`, { 
-    method: "POST",
-    headers: { 'Content-Type': 'application/json' }
-  });
-  
-  if (data) {
+  if (!confirm("Are you sure you want to reset this user's password to the default?")) {
+    return;
+  }
+
+  try {
+    const url = `/api/auth/reset_password/${id}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.msg || "Failed to reset password.");
+    }
+
     showAlert(data.msg, "success");
+    // You might want to reload the user list here if necessary
+  
+  } catch (error) {
+    console.error("API call failed:", error);
+    showAlert(error.message, "danger");
   }
 }
 
