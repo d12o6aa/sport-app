@@ -132,6 +132,7 @@ def login_post():
     
     response = jsonify({
         "msg": "Login successful",
+        
         "user": {
             "id": user.id,
             "name": user.name,

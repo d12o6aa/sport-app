@@ -249,4 +249,4 @@ def dashboard():
         SessionSchedule.scheduled_at < datetime.combine(today + timedelta(days=1), datetime.min.time())
     ).order_by(SessionSchedule.scheduled_at).all()
     points = PointsLog.query.filter_by(athlete_id=identity).order_by(PointsLog.awarded_at.desc()).limit(5).all()
-    return render_template("athlete/dashboard.html", tasks=tasks, notifications=notifications, sessions=sessions, points=points)
+    return render_template("dashboard/athlete_dashboard.html", tasks=tasks, notifications=notifications, sessions=sessions, points=points)

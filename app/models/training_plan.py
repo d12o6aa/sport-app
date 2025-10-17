@@ -13,6 +13,7 @@ class TrainingPlan(db.Model):
     description = db.Column(db.Text)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
+    progress = db.Column(db.Integer, nullable=False, default=0)  # New field for progress percentage
 
     workout_type_id = db.Column(db.Integer, db.ForeignKey("workout_types.id"), nullable=True)  # Nullable if not always required
     status = db.Column(

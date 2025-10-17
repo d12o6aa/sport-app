@@ -50,7 +50,7 @@ def profile():
 @athlete_bp.route("/dashboard")
 @jwt_required()
 def dashboard_view():
-    return render_template("athlete/dashboard.html")
+    return render_template("dashboard/athlete_dashboard.html")
 
 # Training
 @athlete_bp.route("/my_plans")

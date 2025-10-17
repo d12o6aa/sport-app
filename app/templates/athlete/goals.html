@@ -1,367 +1,46 @@
 {% extends "shared/base.html" %}
 
-{% block style %}
-<style>
-  :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --glass-bg: rgba(255, 255, 255, 0.15);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.37);
-    --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.4);
-  }
-
-  body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-  }
-
-  .progress-bar {
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--success-gradient);
-    border-radius: 10px;
-  }
-
-  .card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    box-shadow: var(--shadow-soft);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-hover);
-  }
-
-  .info-card {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .info-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.6s;
-  }
-
-  .info-card:hover::before {
-    left: 100%;
-  }
-
-  .card-icon {
-    background: var(--primary-gradient);
-    width: 60px;
-    height: 60px;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    transition: all 0.3s ease;
-  }
-
-  .card-icon:hover {
-    transform: scale(1.1) rotate(5deg);
-  }
-
-  .btn {
-    border-radius: 15px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary {
-    background: var(--primary-gradient);
-    border: none;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  }
-
-  .btn-outline-secondary {
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    backdrop-filter: blur(10px);
-  }
-
-  .btn-outline-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    color: white;
-    transform: translateY(-2px);
-  }
-
-  .form-control, .form-select {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 15px;
-    color: white;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-  }
-
-  .form-control:focus, .form-select:focus {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: #667eea;
-    color: white;
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
-  }
-
-  .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .form-select option {
-    background: #2d3748;
-    color: white;
-  }
-
-  .goal-card {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .goal-card:hover {
-    transform: translateY(-10px) scale(1.02);
-  }
-
-  .goal-card.completed {
-    background: linear-gradient(145deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
-    border-color: rgba(76, 175, 80, 0.4);
-  }
-
-  .goal-card.completed::after {
-    content: '✓';
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
-    background: var(--success-gradient);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1.2rem;
-    z-index: 10;
-  }
-
-  .progress {
-    height: 8px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-  }
-
-  .badge {
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.75rem;
-  }
-
-  .bg-success {
-    background: var(--success-gradient) !important;
-  }
-
-  .bg-primary {
-    background: var(--primary-gradient) !important;
-  }
-
-  .bg-secondary {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
-  }
-
-  .text-bg-light {
-    background: rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    backdrop-filter: blur(10px);
-  }
-
-  .chart-container {
-    height: 120px;
-    margin: 1rem 0;
-    position: relative;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 0.5rem;
-    backdrop-filter: blur(10px);
-  }
-
-  .modal-content {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 20px;
-  }
-
-  .modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .modal-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .btn-sm {
-    border-radius: 10px;
-  }
-
-  .btn-light {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    backdrop-filter: blur(10px);
-  }
-
-  .btn-light:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-    transform: scale(1.05);
-  }
-
-  .text-danger:hover {
-    background: var(--secondary-gradient) !important;
-    border-color: transparent !important;
-  }
-
-  .text-muted {
-    color: rgba(255, 255, 255, 0.7) !important;
-  }
-
-  .small {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .section.dashboard {
-    padding: 2rem 0;
-  }
-
-  .form-label {
-    color: #333;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .text-center.py-5 {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .bi-emoji-neutral {
-    font-size: 4rem;
-    opacity: 0.6;
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .slide-in {
-    animation: slideIn 0.6s ease-out;
-  }
-
-  .goal-image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 150px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 20px 20px 0 0;
-    opacity: 0.3;
-  }
-
-  .goal-content {
-    position: relative;
-    z-index: 2;
-  }
-
-  .update-input-group {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 0.5rem;
-    margin-top: 1rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .priority-high {
-    border-left: 4px solid #ff4757;
-  }
-
-  .priority-medium {
-    border-left: 4px solid #ffa502;
-  }
-
-  .priority-low {
-    border-left: 4px solid #2ed573;
-  }
-
-  h5, h6 {
-    color: white;
-  }
-
-  .card-title {
-    color: white;
-    font-weight: 700;
-  }
-</style>
-{% endblock %}
-
 {% block content %}
-<section class="section dashboard">
-  <div class="row g-3">
+<div class="pagetitle">
+  <h1>Goals Dashboard</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Athlete Dashboard</a></li>
+      <li class="breadcrumb-item active">Goals</li>
+    </ol>
+  </nav>
+</div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h2 class="m-0 text-white fw-bold">🎯 Goals Dashboard</h2>
-        <p class="text-white-50 mb-0">Track your progress and achieve your dreams</p>
-      </div>
-      <div>
-        <button class="btn btn-outline-secondary me-2" id="refreshGoals">
-          <i class="bi bi-arrow-repeat me-1"></i> Refresh
-        </button>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#goalModal">
-          <i class="bi bi-plus-lg me-1"></i> Add Goal
-        </button>
-      </div>
+<section class="section">
+  <!-- Action Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <p class="text-muted mb-0">Track your progress and achieve your dreams</p>
     </div>
+    <div>
+      <button class="btn btn-outline-secondary me-2" id="refreshGoals">
+        <i class="bi bi-arrow-repeat me-1"></i> Refresh
+      </button>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#goalModal">
+        <i class="bi bi-plus-lg me-1"></i> Add Goal
+      </button>
+    </div>
+  </div>
 
+  <!-- Stats Cards -->
+  <div class="row g-3 mb-4">
     <div class="col-xxl-3 col-md-6">
-      <div class="card info-card sales-card slide-in">
+      <div class="card info-card sales-card">
         <div class="card-body">
           <h5 class="card-title">Active Goals</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-bullseye text-white"></i>
+              <i class="bi bi-bullseye"></i>
             </div>
             <div class="ps-3">
               <h6 id="activeGoalsCount">0</h6>
-              <span class="text-muted small">Currently in progress</span>
+              <span class="text-muted small pt-1">Currently in progress</span>
             </div>
           </div>
         </div>
@@ -369,16 +48,16 @@
     </div>
 
     <div class="col-xxl-3 col-md-6">
-      <div class="card info-card revenue-card slide-in" style="animation-delay: 0.1s;">
+      <div class="card info-card revenue-card">
         <div class="card-body">
           <h5 class="card-title">Completed</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-check2-circle text-white"></i>
+              <i class="bi bi-check2-circle"></i>
             </div>
             <div class="ps-3">
               <h6 id="completedGoalsCount">0</h6>
-              <span class="text-muted small">All time</span>
+              <span class="text-muted small pt-1">All time</span>
             </div>
           </div>
         </div>
@@ -386,16 +65,16 @@
     </div>
 
     <div class="col-xxl-3 col-md-6">
-      <div class="card info-card slide-in" style="animation-delay: 0.2s;">
+      <div class="card info-card customers-card">
         <div class="card-body">
           <h5 class="card-title">Average Progress</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-graph-up text-white"></i>
+              <i class="bi bi-graph-up"></i>
             </div>
             <div class="ps-3">
               <h6 id="averageProgress">0%</h6>
-              <span class="text-muted small">Overall completion</span>
+              <span class="text-muted small pt-1">Overall completion</span>
             </div>
           </div>
         </div>
@@ -403,102 +82,118 @@
     </div>
 
     <div class="col-xxl-3 col-md-6">
-      <div class="card info-card slide-in" style="animation-delay: 0.3s;">
+      <div class="card info-card">
         <div class="card-body">
           <h5 class="card-title">This Week</h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-calendar-week text-white"></i>
+              <i class="bi bi-calendar-week"></i>
             </div>
             <div class="ps-3">
               <h6 id="thisWeekUpdates">0</h6>
-              <span class="text-muted small">Goals updated</span>
+              <span class="text-muted small pt-1">Goals updated</span>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12">
-      <div class="card">
-        <div class="card-body">
-          <div class="row g-2 align-items-end mb-3">
-            <div class="col-md-4">
-              <label class="form-label small text-white-50">Search</label>
-              <input id="goalSearch" type="text" class="form-control" placeholder="🔍 Search by title or tag">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small text-white-50">Status</label>
-              <select id="goalStatusFilter" class="form-select">
-                <option value="">All Status</option>
-                <option value="in progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="not started">Not Started</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small text-white-50">Sort by</label>
-              <select id="goalSort" class="form-select">
-                <option value="due_asc">Due Date ↑</option>
-                <option value="due_desc">Due Date ↓</option>
-                <option value="progress_desc">Progress ↓</option>
-                <option value="progress_asc">Progress ↑</option>
-                <option value="created_desc">Newest First</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label small text-white-50">Priority</label>
-              <select id="goalPriorityFilter" class="form-select">
-                <option value="">All Priority</option>
-                <option value="high">🔴 High</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="low">🟢 Low</option>
-              </select>
-            </div>
-          </div>
-          <div id="goalsList" class="row g-3"></div>
-          <div id="goalsEmpty" class="text-center py-5 d-none">
-            <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
-            <h4 class="mt-3 text-white">No goals yet</h4>
-            <p class="text-white-50">Start your journey by adding your first goal!</p>
-            <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#goalModal">
-              <i class="bi bi-plus-lg me-1"></i> Create Your First Goal
-            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Filters Card -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Filters & Search</h5>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <input id="goalSearch" type="text" class="form-control" placeholder="🔍 Search by title or tag">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select id="goalStatusFilter" class="form-select">
+            <option value="">All Status</option>
+            <option value="in progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="not started">Not Started</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Priority</label>
+          <select id="goalPriorityFilter" class="form-select">
+            <option value="">All Priority</option>
+            <option value="high">🔴 High</option>
+            <option value="medium">🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Sort by</label>
+          <select id="goalSort" class="form-select">
+            <option value="due_asc">Due Date ↑</option>
+            <option value="due_desc">Due Date ↓</option>
+            <option value="progress_desc">Progress ↓</option>
+            <option value="progress_asc">Progress ↑</option>
+            <option value="created_desc">Newest First</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goals List -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">My Goals</h5>
+      <div id="goalsList" class="row g-3"></div>
+      <div id="goalsEmpty" class="text-center py-5 d-none">
+        <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
+        <h4 class="mt-3">No goals yet</h4>
+        <p class="text-muted">Start your journey by adding your first goal!</p>
+        <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#goalModal">
+          <i class="bi bi-plus-lg me-1"></i> Create Your First Goal
+        </button>
+      </div>
+    </div>
+  </div>
 </section>
 
+<!-- Goal Modal -->
 <div class="modal fade" id="goalModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <form id="goalForm" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fw-bold" id="goalModalTitle">🎯 Add Goal</h5>
+        <div>
+          <h5 class="modal-title fw-bold" id="goalModalTitle">🎯 Add Goal</h5>
+          <p class="text-muted small mb-0">Set your target and track your progress</p>
+        </div>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="goalId">
         <div class="row g-3">
           <div class="col-12">
-            <label class="form-label">Goal Title</label>
+            <label class="form-label fw-semibold">Goal Title <span class="text-danger">*</span></label>
             <input id="goalTitle" type="text" class="form-control" required maxlength="120" placeholder="e.g., Run 5km daily">
           </div>
           <div class="col-md-6">
-            <label class="form-label">Target Value</label>
+            <label class="form-label fw-semibold">Target Value <span class="text-danger">*</span></label>
             <input id="goalTarget" type="number" class="form-control" placeholder="100" required step="0.1">
           </div>
           <div class="col-md-6">
-            <label class="form-label">Unit</label>
-            <input id="goalUnit" type="text" class="form-control" placeholder="km, kg, reps">
+            <label class="form-label fw-semibold">Unit <span class="text-danger">*</span></label>
+            <input id="goalUnit" type="text" class="form-control" placeholder="km, kg, reps" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Due Date</label>
+            <label class="form-label fw-semibold">Due Date <span class="text-danger">*</span></label>
             <input id="goalDue" type="date" class="form-control" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Priority Level</label>
+            <label class="form-label fw-semibold">Priority Level</label>
             <select id="goalPriority" class="form-select">
               <option value="low">🟢 Low Priority</option>
               <option value="medium" selected>🟡 Medium Priority</option>
@@ -506,28 +201,47 @@
             </select>
           </div>
           <div class="col-12">
-            <label class="form-label">Image URL (Optional)</label>
-            <input id="goalImage" type="url" class="form-control" placeholder="https://example.com/motivation-image.jpg">
-            <div class="form-text">Add an inspiring image to motivate you</div>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Tags (comma separated)</label>
+            <label class="form-label fw-semibold">Tags (comma separated)</label>
             <input id="goalTags" type="text" class="form-control" placeholder="fitness, health, daily, challenge">
             <div class="form-text">Use tags to organize and filter your goals</div>
           </div>
           <div class="col-12">
-            <label class="form-label">Description (Optional)</label>
+            <label class="form-label fw-semibold">Description (Optional)</label>
             <textarea id="goalDescription" class="form-control" rows="3" placeholder="Why is this goal important to you?"></textarea>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
         <button class="btn btn-primary" type="submit">
           <i class="bi bi-check-lg me-1"></i> Save Goal
         </button>
       </div>
     </form>
+  </div>
+</div>
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold" id="confirmDeleteModalLabel">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body text-dark">
+        <p class="mb-2">Are you sure you want to delete the goal: <strong id="deleteGoalTitle"></strong>?</p>
+        <p class="small text-muted">This action cannot be undone.</p>
+        <input type="hidden" id="goalToDeleteId">
+      </div>
+      
+      <div class="modal-footer d-flex justify-content-end bg-light">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger rounded-pill" id="executeDeleteBtn">Delete Permanently</button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -536,88 +250,126 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function alertShow(message, type="info") {
-  const container = document.getElementById("alert-container") || document.body;
-  const wrapper = document.createElement("div");
-  const icon = type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle';
-  wrapper.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-lg" role="alert" style="z-index:1055; border-radius: 15px; backdrop-filter: blur(10px);">
-      <i class="bi bi-${icon} me-2"></i>
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`;
-  container.appendChild(wrapper);
-  setTimeout(() => wrapper.remove(), 4000);
-}
-
+// Global state
 let GOALS = [];
 let editingId = null;
 let charts = {};
 
 const goalsList = document.getElementById('goalsList');
 const goalsEmpty = document.getElementById('goalsEmpty');
-const activeGoalsCount = document.getElementById('activeGoalsCount');
-const completedGoalsCount = document.getElementById('completedGoalsCount');
-const averageProgress = document.getElementById('averageProgress');
-const thisWeekUpdates = document.getElementById('thisWeekUpdates');
 
+// Alert function
+function alertShow(message, type="info") {
+  const icons = { 
+    success: 'check-circle-fill', 
+    danger: 'exclamation-triangle-fill', 
+    warning: 'exclamation-triangle-fill', 
+    info: 'info-circle-fill' 
+  };
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">
+      <i class="bi bi-${icons[type]} me-2"></i>
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 4000);
+}
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date)) return '-';
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Get priority colors
+function getPriorityColor(priority) {
+  const colors = {
+    high: { bg: '#fff5f5', border: '#dc3545', icon: '🔴' },
+    medium: { bg: '#fff8e1', border: '#ffc107', icon: '🟡' },
+    low: { bg: '#f0fdf4', border: '#198754', icon: '🟢' }
+  };
+  return colors[priority] || colors.medium;
+}
+
+// Goal card template
 function goalCardTpl(g) {
-  const due = g.due_date ? new Date(g.due_date).toLocaleDateString() : '';
   const badge = g.status === "completed" ? "bg-success"
               : g.status === "in progress" ? "bg-primary"
               : "bg-secondary";
-  const tags = (g.tags || []).map(t => `<span class="badge rounded-pill text-bg-light me-1">${t}</span>`).join('');
+  const tags = (g.tags || []).map(t => `<span class="badge bg-light text-dark me-1 mb-1">${t}</span>`).join('');
   
-  const imageStyle = g.image_url ? `<div class="goal-image-overlay" style="background-image: url('${g.image_url}');"></div>` : '';
-  const priorityClass = `priority-${g.priority || 'medium'}`;
-  const priorityIcon = g.priority === 'high' ? '🔴' : g.priority === 'low' ? '🟢' : '🟡';
-  
+  const priorityStyle = getPriorityColor(g.priority || 'medium');
+  const currentProgress = g.progress || 0;
+  const targetValue = g.target || 1;
+  const currentValue = g.current_value || 0;
+  const progressBarWidth = Math.min(currentProgress, 100);
+
   return `
     <div class="col-md-6 col-xl-4">
-      <div class="card goal-card h-100 ${g.status === 'completed' ? 'completed' : ''} ${priorityClass} slide-in">
-        ${imageStyle}
-        <div class="card-body goal-content">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-              <h6 class="mb-1 fw-bold">${g.title}</h6>
-              <div class="small text-muted">Target: ${g.target} ${g.unit} ${priorityIcon}</div>
-            </div>
+      <div class="card goal-card h-100 ${g.status === 'completed' ? 'goal-completed' : ''}" 
+           style="border-left: 4px solid ${priorityStyle.border};">
+        
+        <!-- Icon Header -->
+        <div class="goal-icon-header" style="background: ${priorityStyle.bg};">
+          <div class="goal-priority-badge">
+            <span class="priority-icon">${priorityStyle.icon}</span>
             <span class="badge ${badge}">${g.status}</span>
           </div>
+          <div class="goal-main-icon">
+            <i class="bi bi-${g.status === 'completed' ? 'trophy-fill text-warning' : 'bullseye text-primary'}" style="font-size: 3rem;"></i>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <h6 class="card-title mb-2">${g.title}</h6>
+          <p class="text-muted small mb-3">
+            <i class="bi bi-flag-fill me-1"></i>Target: ${targetValue} ${g.unit}
+          </p>
           
-          <div class="my-3">
+          <!-- Progress Section -->
+          <div class="mb-3">
             <div class="d-flex justify-content-between small mb-1">
-              <span class="text-white-50">Progress</span>
-              <span class="text-white fw-bold">${g.progress}%</span>
+              <span class="text-muted">Progress</span>
+              <span class="fw-bold text-primary">${currentProgress}%</span>
             </div>
-            <div class="progress">
-              <div class="progress-bar" style="width:${g.progress}%" role="progressbar" aria-valuenow="${g.progress}" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress" style="height: 10px;">
+              <div class="progress-bar" style="width:${progressBarWidth}%" role="progressbar"></div>
             </div>
-            <div class="small text-white-50 mt-1">${g.current_value} / ${g.target} ${g.unit}</div>
+            <div class="small text-muted mt-1">
+              <i class="bi bi-graph-up-arrow me-1"></i>${currentValue} / ${targetValue} ${g.unit}
+            </div>
           </div>
           
+          <!-- Chart Container -->
           <div class="chart-container mb-3">
             <canvas id="goalChart-${g.id}"></canvas>
           </div>
 
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <!-- Due Date and Actions -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="small text-muted">
-              <i class="bi bi-calendar2-week me-1"></i>Due: ${due}
+              <i class="bi bi-calendar2-week me-1"></i>${formatDate(g.due_date)}
             </div>
             <div>
-              <button class="btn btn-sm btn-light me-1" onclick="openEdit(${g.id})" title="Edit Goal">
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="openEdit(${g.id})" title="Edit Goal">
                 <i class="bi bi-pencil"></i>
               </button>
-              <button class="btn btn-sm btn-light text-danger" onclick="removeGoal(${g.id})" title="Delete Goal">
+              <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteGoal(${g.id})" title="Delete Goal">
                 <i class="bi bi-trash"></i>
               </button>
             </div>
           </div>
 
-          <div class="update-input-group">
+          <!-- Quick Update Section -->
+          <div class="update-section p-2 rounded" style="background: #f8f9fa;">
             <div class="row g-2">
               <div class="col-8">
-                <input type="number" id="updateValueInput-${g.id}" class="form-control form-control-sm" placeholder="+ Add ${g.unit}" step="0.1">
+                <input type="number" id="updateValueInput-${g.id}" class="form-control form-control-sm" 
+                       placeholder="+ Add ${g.unit}" step="0.1">
               </div>
               <div class="col-4">
                 <button class="btn btn-sm btn-primary w-100" onclick="updateGoalValue(${g.id})">
@@ -627,13 +379,14 @@ function goalCardTpl(g) {
             </div>
           </div>
 
-          ${tags ? `<div class="mt-2">${tags}</div>` : ``}
+          ${tags ? `<div class="mt-2">${tags}</div>` : ''}
         </div>
       </div>
     </div>
   `;
 }
 
+// Render goals
 function renderGoals() {
   const q = document.getElementById('goalSearch').value.trim().toLowerCase();
   const st = document.getElementById('goalStatusFilter').value;
@@ -642,21 +395,18 @@ function renderGoals() {
 
   let list = [...GOALS];
   
-  if (q) {
-    list = list.filter(g =>
-      g.title.toLowerCase().includes(q) ||
-      (g.tags || []).some(t => t.toLowerCase().includes(q))
-    );
-  }
-  
+  if (q) list = list.filter(g => 
+    g.title.toLowerCase().includes(q) || 
+    (g.tags || []).some(t => t.toLowerCase().includes(q))
+  );
   if (st) list = list.filter(g => g.status === st);
   if (pr) list = list.filter(g => g.priority === pr);
 
   list.sort((a,b)=>{
     if (sortBy === 'due_asc') return new Date(a.due_date) - new Date(b.due_date);
     if (sortBy === 'due_desc') return new Date(b.due_date) - new Date(a.due_date);
-    if (sortBy === 'progress_desc') return b.progress - a.progress;
-    if (sortBy === 'progress_asc') return a.progress - b.progress;
+    if (sortBy === 'progress_desc') return (b.progress || 0) - (a.progress || 0);
+    if (sortBy === 'progress_asc') return (a.progress || 0) - (b.progress || 0);
     if (sortBy === 'created_desc') return new Date(b.created_at) - new Date(a.created_at);
     return 0;
   });
@@ -667,12 +417,12 @@ function renderGoals() {
   // Update stats
   const active = GOALS.filter(g => g.status !== 'completed').length;
   const completed = GOALS.filter(g => g.status === 'completed').length;
-  const avgProgress = GOALS.length > 0 ? Math.round(GOALS.reduce((sum, g) => sum + g.progress, 0) / GOALS.length) : 0;
+  const avgProgress = GOALS.length > 0 ? Math.round(GOALS.reduce((sum, g) => sum + (g.progress || 0), 0) / GOALS.length) : 0;
   
-  activeGoalsCount.textContent = active;
-  completedGoalsCount.textContent = completed;
-  averageProgress.textContent = avgProgress + '%';
-  thisWeekUpdates.textContent = GOALS.filter(g => {
+  document.getElementById('activeGoalsCount').textContent = active;
+  document.getElementById('completedGoalsCount').textContent = completed;
+  document.getElementById('averageProgress').textContent = avgProgress + '%';
+  document.getElementById('thisWeekUpdates').textContent = GOALS.filter(g => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return g.log_data && g.log_data.some(log => new Date(log.date) >= weekAgo);
@@ -682,7 +432,7 @@ function renderGoals() {
   Object.values(charts).forEach(chart => chart.destroy());
   charts = {};
 
-  // Render charts with enhanced styling
+  // Render charts
   list.forEach(g => {
     const ctx = document.getElementById(`goalChart-${g.id}`);
     if (ctx) {
@@ -693,15 +443,15 @@ function renderGoals() {
           datasets: [{
             label: 'Progress',
             data: g.log_data.map(d => d.value),
-            borderColor: '#4facfe',
-            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+            borderColor: '#4154f1',
+            backgroundColor: 'rgba(65, 84, 241, 0.1)',
             fill: true,
             tension: 0.4,
-            borderWidth: 3,
-            pointBackgroundColor: '#4facfe',
+            borderWidth: 2,
+            pointBackgroundColor: '#4154f1',
             pointBorderColor: '#fff',
             pointBorderWidth: 2,
-            pointRadius: 4
+            pointRadius: 3
           }]
         },
         options: {
@@ -711,20 +461,16 @@ function renderGoals() {
             y: { 
               beginAtZero: true, 
               max: g.target,
-              grid: { color: 'rgba(255,255,255,0.1)' },
-              ticks: { color: 'rgba(255,255,255,0.7)' }
+              grid: { color: 'rgba(0,0,0,0.05)' }
             },
-            x: { 
-              display: false 
-            }
+            x: { display: false }
           },
           plugins: { 
             legend: { display: false },
             tooltip: {
               backgroundColor: 'rgba(0,0,0,0.8)',
-              titleColor: 'white',
-              bodyColor: 'white',
-              borderColor: '#4facfe',
+              padding: 10,
+              borderColor: '#4154f1',
               borderWidth: 1
             }
           }
@@ -734,6 +480,16 @@ function renderGoals() {
   });
 }
 
+// Reset filters
+function resetFilters() {
+  document.getElementById('goalSearch').value = '';
+  document.getElementById('goalStatusFilter').value = '';
+  document.getElementById('goalPriorityFilter').value = '';
+  document.getElementById('goalSort').value = 'due_asc';
+  renderGoals();
+}
+
+// Fetch goals
 async function fetchGoals() {
   try {
     const res = await fetch('/athlete/api/goals', { 
@@ -742,36 +498,47 @@ async function fetchGoals() {
     const data = res.ok ? await res.json() : [];
     GOALS = Array.isArray(data) ? data.map(g => ({
       ...g,
-      priority: g.priority || 'medium'
+      priority: g.priority || 'medium',
+      progress: g.progress || 0,
+      current_value: g.current_value || 0,
+      log_data: g.log_data || []
     })) : [];
   } catch(e) {
     console.error(e);
+    GOALS = [];
     alertShow('Failed to load goals', 'danger');
   } finally {
     renderGoals();
   }
 }
 
+// Create goal
 async function createGoal(payload) {
   const res = await fetch('/athlete/api/goals', {
     method:'POST',
-    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    headers:{ 
+      'Content-Type':'application/json', 
+      Authorization:`Bearer ${localStorage.getItem('access_token')}` 
+    },
     body: JSON.stringify(payload)
   });
-  
-  const data = res.ok ? await res.json() : { msg: 'Failed to connect to the server.' }; 
-  return { ok: res.ok, d: data };
+  return { ok: res.ok, d: res.ok ? await res.json() : { msg: 'Failed' } };
 }
 
+// Update goal
 async function updateGoal(id, payload) {
   const res = await fetch(`/athlete/api/goals/${id}`, {
     method:'PUT',
-    headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('access_token')}` },
+    headers:{ 
+      'Content-Type':'application/json', 
+      Authorization:`Bearer ${localStorage.getItem('access_token')}` 
+    },
     body: JSON.stringify(payload)
   });
-  return res.json().then(d => ({ ok: res.ok, d }));
+  return { ok: res.ok, d: res.ok ? await res.json() : { msg: 'Failed' } };
 }
 
+// Update goal value
 async function updateGoalValue(id) {
   const input = document.getElementById(`updateValueInput-${id}`);
   const valueToAdd = Number(input.value);
@@ -780,16 +547,18 @@ async function updateGoalValue(id) {
     return;
   }
   
-  // Add loading state
   const button = input.parentElement.nextElementSibling.querySelector('button');
   const originalContent = button.innerHTML;
-  button.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+  button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
   button.disabled = true;
   
   try {
     const res = await fetch(`/athlete/api/goals/${id}/update_value`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+      headers: { 
+        'Content-Type': 'application/json', 
+        Authorization: `Bearer ${localStorage.getItem('access_token')}` 
+      },
       body: JSON.stringify({ value_to_add: valueToAdd })
     });
     const data = await res.json();
@@ -809,28 +578,39 @@ async function updateGoalValue(id) {
   }
 }
 
-async function removeGoal(id) {
-  const goal = GOALS.find(g => g.id === id);
-  if (!confirm(`Are you sure you want to delete "${goal?.title}"? This action cannot be undone.`)) return;
-  
-  const { ok, d } = await deleteGoal(id);
-  if (ok) { 
-    alertShow('Goal deleted successfully', 'success'); 
-    fetchGoals(); 
-  } else { 
-    alertShow(d?.msg || 'Delete failed', 'danger'); 
-  }
+// Delete goal
+function confirmDeleteGoal(id) {
+    const goal = GOALS.find(g => g.id === id);
+    if (!goal) return;
+
+    // Populate the confirmation modal
+    document.getElementById('deleteGoalTitle').textContent = goal.title;
+    document.getElementById('goalToDeleteId').value = id;
+
+    // Show the modal
+    new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
 }
 
-async function deleteGoal(id) {
-  const res = await fetch(`/athlete/api/goals/${id}`, {
-    method:'DELETE',
-    headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }
-  });
-  return res.json().then(d => ({ ok: res.ok, d }));
-}
+async function executeDelete() {
+    const id = document.getElementById('goalToDeleteId').value;
+    if (!id) return;
+    
+    bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
 
-// Modal and Event Listeners
+    try {
+        await fetch(`/athlete/api/goals/${id}`, {
+            method:'DELETE',
+            headers:{ Authorization:`Bearer ${localStorage.getItem('access_token')}` }
+        });
+        
+        alertShow('Goal deleted successfully', 'success'); 
+        fetchGoals(); 
+        
+    } catch (e) { 
+        alertShow(e.message || 'Delete failed', 'danger'); 
+    }
+}
+// Modal events
 const goalModalEl = document.getElementById('goalModal');
 const goalModal = new bootstrap.Modal(goalModalEl);
 
@@ -844,7 +624,7 @@ document.getElementById('goalStatusFilter').addEventListener('change', renderGoa
 document.getElementById('goalPriorityFilter').addEventListener('change', renderGoals);
 document.getElementById('goalSort').addEventListener('change', renderGoals);
 
-// Enhanced form submission with validation
+// Form submit
 document.getElementById('goalForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   
@@ -852,56 +632,43 @@ document.getElementById('goalForm').addEventListener('submit', async (e)=>{
   const target = Number(document.getElementById('goalTarget').value.trim());
   const unit = document.getElementById('goalUnit').value.trim();
   const dueDate = document.getElementById('goalDue').value;
-  const imageUrl = document.getElementById('goalImage').value.trim();
   const tags = document.getElementById('goalTags').value.split(',').map(s=>s.trim()).filter(Boolean);
   const priority = document.getElementById('goalPriority').value;
   const description = document.getElementById('goalDescription').value.trim();
 
-  // Enhanced validation
-  if (!title) {
+  if (!title) { 
     alertShow('Goal title is required', 'warning'); 
-    document.getElementById('goalTitle').focus();
-    return;
+    return; 
   }
-  
-  if (!target || target <= 0) {
+  if (!target || target <= 0) { 
     alertShow('Target value must be greater than 0', 'warning'); 
-    document.getElementById('goalTarget').focus();
-    return;
+    return; 
   }
-  
-  if (!dueDate) {
+  if (!unit) { 
+    alertShow('Unit is required', 'warning'); 
+    return; 
+  }
+  if (!dueDate) { 
     alertShow('Due date is required', 'warning'); 
-    document.getElementById('goalDue').focus();
-    return;
+    return; 
   }
   
-  // Check if due date is in the past
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const selectedDate = new Date(dueDate);
-  
-  if (selectedDate < today) {
-    alertShow('Due date cannot be in the past', 'warning');
-    document.getElementById('goalDue').focus();
-    return;
+  if (selectedDate < today) { 
+    alertShow('Due date cannot be in the past', 'warning'); 
+    return; 
   }
 
   const payload = {
-    title,
-    target,
-    unit,
-    due_date: dueDate,
-    image_url: imageUrl,
-    tags: tags.join(','),
-    priority,
-    description
+    title, target, unit, due_date: dueDate,
+    tags: tags.join(','), priority, description
   };
 
-  // Add loading state to submit button
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const originalText = submitBtn.innerHTML;
-  submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i> Saving...';
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
   submitBtn.disabled = true;
 
   try {
@@ -929,6 +696,7 @@ document.getElementById('goalForm').addEventListener('submit', async (e)=>{
   }
 });
 
+// Open edit
 function openEdit(id) {
   const g = GOALS.find(x => x.id === id);
   if (!g) return;
@@ -939,7 +707,6 @@ function openEdit(id) {
   document.getElementById('goalTarget').value = g.target;
   document.getElementById('goalUnit').value = g.unit;
   document.getElementById('goalDue').value = g.due_date;
-  document.getElementById('goalImage').value = g.image_url || '';
   document.getElementById('goalTags').value = (g.tags||[]).join(', ');
   document.getElementById('goalPriority').value = g.priority || 'medium';
   document.getElementById('goalDescription').value = g.description || '';
@@ -952,7 +719,6 @@ goalModalEl.addEventListener('hidden.bs.modal', ()=>{
   document.getElementById('goalForm').reset();
 });
 
-// Set default due date to one month from now
 document.addEventListener('DOMContentLoaded', () => {
   const dueDateInput = document.getElementById('goalDue');
   const today = new Date();
@@ -961,20 +727,501 @@ document.addEventListener('DOMContentLoaded', () => {
   dueDateInput.value = oneMonthFromNow.toISOString().split('T')[0];
 });
 
-// Add CSS for spinning animation
-const spinStyle = document.createElement('style');
-spinStyle.textContent = `
-  .spin {
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-`;
-document.head.appendChild(spinStyle);
-
-// Initialize
 fetchGoals();
 </script>
+
+<style>
+/* Goal Card Styling */
+.goal-card {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.goal-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.goal-icon-header {
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.goal-priority-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.priority-icon {
+  font-size: 1.2rem;
+}
+
+.goal-main-icon {
+  margin-top: 0.5rem;
+}
+
+.goal-completed {
+  position: relative;
+  opacity: 0.95;
+}
+
+.goal-completed::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 35px;
+  height: 35px;
+  background: #198754;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+  z-index: 10;
+}
+
+.chart-container {
+  height: 100px;
+  position: relative;
+  background: #f8f9fa;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+}
+
+.update-section {
+  border: 1px solid #dee2e6;
+}
+
+.progress {
+  border-radius: 0.375rem;
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+}
+
+/* Card Icon Styling */
+.card-icon {
+  width: 64px;
+  height: 64px;
+  font-size: 32px;
+  transition: transform 0.3s ease;
+}
+
+.info-card:hover .card-icon {
+  transform: scale(1.1);
+}
+
+.sales-card .card-icon {
+  color: #4154f1;
+  background: #f6f6fe;
+}
+
+.revenue-card .card-icon {
+  color: #2eca6a;
+  background: #e0f8e9;
+}
+
+.customers-card .card-icon {
+  color: #ff771d;
+  background: #ffecdf;
+}
+
+.info-card .card-icon {
+  color: #ffbb2c;
+  background: #fff8dd;
+}
+
+/* Info Card Hover */
+.info-card {
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Modal Styling */
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+/* Form Elements */
+.form-control:focus,
+.form-select:focus {
+  border-color: #4154f1;
+  box-shadow: 0 0 0 0.25rem rgba(65, 84, 241, 0.25);
+}
+
+.form-label {
+  color: #012970;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Button Enhancements */
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background-color: #4154f1;
+  border-color: #4154f1;
+}
+
+.btn-primary:hover {
+  background-color: #3142d1;
+  border-color: #3142d1;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-danger:hover,
+.btn-outline-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+/* Empty State */
+#goalsEmpty {
+  padding: 3rem 1rem;
+}
+
+#goalsEmpty i {
+  font-size: 4rem;
+  opacity: 0.5;
+}
+
+/* Alert Styling */
+.alert {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.alert-success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #664d03;
+}
+
+.alert-info {
+  background-color: #cff4fc;
+  color: #055160;
+}
+
+/* Spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+}
+
+/* Tag Badges */
+.badge.bg-light {
+  color: #012970 !important;
+  border: 1px solid #e0e0e0;
+}
+
+/* Progress Bar Animation */
+.progress-bar {
+  transition: width 0.6s ease;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .goal-icon-header {
+    padding: 1rem;
+  }
+  
+  .goal-main-icon i {
+    font-size: 2rem !important;
+  }
+  
+  .card-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+  
+  .d-flex.justify-content-between.align-items-center.mb-4 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  
+  .d-flex.justify-content-between.align-items-center.mb-4 > div:last-child {
+    width: 100%;
+  }
+  
+  .d-flex.justify-content-between.align-items-center.mb-4 button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn.me-2 {
+    margin-right: 0 !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .pagetitle h1 {
+    font-size: 20px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+  }
+  
+  .info-card h6 {
+    font-size: 24px;
+  }
+}
+
+/* Card Title Styling */
+.card-title {
+  padding: 20px 0 15px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #012970;
+}
+
+/* Info Card Stats */
+.info-card h6 {
+  font-size: 28px;
+  color: #012970;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+}
+
+/* Section Spacing */
+.section {
+  padding: 60px 0;
+  overflow: hidden;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  color: #899bbd;
+}
+
+/* Page Title */
+.pagetitle h1 {
+  font-size: 24px;
+  margin-bottom: 0;
+  font-weight: 600;
+  color: #012970;
+}
+
+/* Card Body Padding */
+.card-body {
+  padding: 20px;
+}
+
+/* Text Colors */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+/* Focus States for Accessibility */
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid #4154f1;
+  outline-offset: 2px;
+}
+
+/* Prevent Text Selection on Interactive Elements */
+.card-icon,
+.badge,
+.btn {
+  user-select: none;
+}
+
+/* Animation for Cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.goal-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Completion Checkmark Animation */
+@keyframes checkmark {
+  0% {
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+.goal-completed::after {
+  animation: checkmark 0.5s ease-out;
+}
+
+/* Chart Improvements */
+.chart-container canvas {
+  max-height: 100px;
+}
+
+/* Input Group Styling */
+.update-section .form-control {
+  border-radius: 0.375rem;
+  border: 1px solid #ced4da;
+}
+
+.update-section .btn {
+  border-radius: 0.375rem;
+}
+
+/* Button Size Adjustments */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+}
+
+/* Card Hover Effect Enhancement */
+.card {
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Priority Visual Indicators */
+.goal-card[style*="border-left-color: #dc3545"] .card-title {
+  color: #dc3545;
+}
+
+.goal-card[style*="border-left-color: #ffc107"] .card-title {
+  color: #fd7e14;
+}
+
+.goal-card[style*="border-left-color: #198754"] .card-title {
+  color: #198754;
+}
+
+/* Filter Card Enhancement */
+.card.mb-4 .card-body {
+  padding: 1.5rem;
+}
+
+/* Stats Card Refinement */
+.info-card .card-body {
+  padding: 1.5rem;
+}
+
+/* Goal Card Content Spacing */
+.goal-card .card-body > * + * {
+  margin-top: 0.75rem;
+}
+
+/* Improve Contrast */
+.text-primary {
+  color: #4154f1 !important;
+}
+
+/* Modal Header Text Color Fix */
+.modal-header h5,
+.modal-header p {
+  color: #012970;
+}
+
+/* Form Text Helper */
+.form-text {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Loading State */
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Smooth Transitions */
+* {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, 
+              border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Override for specific elements */
+.progress-bar,
+canvas,
+input,
+textarea,
+select {
+  transition: none;
+}
+
+input[type="number"],
+input[type="date"],
+input[type="text"],
+textarea {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+</style>
 {% endblock %}

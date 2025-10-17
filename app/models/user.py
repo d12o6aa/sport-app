@@ -115,6 +115,7 @@ class User(db.Model):
         cascade="all, delete-orphan"
     )
     
+    
     maintenance_logs = db.relationship("MaintenanceLog", back_populates="technician", lazy="dynamic", cascade="all, delete-orphan")
     equipment_reservations = db.relationship("EquipmentReservation", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")
     event_registrations = db.relationship("EventRegistration", back_populates="user", lazy="dynamic", cascade="all, delete-orphan")

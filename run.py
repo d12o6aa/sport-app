@@ -4,6 +4,6 @@ from app.extensions import socketio
 app = create_app()
 
 if __name__ == '__main__':
-    eventlet.monkey_patch()  # Must be before other imports
+    eventlet.monkey_patch()
     app = create_app()
     socketio.run(app, debug=True, port=5000)

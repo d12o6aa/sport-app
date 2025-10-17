@@ -16,13 +16,18 @@ UPLOAD_FOLDER = "static/uploads"
 def get_plans():
     athlete_id = get_jwt_identity()
     plans = TrainingPlan.query.filter_by(athlete_id=athlete_id).all()
+    
+    # ✅ FIX: تأكد من إرجاع حقل التقدم (Progress)
     return jsonify([{
         "id": p.id,
         "title": p.title,
         "description": p.description,
         "duration_weeks": p.duration_weeks,
         "status": p.status,
-        "image_url": p.image_url
+        "image_url": p.image_url,
+        "progress": p.progress if hasattr(p, 'progress') else 0, # Assuming 'progress' exists in the model
+        "start_date": p.start_date.isoformat() if p.start_date else None,
+        "end_date": p.end_date.isoformat() if p.end_date else None
     } for p in plans])
 
 @athlete_bp.route("/api/plans", methods=["POST"])
@@ -43,14 +48,16 @@ def create_plan():
 
     plan = TrainingPlan(
         athlete_id=athlete_id,
-        coach_id=data.get("coach_id", athlete_id),
+        coach_id=data.get("coach_id", athlete_id), # استخدام athlete_id كـ coach_id افتراضي مؤقتًا
         title=data.get("title"),
         description=data.get("description"),
         duration_weeks=int(data.get("duration_weeks", 4)),
         status=data.get("status", "active"),
         start_date=date.today(),
         end_date=date.today() + timedelta(weeks=int(data.get("duration_weeks", 4))),
-        image_url=image_url
+        image_url=image_url,
+        # ✅ يتم تعيين التقدم الأولي على 0%
+        progress=0 
     )
     db.session.add(plan)
     db.session.commit()
@@ -62,6 +69,14 @@ def update_plan(plan_id):
     athlete_id = get_jwt_identity()
     plan = TrainingPlan.query.filter_by(id=plan_id, athlete_id=athlete_id).first_or_404()
     data = request.form
+
+    # ✅ FIX: تحديث حقل التقدم
+    progress_value = data.get("progress")
+    if progress_value is not None:
+        try:
+            plan.progress = int(float(progress_value))
+        except ValueError:
+            pass 
 
     plan.title = data.get("title", plan.title)
     plan.description = data.get("description", plan.description)
@@ -78,7 +93,7 @@ def update_plan(plan_id):
         plan.image_url = f"/{UPLOAD_FOLDER}/{filename}"
 
     db.session.commit()
-    return jsonify({"msg": "Plan updated", "image_url": plan.image_url})
+    return jsonify({"msg": "Plan updated", "image_url": plan.image_url, "progress": plan.progress if hasattr(plan, 'progress') else 0})
 
 
 @athlete_bp.route("/api/plans/<int:plan_id>", methods=["DELETE"])

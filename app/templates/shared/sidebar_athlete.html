@@ -20,11 +20,7 @@
             <i class="bi bi-circle"></i><span>Assigned Plans</span>
           </a>
         </li>
-        <li>
-          <a href="{{ url_for('athlete.my_calendar') }}">
-            <i class="bi bi-circle"></i><span>Calendar</span>
-          </a>
-        </li>
+        
       </ul>
     </li>
     <!-- Performance -->
@@ -38,32 +34,11 @@
             <i class="bi bi-circle"></i><span>My Stats</span>
           </a>
         </li>
-        <li>
-          <a href="{{ url_for('athlete.workout_history') }}">
-            <i class="bi bi-circle"></i><span>Workout History</span>
-          </a>
-        </li>
+        
       </ul>
     </li>
 
-    <!-- Feedback -->
-    <li class="nav-item">
-      <a class="nav-link collapsed" data-bs-target="#feedback-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-chat-left-text"></i><span>Feedback</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <ul id="feedback-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-        <li>
-          <a href="{{ url_for('athlete.send_feedback') }}">
-            <i class="bi bi-circle"></i><span>Send Feedback</span>
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('athlete.view_coach_feedback') }}">
-            <i class="bi bi-circle"></i><span>Coach Feedback</span>
-          </a>
-        </li>
-      </ul>
-    </li>
+    
 
     <!-- Workout Section with Submenu -->
     <li class="nav-item">
@@ -87,31 +62,19 @@
         </a>
     </li>
 
-    <!-- Workouts / Sessions -->
+    <!-- Progress -->
+    <li class="nav-item">
+        <a href="{{ url_for('athlete.progress') }}" class="nav-link">
+            <i class="fas fa-chart-line"></i>
+            <span>Progress</span>
+        </a>
+    </li>
     
 
     <!-- Goals & Challenges -->
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.challenges') }}" class="nav-link">
-            <i class="fas fa-flag-checkered"></i>
-            <span>Goals & Challenges</span>
-        </a>
-    </li>
+    
 
-    <!-- Health Tracking -->
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.health') }}" class="nav-link">
-            <i class="fas fa-heartbeat"></i>
-            <span>Health Tracking</span>
-        </a>
-    </li>
-    <!-- subscriptions -->
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.subscriptions') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>subscriptions</span>
-        </a>
-    </li>
+    
 
     <!-- Goals (الموجودة عندك بالفعل) -->
     <li class="nav-item">
@@ -120,62 +83,14 @@
             <span>Goals</span>
         </a>
     </li>
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.book_sessions_page') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>Book Session</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.communication') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>Communication</span>
-        </a>
-    </li>
+    
 
 
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.dashboard') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>Dashboard</span>
-        </a>
-    </li>
 
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.view_plans') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>view_plans</span>
-        </a>
-    </li>
+    
 
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.track_progress') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>track_progress</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.log_activity') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>log_activity</span>
-        </a>
-    </li>
-
-
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.integrations') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>integrations</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.training_plans') }}" class="nav-link">
-            <i class="fas fa-target"></i>
-            <span>training_plans</span>
-        </a>
-    </li>
+    
+    
 
 
   </ul>

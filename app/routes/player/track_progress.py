@@ -45,7 +45,7 @@ def progress_data():
         WorkoutLog.athlete_id == identity,
         WorkoutLog.logged_at >= start_date,
         WorkoutLog.logged_at <= end_date,
-        WorkoutLog.compliance_status == "completed"
+        WorkoutLog.completion_status == "completed"
     ).count()
     compliance = round((completed_logs / total_sessions * 100) if total_sessions > 0 else 0, 1)
 
