@@ -1,7 +1,6 @@
 <aside id="sidebar" class="sidebar">
   <ul class="sidebar-nav" id="sidebar-nav">
 
-    <!-- Dashboard -->
     <li class="nav-item">
       <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">
         <i class="bi bi-grid"></i>
@@ -9,89 +8,33 @@
       </a>
     </li>
 
-    <!-- My Training -->
     <li class="nav-item">
-      <a class="nav-link collapsed" data-bs-target="#training-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-calendar-event"></i><span>My Training</span><i class="bi bi-chevron-down ms-auto"></i>
+      <a class="nav-link" href="{{ url_for('athlete.my_plans') }}">
+        <i class="bi bi-calendar-event"></i>
+        <span>Training Plans</span>
       </a>
-      <ul id="training-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-        <li>
-          <a href="{{ url_for('athlete.my_plans') }}">
-            <i class="bi bi-circle"></i><span>Assigned Plans</span>
-          </a>
-        </li>
-        
-      </ul>
     </li>
-    <!-- Performance -->
+
     <li class="nav-item">
-      <a class="nav-link collapsed" data-bs-target="#performance-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-bar-chart-line"></i><span>Performance</span><i class="bi bi-chevron-down ms-auto"></i>
+      <a class="nav-link" href="{{ url_for('athlete.my_stats') }}">
+        <i class="bi bi-bar-chart-line"></i>
+        <span>My Stats</span>
       </a>
-      <ul id="performance-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-        <li>
-          <a href="{{ url_for('athlete.my_stats') }}">
-            <i class="bi bi-circle"></i><span>My Stats</span>
-          </a>
-        </li>
-        
-      </ul>
     </li>
 
-    
-
-    <!-- Workout Section with Submenu -->
     <li class="nav-item">
-      <a class="nav-link collapsed" data-bs-target="#workout-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-heart-pulse"></i><span>Workout</span><i class="bi bi-chevron-down ms-auto"></i>
+      <a class="nav-link" href="{{ url_for('athlete.workout_hub_page') }}">
+        <i class="bi bi-heart-pulse"></i>
+        <span>Workouts Hub</span>
       </a>
-      <ul id="workout-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-        <li class="nav-item">
-            <a href="{{ url_for('athlete.workout_hub_page') }}" class="nav-link">
-                <i class="fas fa-running"></i>
-                <span>Workouts Hub</span>
-            </a>
-        </li>
-      </ul>
-    </li>
-    <!-- Training Plans -->
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.training_plans') }}" class="nav-link">
-            <i class="fas fa-dumbbell"></i>
-            <span>Training Plans</span>
-        </a>
     </li>
 
-    <!-- Progress -->
-    <li class="nav-item">
-        <a href="{{ url_for('athlete.progress') }}" class="nav-link">
-            <i class="fas fa-chart-line"></i>
-            <span>Progress</span>
-        </a>
-    </li>
-    
-
-    <!-- Goals & Challenges -->
-    
-
-    
-
-    <!-- Goals (الموجودة عندك بالفعل) -->
     <li class="nav-item">
         <a href="{{ url_for('athlete.goals') }}" class="nav-link">
-            <i class="fas fa-target"></i>
+            <i class="bi bi-bullseye"></i> 
             <span>Goals</span>
         </a>
     </li>
-    
-
-
-
-    
-
-    
-    
-
 
   </ul>
 </aside>

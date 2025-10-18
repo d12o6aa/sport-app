@@ -7,7 +7,7 @@
     <div class="row mb-3">
       <label for="profileImageInput" class="col-md-4 col-lg-3 col-form-label">Profile Image</label>
       <div class="col-md-8 col-lg-9">
-        <img id="currentImage" src="{{ url_for('static', filename='uploads/' ~ (user.profile_image or 'default.jpg')) }}" alt="Profile" width="120">
+        <img id="currentImage" src="{{ url_for('static', filename='uploads/profile/' ~ (user.profile_image or 'default.jpg')) }}" alt="Profile" width="120">
         <div class="pt-2 d-flex gap-2">
           <input type="file" name="profile_image" id="profileImageInput" class="form-control d-inline w-75" />
           <button type="button" class="btn btn-danger btn-sm" id="deleteBtn" title="Remove my profile image">

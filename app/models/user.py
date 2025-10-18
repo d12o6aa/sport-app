@@ -162,4 +162,4 @@ class User(db.Model):
     
     @property
     def profile_image_url(self):
-        return self.profile_image or url_for('static', filename='images/default.jpg')
+        return self.profile_image or url_for('static', filename='uploads/profile/default.jpg')

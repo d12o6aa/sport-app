@@ -22,6 +22,7 @@ auth_bp = Blueprint("auth", __name__)
 user_schema = UserSchema()
 DEFAULT_PASSWORD = "Default@1234"
 
+
 def validate_password(password):
     """Validate password strength."""
     if len(password) < 8:

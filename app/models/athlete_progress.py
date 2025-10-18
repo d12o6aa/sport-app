@@ -17,7 +17,7 @@ class AthleteProgress(db.Model):
     body_fat = db.Column(db.Float)
     muscle_mass = db.Column(db.Float)
     heart_rate = db.Column(db.Integer)
-    
+    total_duration = db.Column(db.Integer)  # in minutes
     # Workout Statistics
     workouts_done = db.Column(db.Integer, default=0)
     calories_burned = db.Column(db.Integer, default=0)
@@ -31,14 +31,12 @@ class AthleteProgress(db.Model):
     workout_score = db.Column(db.Float, default=0)  # 0-100
     goals_completion_rate = db.Column(db.Float, default=0)  # 0-100
     plan_adherence = db.Column(db.Float, default=0)  # 0-100
-    consistency_score = db.Column(db.Float, default=0)  # 0-100
     overall_health_score = db.Column(db.Float, default=0)  # 0-100
     completed_goals = db.Column(db.Integer, default=0)  # ✅ New field to track number of completed goals
     total_goals = db.Column(db.Integer, default=0)      # ✅ New field to track total number of goals
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     avg_goal_progress = db.Column(db.Float, default=0)  # ✅ New field to track average goal progress percentage
-    plan_adherence = db.Column(db.Float, default=0)  # ✅ New field to track plan adherence percentage
     consistency_score = db.Column(db.Float, default=0)  # ✅ New field to track consistency score percentage
     health_score = db.Column(db.Float, default=0)  # ✅ New field to track overall health score percentage
     
@@ -67,5 +65,10 @@ class AthleteProgress(db.Model):
             'consistency_score': self.consistency_score,
             'overall_health_score': self.overall_health_score,
             'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
+            'updated_at': self.updated_at.isoformat(),
+            'completed_goals': self.completed_goals,
+            'total_goals': self.total_goals,
+            'avg_goal_progress': self.avg_goal_progress,
+            'total_duration': self.total_duration,
+            'health_score': self.health_score
         }

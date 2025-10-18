@@ -358,25 +358,30 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.performance-score-circle { position: relative; display: inline-block; }
+.score-item { padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; }
+</style>
 <script>
-// Global variables
+const MAX_CALORIES = 1200;
 let charts = {};
 let currentPeriod = 7;
 let allWorkouts = [];
 let allGoals = [];
 let allPlans = [];
 
-// Alert function
-function alertShow(message, type = "info") {
-// ... (alertShow logic remains the same)
+function alertShow(msg, type = "info") {
   const icons = { success: 'check-circle-fill', danger: 'exclamation-triangle-fill', warning: 'exclamation-triangle-fill', info: 'info-circle-fill' };
   const wrap = document.createElement("div");
-  wrap.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;"><i class="bi bi-${icons[type]} me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+  wrap.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;"><i class="bi bi-${icons[type]} me-2"></i>${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
   document.body.appendChild(wrap);
   setTimeout(() => wrap.remove(), 4000);
 }
 
-// Initialize
 document.addEventListener('DOMContentLoaded', function() {
   initCharts();
   fetchAllData();
@@ -394,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  document.getElementById('btnRefresh').addEventListener('click', function() {
+  document.getElementById('btnRefresh')?.addEventListener('click', function() {
     const btn = this;
     const icon = btn.querySelector('i');
     icon.style.animation = 'spin 1s linear infinite';
@@ -409,12 +414,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// Fetch all data
 async function fetchAllData() {
-  // استخدام access_token هو الشائع
   const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token'); 
   if (!token) {
-    alertShow('Please log in to view progress', 'warning');
+    alertShow('Please log in', 'warning');
     return;
   }
 
@@ -430,114 +433,152 @@ async function fetchAllData() {
     allPlans = plans;
     
     analyzeData();
-    alertShow('Data loaded successfully!', 'success');
+    alertShow('Data loaded!', 'success');
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error('Error:', error);
     alertShow('Error loading data', 'danger');
   }
 }
 
-// Main analysis function
 function analyzeData() {
   const periodDate = new Date();
   periodDate.setDate(periodDate.getDate() - currentPeriod);
   
-  const filteredWorkouts = allWorkouts.filter(w => {
-    const workoutDate = new Date(w.date);
-    // تأكد من أن التاريخ صالح قبل المقارنة
-    return !isNaN(workoutDate) && workoutDate >= periodDate && w.completion_status === 'completed';
+  const filtered = allWorkouts.filter(w => {
+    const d = new Date(w.date);
+    return !isNaN(d) && d >= periodDate && w.completion_status === 'completed' && (w.calories_burned || 0) <= MAX_CALORIES;
   });
   
-  // Calculate all metrics
-  calculatePerformanceScore(filteredWorkouts);
-  calculateQuickStats(filteredWorkouts);
-  analyzeWorkoutTypes(filteredWorkouts);
-  analyzePerformanceTrends(filteredWorkouts);
-  // *** تم حذف analyzeTimePatterns(filteredWorkouts); ***
+  calculatePerformanceScore(filtered);
+  calculateQuickStats(filtered);
+  analyzeWorkoutTypes(filtered);
+  analyzePerformanceTrends(filtered);
   analyzeGoals();
   analyzePlans();
-  calculateAchievements(filteredWorkouts);
+  calculateAchievements(filtered);
   calculatePersonalRecords(allWorkouts);
   updateRecentWorkouts(allWorkouts.slice(0, 10));
 }
 
-// Calculate Performance Score
 function calculatePerformanceScore(workouts) {
   const consistency = calculateConsistency(workouts);
   const improvement = calculateImprovement(workouts);
-  const goalAchievement = calculateGoalAchievement();
+  const goals = calculateGoalAchievement();
   const intensity = calculateIntensity(workouts);
   
-  const overall = Math.round((consistency + improvement + goalAchievement + intensity) / 4);
+  const WEIGHTS = { consistency: 0.35, improvement: 0.25, goals: 0.25, intensity: 0.15 };
+  const overall = Math.round(
+    consistency * WEIGHTS.consistency +
+    improvement * WEIGHTS.improvement +
+    goals * WEIGHTS.goals +
+    intensity * WEIGHTS.intensity
+  );
   
   document.getElementById('consistencyScore').textContent = consistency + '%';
   document.getElementById('improvementScore').textContent = improvement + '%';
-  document.getElementById('goalAchievement').textContent = goalAchievement + '%';
+  document.getElementById('goalAchievement').textContent = goals + '%';
   document.getElementById('intensityScore').textContent = intensity + '%';
   document.getElementById('performanceScore').textContent = overall;
   
-  // Animate circle
   const circle = document.getElementById('performanceCircle');
-  const circumference = 408.4;
-  const offset = circumference - (overall / 100) * circumference;
-  if (circle) circle.style.strokeDashoffset = offset;
+  if (circle) {
+    const circumference = 408.4;
+    circle.style.strokeDashoffset = circumference - (overall / 100) * circumference;
+  }
 }
 
-// Calculate Consistency
 function calculateConsistency(workouts) {
   if (workouts.length === 0) return 0;
   
   const uniqueDays = new Set(workouts.map(w => w.date)).size;
-  const consistency = (uniqueDays / currentPeriod) * 100;
+  const weeks = currentPeriod / 7;
+  const idealDays = 4 * weeks;
+  const ratio = uniqueDays / idealDays;
   
-  return Math.min(Math.round(consistency * 1.5), 100); // Boost score
+  if (ratio >= 1.0) return 100;
+  if (ratio >= 0.85) return Math.round(90 + (ratio - 0.85) * 66.67);
+  if (ratio >= 0.70) return Math.round(80 + (ratio - 0.70) * 66.67);
+  if (ratio >= 0.50) return Math.round(65 + (ratio - 0.50) * 75);
+  if (ratio >= 0.30) return Math.round(40 + (ratio - 0.30) * 125);
+  return Math.round(ratio * 133.33);
 }
 
-// Calculate Improvement
 function calculateImprovement(workouts) {
   if (workouts.length < 2) return 50;
   
-  const midPoint = Math.floor(workouts.length / 2);
-  const firstHalf = workouts.slice(0, midPoint);
-  const secondHalf = workouts.slice(midPoint);
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   
-  const avgFirst = firstHalf.reduce((sum, w) => sum + (w.calories_burned || 0), 0) / firstHalf.length;
-  const avgSecond = secondHalf.reduce((sum, w) => sum + (w.calories_burned || 0), 0) / secondHalf.length;
+  const current = workouts.filter(w => new Date(w.date) >= sevenDaysAgo);
+  const previous = workouts.filter(w => {
+    const d = new Date(w.date);
+    return d >= fourteenDaysAgo && d < sevenDaysAgo;
+  });
   
-  if (avgFirst === 0) return 50;
+  if (previous.length === 0 && current.length > 0) return 70;
+  if (current.length === 0) return 0;
+  if (previous.length === 0) return 50;
   
-  const improvement = ((avgSecond - avgFirst) / avgFirst) * 100;
-  return Math.min(Math.max(Math.round(50 + improvement), 0), 100);
+  const currAvg = current.reduce((s, w) => s + Math.min(w.calories_burned || 0, MAX_CALORIES), 0) / current.length;
+  const prevAvg = previous.reduce((s, w) => s + Math.min(w.calories_burned || 0, MAX_CALORIES), 0) / previous.length;
+  
+  const improvement = prevAvg > 0 ? ((currAvg - prevAvg) / prevAvg) * 100 : 0;
+  let score = 50 + improvement;
+  return Math.min(Math.max(Math.round(score), 0), 100);
 }
 
-// Calculate Goal Achievement
 function calculateGoalAchievement() {
   if (allGoals.length === 0) return 0;
   
-  const avgProgress = allGoals.reduce((sum, g) => sum + (g.progress || 0), 0) / allGoals.length;
-  return Math.round(avgProgress);
+  let totalScore = 0;
+  let totalWeight = 0;
+  
+  allGoals.forEach(g => {
+    const progress = Math.min(g.progress || 0, 100);
+    let weight = 1.0;
+    
+    if (g.due_date) {
+      const daysLeft = Math.floor((new Date(g.due_date) - new Date()) / (1000 * 60 * 60 * 24));
+      if (daysLeft < 0) weight = 0.5;
+      else if (daysLeft <= 7) weight = 1.5;
+      else if (daysLeft <= 30) weight = 1.2;
+    }
+    
+    totalScore += progress * weight;
+    totalWeight += weight;
+  });
+  
+  return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
 }
 
-// Calculate Intensity
 function calculateIntensity(workouts) {
   if (workouts.length === 0) return 0;
   
-  const avgCaloriesPerMin = workouts.reduce((sum, w) => {
-    const duration = w.actual_duration || 1;
-    const calories = w.calories_burned || 0;
-    return sum + (calories / duration);
+  const avgCalPerMin = workouts.reduce((sum, w) => {
+    const dur = w.actual_duration || 1;
+    const cal = Math.min(w.calories_burned || 0, MAX_CALORIES);
+    return sum + (cal / dur);
   }, 0) / workouts.length;
   
-  // Assuming 10 cal/min is 100% intensity
-  const intensity = (avgCaloriesPerMin / 10) * 100;
+  let intensity;
+  if (avgCalPerMin >= 6 && avgCalPerMin <= 10) {
+    intensity = 80 + (avgCalPerMin - 6) * 5;
+  } else if (avgCalPerMin >= 4 && avgCalPerMin < 6) {
+    intensity = 60 + (avgCalPerMin - 4) * 10;
+  } else if (avgCalPerMin > 10) {
+    intensity = Math.min(100, 85);
+  } else {
+    intensity = avgCalPerMin * 15;
+  }
+  
   return Math.min(Math.round(intensity), 100);
 }
 
-// Calculate Quick Stats
 function calculateQuickStats(workouts) {
   const total = workouts.length;
-  const totalDuration = workouts.reduce((sum, w) => sum + (w.actual_duration || 0), 0);
-  const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
+  const totalDuration = workouts.reduce((s, w) => s + (w.actual_duration || 0), 0);
+  const totalCalories = workouts.reduce((s, w) => s + Math.min(w.calories_burned || 0, MAX_CALORIES), 0);
   
   document.getElementById('totalWorkouts').textContent = total;
   document.getElementById('avgDuration').textContent = total > 0 ? Math.round(totalDuration / total) + ' min' : '0 min';
@@ -545,7 +586,6 @@ function calculateQuickStats(workouts) {
   document.getElementById('totalCalories').textContent = totalCalories.toLocaleString();
   document.getElementById('avgCalories').textContent = total > 0 ? Math.round(totalCalories / total) + ' per workout' : '0';
   
-  // Calculate trend
   const prevPeriodDate = new Date();
   prevPeriodDate.setDate(prevPeriodDate.getDate() - (currentPeriod * 2));
   const prevPeriodEndDate = new Date();
@@ -553,12 +593,11 @@ function calculateQuickStats(workouts) {
   
   const prevWorkouts = allWorkouts.filter(w => {
     const date = new Date(w.date);
-    return !isNaN(date) && date >= prevPeriodDate && date < prevPeriodEndDate && w.completion_status === 'completed';
+    return !isNaN(date) && date >= prevPeriodDate && date < prevPeriodEndDate && 
+           w.completion_status === 'completed' && (w.calories_burned || 0) <= MAX_CALORIES;
   });
   
-  const trend = prevWorkouts.length > 0 
-    ? Math.round(((total - prevWorkouts.length) / prevWorkouts.length) * 100)
-    : 0;
+  const trend = prevWorkouts.length > 0 ? Math.round(((total - prevWorkouts.length) / prevWorkouts.length) * 100) : 0;
   
   const trendEl = document.getElementById('workoutsTrend');
   if (trendEl) {
@@ -574,44 +613,34 @@ function calculateQuickStats(workouts) {
     }
   }
   
-  // Calculate streaks
   calculateStreaks();
 }
 
-// Calculate Streaks
 function calculateStreaks() {
-  const sortedWorkouts = [...allWorkouts]
+  const sorted = [...allWorkouts]
     .filter(w => w.completion_status === 'completed' && w.date && !isNaN(new Date(w.date)))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
   
-  let currentStreak = 0;
-  let longestStreak = 0;
-  let tempStreak = 0;
-  let lastDate = null;
-  
-  // Simple streak approximation for this scope (complex logic removed for brevity, using tempStreak)
   let maxStreak = 0;
-  if (sortedWorkouts.length > 0) {
-      maxStreak = 1;
-      let prevDate = new Date(sortedWorkouts[0].date);
-      for(let i = 1; i < sortedWorkouts.length; i++) {
-          const currentDate = new Date(sortedWorkouts[i].date);
-          const diff = Math.floor((prevDate.getTime() - currentDate.getTime()) / 86400000);
-          if (diff === 1) {
-              maxStreak++;
-          } else if (diff > 1) {
-              break; 
-          }
-          prevDate = currentDate;
+  if (sorted.length > 0) {
+    maxStreak = 1;
+    let prevDate = new Date(sorted[0].date);
+    for (let i = 1; i < sorted.length; i++) {
+      const curr = new Date(sorted[i].date);
+      const diff = Math.floor((prevDate.getTime() - curr.getTime()) / 86400000);
+      if (diff === 1) {
+        maxStreak++;
+      } else if (diff > 1) {
+        break; 
       }
-      currentStreak = maxStreak;
+      prevDate = curr;
+    }
   }
   
-  document.getElementById('currentStreak').textContent = currentStreak + ' days';
+  document.getElementById('currentStreak').textContent = maxStreak + ' days';
   document.getElementById('longestStreak').textContent = 'Best: ' + maxStreak;
 }
 
-// Analyze Workout Types
 function analyzeWorkoutTypes(workouts) {
   const typeCount = {};
   workouts.forEach(w => {
@@ -629,30 +658,26 @@ function analyzeWorkoutTypes(workouts) {
   }
   
   const statsEl = document.getElementById('workoutTypeStats');
-  const statsHtml = types.map((type, i) => {
-    const percent = Math.round((counts[i] / workouts.length) * 100);
-    return `
-      <div class="d-flex justify-content-between align-items-center mb-2">
+  if (statsEl) {
+    statsEl.innerHTML = types.map((type, i) => {
+      const percent = Math.round((counts[i] / workouts.length) * 100);
+      return `<div class="d-flex justify-content-between align-items-center mb-2">
         <span class="small">${type}</span>
         <span class="badge bg-primary">${counts[i]} (${percent}%)</span>
-      </div>
-    `;
-  }).join('');
-  
-  if (statsEl) statsEl.innerHTML = statsHtml || '<p class="text-muted small">No data</p>';
+      </div>`;
+    }).join('') || '<p class="text-muted small">No data</p>';
+  }
 }
 
-// Analyze Performance Trends
 function analyzePerformanceTrends(workouts) {
   const dateMap = {};
   workouts.forEach(w => {
     if (w.date && !isNaN(new Date(w.date))) {
       if (!dateMap[w.date]) {
-        dateMap[w.date] = { calories: 0, duration: 0, count: 0 };
+        dateMap[w.date] = { calories: 0, duration: 0 };
       }
-      dateMap[w.date].calories += w.calories_burned || 0;
+      dateMap[w.date].calories += Math.min(w.calories_burned || 0, MAX_CALORIES);
       dateMap[w.date].duration += w.actual_duration || 0;
-      dateMap[w.date].count++;
     }
   });
   
@@ -669,7 +694,6 @@ function analyzePerformanceTrends(workouts) {
   }
 }
 
-// Analyze Goals
 function analyzeGoals() {
   const completed = allGoals.filter(g => (g.progress || 0) >= 100).length;
   const inProgress = allGoals.filter(g => (g.progress || 0) > 0 && (g.progress || 0) < 100).length;
@@ -683,132 +707,107 @@ function analyzeGoals() {
     charts.goalsProgress.update('none');
   }
   
-  // Goals insights
   const insights = [];
-  
   if (completed > 0) {
     insights.push(`<div class="alert alert-success py-2"><i class="bi bi-check-circle me-2"></i>You've completed ${completed} goal${completed > 1 ? 's' : ''}! 🎉</div>`);
   }
-  
   if (inProgress > 0) {
     const inProgressGoals = allGoals.filter(g => (g.progress || 0) > 0 && (g.progress || 0) < 100);
     const avgProgress = Math.round(inProgressGoals.reduce((sum, g) => sum + (g.progress || 0), 0) / inProgressGoals.length);
     insights.push(`<div class="alert alert-info py-2"><i class="bi bi-graph-up me-2"></i>${inProgress} goal${inProgress > 1 ? 's' : ''} in progress (${avgProgress}% avg)</div>`);
   }
-  
-  const overdue = allGoals.filter(g => {
-    if (!g.due_date || (g.progress || 0) >= 100) return false;
-    return new Date(g.due_date) < new Date();
-  }).length;
-  
+  const overdue = allGoals.filter(g => g.due_date && (g.progress || 0) < 100 && new Date(g.due_date) < new Date()).length;
   if (overdue > 0) {
     insights.push(`<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-2"></i>${overdue} goal${overdue > 1 ? 's are' : ' is'} overdue</div>`);
   }
   
   const goalInsightsEl = document.getElementById('goalInsights');
-  if (goalInsightsEl) goalInsightsEl.innerHTML = insights.length > 0 
-    ? insights.join('') 
-    : '<p class="text-muted small mb-0">Set goals to track your progress!</p>';
+  if (goalInsightsEl) {
+    goalInsightsEl.innerHTML = insights.length > 0 ? insights.join('') : '<p class="text-muted small mb-0">Set goals to track your progress!</p>';
+  }
 }
 
-// Analyze Plans
 function analyzePlans() {
   const active = allPlans.filter(p => p.status === 'active');
   const completed = allPlans.filter(p => p.status === 'completed');
   
   const plansListEl = document.getElementById('plansList');
-  const plansHtml = active.slice(0, 5).map(plan => {
-    const progress = plan.progress || 0;
-    const statusColor = progress >= 75 ? 'success' : progress >= 40 ? 'primary' : 'warning';
-    
-    return `
-      <div class="plan-item mb-3 pb-3 border-bottom">
+  if (plansListEl) {
+    plansListEl.innerHTML = active.slice(0, 5).map(plan => {
+      const progress = plan.progress || 0;
+      const color = progress >= 75 ? 'success' : progress >= 40 ? 'primary' : 'warning';
+      return `<div class="plan-item mb-3 pb-3 border-bottom">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="fw-semibold">${plan.title}</span>
-          <span class="badge bg-${statusColor}">${progress}%</span>
+          <span class="badge bg-${color}">${progress}%</span>
         </div>
         <div class="progress mb-2" style="height: 6px;">
-          <div class="progress-bar bg-${statusColor}" style="width: ${progress}%"></div>
+          <div class="progress-bar bg-${color}" style="width: ${progress}%"></div>
         </div>
         <div class="d-flex justify-content-between text-muted small">
           <span>${plan.duration_weeks} weeks</span>
           <span>${plan.end_date ? new Date(plan.end_date).toLocaleDateString() : 'No end date'}</span>
         </div>
-      </div>
-    `;
-  }).join('');
-  
-  if (plansListEl) plansListEl.innerHTML = plansHtml || 
-    '<div class="text-center py-4"><p class="text-muted">No active plans</p></div>';
-  
-  // Plan insights
-  const insights = [];
-  
-  if (completed.length > 0) {
-    insights.push(`<div class="alert alert-success py-2"><i class="bi bi-trophy me-2"></i>Completed ${completed.length} training plan${completed.length > 1 ? 's' : ''}!</div>`);
+      </div>`;
+    }).join('') || '<div class="text-center py-4"><p class="text-muted">No active plans</p></div>';
   }
   
+  const insights = [];
+  if (completed.length > 0) {
+    insights.push(`<div class="alert alert-success py-2"><i class="bi bi-trophy me-2"></i>Completed ${completed.length} plan${completed.length > 1 ? 's' : ''}!</div>`);
+  }
   if (active.length > 0) {
-    const avgProgress = Math.round(active.reduce((sum, p) => sum + (p.progress || 0), 0) / active.length);
-    insights.push(`<div class="alert alert-info py-2"><i class="bi bi-clipboard-check me-2"></i>${active.length} active plan${active.length > 1 ? 's' : ''} (${avgProgress}% avg progress)</div>`);
+    const avg = Math.round(active.reduce((s, p) => s + (p.progress || 0), 0) / active.length);
+    insights.push(`<div class="alert alert-info py-2"><i class="bi bi-clipboard-check me-2"></i>${active.length} active plan${active.length > 1 ? 's' : ''} (${avg}% avg)</div>`);
   }
   
   const planInsightsEl = document.getElementById('planInsights');
   if (planInsightsEl) planInsightsEl.innerHTML = insights.join('');
 }
 
-// Calculate Achievements
 function calculateAchievements(workouts) {
   const achievements = [];
+  const completed = allWorkouts.filter(w => w.completion_status === 'completed');
   
-  const completedWorkouts = allWorkouts.filter(w => w.completion_status === 'completed');
+  const total = completed.length;
+  if (total >= 100) achievements.push({ icon: '💯', title: 'Century Club', desc: '100 workouts' });
+  else if (total >= 50) achievements.push({ icon: '🎖️', title: 'Half Century', desc: '50 workouts' });
+  else if (total >= 25) achievements.push({ icon: '⭐', title: 'Quarter Master', desc: '25 workouts' });
   
-  // Workout milestones
-  const totalWorkouts = completedWorkouts.length;
-  if (totalWorkouts >= 100) achievements.push({ icon: '💯', title: 'Century Club', desc: '100 workouts completed' });
-  else if (totalWorkouts >= 50) achievements.push({ icon: '🎖️', title: 'Half Century', desc: '50 workouts completed' });
-  else if (totalWorkouts >= 25) achievements.push({ icon: '⭐', title: 'Quarter Master', desc: '25 workouts completed' });
+  const totalCals = completed.reduce((s, w) => s + Math.min(w.calories_burned || 0, MAX_CALORIES), 0);
+  if (totalCals >= 50000) achievements.push({ icon: '🔥', title: 'Inferno', desc: '50k+ calories' });
+  else if (totalCals >= 25000) achievements.push({ icon: '🌋', title: 'Volcano', desc: '25k+ calories' });
+  else if (totalCals >= 10000) achievements.push({ icon: '🏮', title: 'Flame Master', desc: '10k+ calories' });
   
-  // Calorie burner
-  const totalCalories = completedWorkouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
-  if (totalCalories >= 50000) achievements.push({ icon: '🔥', title: 'Inferno', desc: '50,000+ calories burned' });
-  else if (totalCalories >= 25000) achievements.push({ icon: '🌋', title: 'Volcano', desc: '25,000+ calories burned' });
-  else if (totalCalories >= 10000) achievements.push({ icon: '🏮', title: 'Flame Master', desc: '10,000+ calories burned' });
-  
-  // Consistency
   const uniqueDays = new Set(workouts.map(w => w.date)).size;
   const consistency = (uniqueDays / currentPeriod) * 100;
   if (consistency >= 80) achievements.push({ icon: '⚡', title: 'Consistency King', desc: '80%+ attendance' });
   else if (consistency >= 60) achievements.push({ icon: '💪', title: 'Regular', desc: '60%+ attendance' });
   
-  // Goals
   const completedGoals = allGoals.filter(g => (g.progress || 0) >= 100).length;
-  if (completedGoals >= 10) achievements.push({ icon: '🏆', title: 'Goal Crusher', desc: '10 goals completed' });
-  else if (completedGoals >= 5) achievements.push({ icon: '🎯', title: 'Achiever', desc: '5 goals completed' });
+  if (completedGoals >= 10) achievements.push({ icon: '🏆', title: 'Goal Crusher', desc: '10 goals' });
+  else if (completedGoals >= 5) achievements.push({ icon: '🎯', title: 'Achiever', desc: '5 goals' });
   
-  // Duration
-  const totalHours = completedWorkouts.reduce((sum, w) => sum + (w.actual_duration || 0), 0) / 60;
-  if (totalHours >= 100) achievements.push({ icon: '⏰', title: 'Time Master', desc: '100+ hours trained' });
-  else if (totalHours >= 50) achievements.push({ icon: '⌚', title: 'Dedicated', desc: '50+ hours trained' });
-  
-  const achievementsHtml = achievements.map(a => `
-    <div class="col-md-4 col-lg-3">
-      <div class="achievement-card text-center p-3 bg-light rounded border border-primary">
-        <div class="fs-1 mb-2">${a.icon}</div>
-        <h6 class="mb-1">${a.title}</h6>
-        <small class="text-muted">${a.desc}</small>
-      </div>
-    </div>
-  `).join('');
+  const totalHours = completed.reduce((s, w) => s + (w.actual_duration || 0), 0) / 60;
+  if (totalHours >= 100) achievements.push({ icon: '⏰', title: 'Time Master', desc: '100+ hours' });
+  else if (totalHours >= 50) achievements.push({ icon: '⌚', title: 'Dedicated', desc: '50+ hours' });
   
   const achievementsListEl = document.getElementById('achievementsList');
-  if (achievementsListEl) achievementsListEl.innerHTML = achievementsHtml || 
-    '<div class="col-12 text-center py-3"><p class="text-muted">Keep training to unlock achievements!</p></div>';
+  if (achievementsListEl) {
+    achievementsListEl.innerHTML = achievements.map(a => `
+      <div class="col-md-4 col-lg-3">
+        <div class="achievement-card text-center p-3 bg-light rounded border border-primary">
+          <div class="fs-1 mb-2">${a.icon}</div>
+          <h6 class="mb-1">${a.title}</h6>
+          <small class="text-muted">${a.desc}</small>
+        </div>
+      </div>
+    `).join('') || '<div class="col-12 text-center py-3"><p class="text-muted">Keep training!</p></div>';
+  }
 }
 
-// Calculate Personal Records
 function calculatePersonalRecords(workouts) {
-  const completed = workouts.filter(w => w.completion_status === 'completed');
+  const completed = workouts.filter(w => w.completion_status === 'completed' && (w.calories_burned || 0) <= MAX_CALORIES);
   
   if (completed.length === 0) {
     document.getElementById('longestWorkout').textContent = '0 min';
@@ -818,89 +817,89 @@ function calculatePersonalRecords(workouts) {
     return;
   }
   
-  // Longest workout
-  const longest = Math.max(...completed.map(w => w.actual_duration || 0));
+  const longest = Math.min(Math.max(...completed.map(w => w.actual_duration || 0)), 120);
   document.getElementById('longestWorkout').textContent = longest + ' min';
   
-  // Most calories
-  const mostCals = Math.max(...completed.map(w => w.calories_burned || 0));
+  const mostCals = Math.max(...completed.map(w => Math.min(w.calories_burned || 0, MAX_CALORIES)));
   document.getElementById('mostCalories').textContent = mostCals.toLocaleString();
   
-  // Most productive week
   const weekMap = {};
   completed.forEach(w => {
     if (w.date && !isNaN(new Date(w.date))) {
       const date = new Date(w.date);
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
-      const weekKey = weekStart.toISOString().split('T')[0];
-      weekMap[weekKey] = (weekMap[weekKey] || 0) + 1;
+      const key = weekStart.toISOString().split('T')[0];
+      weekMap[key] = (weekMap[key] || 0) + 1;
     }
   });
   const bestWeek = Object.keys(weekMap).length > 0 ? Math.max(...Object.values(weekMap)) : 0;
   document.getElementById('mostProductiveWeek').textContent = bestWeek + ' workouts';
   
-  // Average intensity
-  const avgIntensity = completed.reduce((sum, w) => {
-    const duration = w.actual_duration || 1;
-    const calories = w.calories_burned || 0;
-    return sum + (calories / duration);
+  const avgIntensity = completed.reduce((s, w) => {
+    const dur = w.actual_duration || 1;
+    const cal = Math.min(w.calories_burned || 0, MAX_CALORIES);
+    return s + (cal / dur);
   }, 0) / completed.length;
   
-  const intensityPercent = Math.min(Math.round((avgIntensity / 10) * 100), 100);
-  document.getElementById('avgIntensity').textContent = intensityPercent + '%';
+  let intensityPercent;
+  if (avgIntensity >= 6 && avgIntensity <= 10) {
+    intensityPercent = 80 + (avgIntensity - 6) * 5;
+  } else if (avgIntensity >= 4 && avgIntensity < 6) {
+    intensityPercent = 60 + (avgIntensity - 4) * 10;
+  } else if (avgIntensity > 10) {
+    intensityPercent = 85;
+  } else {
+    intensityPercent = avgIntensity * 15;
+  }
+  
+  document.getElementById('avgIntensity').textContent = Math.round(intensityPercent) + '%';
 }
 
-// Update Recent Workouts
 function updateRecentWorkouts(workouts) {
   const tbody = document.getElementById('recentWorkoutsList');
-  if (!tbody) return; 
+  if (!tbody) return;
 
   tbody.innerHTML = '';
 
   if (workouts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">No workouts recorded yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">No workouts yet</td></tr>';
     return;
   }
 
-  workouts.forEach(workout => {
+  workouts.forEach(w => {
     const statusBadge = {
       'completed': 'bg-success',
       'in_progress': 'bg-primary',
       'missed': 'bg-danger',
       'partial': 'bg-warning'
-    }[workout.completion_status] || 'bg-secondary';
+    }[w.completion_status] || 'bg-secondary';
 
-    const intensity = workout.actual_duration > 0 
-      ? Math.min(Math.round(((workout.calories_burned || 0) / workout.actual_duration) * 10), 100)
+    const intensity = w.actual_duration > 0 
+      ? Math.min(Math.round(((Math.min(w.calories_burned || 0, MAX_CALORIES)) / w.actual_duration) * 10), 100)
       : 0;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${new Date(workout.date).toLocaleDateString()}</td>
-      <td><strong>${workout.title || 'Workout'}</strong></td>
-      <td><span class="badge bg-light text-dark">${workout.workout_type || 'N/A'}</span></td>
-      <td>${workout.actual_duration || 0} min</td>
-      <td>${workout.calories_burned || 0} kcal</td>
+      <td>${new Date(w.date).toLocaleDateString()}</td>
+      <td><strong>${w.title || 'Workout'}</strong></td>
+      <td><span class="badge bg-light text-dark">${w.workout_type || 'N/A'}</span></td>
+      <td>${w.actual_duration || 0} min</td>
+      <td>${Math.min(w.calories_burned || 0, MAX_CALORIES)} kcal</td>
       <td>
         <div class="progress" style="height: 20px; min-width: 60px;">
           <div class="progress-bar ${intensity >= 70 ? 'bg-danger' : intensity >= 40 ? 'bg-warning' : 'bg-success'}" 
                style="width: ${intensity}%">${intensity}%</div>
         </div>
       </td>
-      <td><span class="badge ${statusBadge}">${workout.completion_status}</span></td>
+      <td><span class="badge ${statusBadge}">${w.completion_status}</span></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// Initialize Charts (Removed hourChart and weekdayChart initialization)
 function initCharts() {
-  const commonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 750 }
-  };
+  const common = { responsive: true, maintainAspectRatio: false, animation: { duration: 750 } };
 
   const workoutTypeCtx = document.getElementById('workoutTypeChart');
   if (workoutTypeCtx) {
@@ -908,15 +907,9 @@ function initCharts() {
       type: 'doughnut',
       data: {
         labels: [],
-        datasets: [{
-          data: [],
-          backgroundColor: ['#4154f1', '#2eca6a', '#ff771d', '#ffbb2c', '#e74c3c', '#9b59b6']
-        }]
+        datasets: [{ data: [], backgroundColor: ['#4154f1', '#2eca6a', '#ff771d', '#ffbb2c', '#e74c3c', '#9b59b6'] }]
       },
-      options: {
-        ...commonOptions,
-        plugins: { legend: { position: 'bottom' } }
-      }
+      options: { ...common, plugins: { legend: { position: 'bottom' } } }
     });
   }
 
@@ -948,22 +941,11 @@ function initCharts() {
         ]
       },
       options: {
-        ...commonOptions,
+        ...common,
         interaction: { mode: 'index', intersect: false },
         scales: {
-          y: {
-            type: 'linear',
-            display: true,
-            position: 'left',
-            title: { display: true, text: 'Calories' }
-          },
-          y1: {
-            type: 'linear',
-            display: true,
-            position: 'right',
-            title: { display: true, text: 'Minutes' },
-            grid: { drawOnChartArea: false }
-          }
+          y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Calories' } },
+          y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Minutes' }, grid: { drawOnChartArea: false } }
         }
       }
     });
@@ -975,77 +957,12 @@ function initCharts() {
       type: 'doughnut',
       data: {
         labels: ['Completed', 'In Progress', 'Not Started'],
-        datasets: [{
-          data: [0, 0, 0],
-          backgroundColor: ['#2eca6a', '#4154f1', '#e0e0e0']
-        }]
+        datasets: [{ data: [0, 0, 0], backgroundColor: ['#2eca6a', '#4154f1', '#e0e0e0'] }]
       },
-      options: {
-        ...commonOptions,
-        plugins: {
-          legend: { position: 'bottom' }
-        }
-      }
+      options: { ...common, plugins: { legend: { position: 'bottom' } } }
     });
   }
 }
-
-// Add CSS
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  
-  .card-icon {
-    width: 64px;
-    height: 64px;
-    font-size: 32px;
-  }
-  
-  .sales-card .card-icon {
-    color: #4154f1;
-    background: #f6f6fe;
-  }
-  
-  .performance-score-circle {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .score-item {
-    padding: 1rem;
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-  }
-  
-  .achievement-card {
-    transition: all 0.3s;
-  }
-  
-  .achievement-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  
-  .record-card {
-    transition: all 0.3s;
-  }
-  
-  .record-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  
-  .table-hover tbody tr:hover {
-    background-color: rgba(65, 84, 241, 0.05);
-  }
-  
-  .plan-item:last-child {
-    border-bottom: none !important;
-  }
-`;
-document.head.appendChild(style);
 </script>
+
 {% endblock %}

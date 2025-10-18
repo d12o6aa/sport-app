@@ -1,6 +1,3 @@
-import eventlet
-
-eventlet.monkey_patch()
 
 from flask import Flask, jsonify, url_for, render_template
 from flask_cors import CORS
@@ -13,6 +10,18 @@ from datetime import datetime, timedelta
 from sqlalchemy import desc 
 
 scheduler = APScheduler()
+
+def configure_scheduler(app):
+    """تهيئة وبدء تشغيل المجدول (Scheduler)"""
+    if not app.config.get('SCHEDULER_INITIALIZED', False):
+        try:
+            scheduler.init_app(app)
+            scheduler.start()
+            app.config['SCHEDULER_INITIALIZED'] = True
+        except Exception as e:
+            if "already initialized" not in str(e):
+                raise
+
 
 # --- HELPER FUNCTION: Collects real data for ML Model Input ---
 def get_ml_input_data(athlete_id):
@@ -60,6 +69,7 @@ def get_ml_input_data(athlete_id):
 def create_app():
     # --- FLASK SETUP ---
     app = Flask(__name__)
+    app.app_context()
 
     # الإعدادات
     app.config['SECRET_KEY'] = 'supersecretkey'
@@ -104,7 +114,9 @@ def create_app():
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
         return render_template("auth/login.html")
-    
+    @jwt.unauthorized_loader 
+    def unauthorized_callback(callback):
+        return render_template("auth/login.html")
     @app.context_processor
     def inject_user():
         try:
@@ -186,7 +198,7 @@ def create_app():
     # ولكن هنا نستخدم الشرط العادي لتغطية وضع التطوير.
     if not scheduler.running:
         scheduler.start()
-        
+    
     return app
 
 # JWT callback

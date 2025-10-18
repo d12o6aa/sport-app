@@ -2,325 +2,606 @@
 
 {% block content %}
 <div class="pagetitle">
-      <h1>OVERVIEW</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-          <li class="breadcrumb-item active">Profile</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
+  <h1>Welcome Back, {{ user.name.split()[0] if user.name else 'Athlete' }}! 👋</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+  </nav>
+</div>
 
-    <section class="section dashboard">
-      <div class="row">
-
-        <!-- Left side columns -->
-        <div class="col-lg-8">
-          <div class="row">
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                  <i class="bi bi-plus-lg me-1"></i> Edit Profile
+<section class="section dashboard">
+  <div class="row">
+    
+    <!-- Left Column (Main Content) -->
+    <div class="col-lg-8">
+      
+      <!-- Profile Header Card with Image -->
+      <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body text-white p-4">
+          <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+              <div class="profile-image-container position-relative">
+                <img id="profileImageDisplay" 
+                     src="{{ url_for('static', filename='uploads/profile/' ~ (user.profile_image or 'default.jpg')) }}" 
+                     class="rounded-circle border border-3 border-white shadow-lg" 
+                     width="150" height="150" 
+                     style="object-fit: cover;"
+                     alt="Profile">
+                <button class="btn btn-light btn-sm rounded-circle position-absolute bottom-0 end-0" 
+                        style="width: 40px; height: 40px;"
+                        onclick="document.getElementById('profileImageInput').click()">
+                  <i class="bi bi-camera-fill"></i>
                 </button>
+                <input type="file" id="profileImageInput" class="d-none" accept="image/*">
               </div>
             </div>
-            <!-- User Stats Cards -->
-            <div class="col-xxl-4 col-md-6">
-              <div class="card info-card sales-card">
-                <div class="card-body">
-                  <h5 class="card-title">{{ user.name  or "--" }}</h5>
-                  <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-person"></i>
-                    </div>
-                    <div class="ps-3">
-                      <h6>{{ profile.weight if profile else "--"  }}</h6>
-                      <span class="text-muted small pt-1">Weight</span>
-                    </div>
-                  </div>
+            <div class="col-md-6">
+              <h3 class="mb-2">{{ user.name or 'Athlete Name' }}</h3>
+              <p class="mb-3 opacity-75">
+                <i class="bi bi-envelope me-2"></i>{{ user.email }}
+              </p>
+              <div class="d-flex gap-3">
+                <div class="stat-pill">
+                  <i class="bi bi-calendar-check me-1"></i>
+                  <span>Member since {{ user.created_at.strftime('%b %Y') if user.created_at else 'N/A' }}</span>
+                </div>
+                <div class="stat-pill">
+                  <i class="bi bi-trophy me-1"></i>
+                  <span id="totalWorkoutsHeader">0 Workouts</span>
                 </div>
               </div>
-            </div><!-- End User Stats Card -->
-
-            <!-- Height Card -->
-            <div class="col-xxl-4 col-md-6">
-              <div class="card info-card revenue-card">
-                <div class="card-body">
-                  <h5 class="card-title">Height</h5>
-                  <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-rulers"></i>
-                    </div>
-                    <div class="ps-3">
-                      <h6>{{profile.height if profile else "--" }}</h6>
-                      <span class="text-muted small pt-1">Height</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End Height Card -->
-
-            <!-- Age Card -->
-            <div class="col-xxl-4 col-xl-12">
-              <div class="card info-card customers-card">
-                <div class="card-body">
-                  <h5 class="card-title">Age</h5>
-                  <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-calendar"></i>
-                    </div>
-                    <div class="ps-3">
-                      <h6>{{profile.age if profile else "--" }}</h6>
-                      <span class="text-muted small pt-1">Age</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End Age Card -->
-
-            <!-- User Details -->
-            <div class="col-12">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Account</h5>
-                  
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="profile-info">
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Name</span>
-                          <span>{{ user.name  or "--" }} <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Gender</span>
-                          <span>{{ profile.gender if profile else "--" }} <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Date of birth</span>
-                          <span>{{ profile.age if profile else "--" }} <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Height</span>
-                          <span>{{ profile.height if profile else "--" }} <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Weight</span>
-                          <span>{{ profile.weight if profile else "--"  }} <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span class="text-muted">Max heart rate</span>
-                          <span>{{ hr.heart_rate if hr else "--"  }} <i class="bi bi-chevron-right"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                      <div class="account-actions">
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span>Account</span>
-                          <i class="bi bi-chevron-right"></i>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span>My Workouts</span>
-                          <i class="bi bi-chevron-right"></i>
-                        </div>
-                        <div class="info-item d-flex justify-content-between py-2">
-                          <span>Workout reminders</span>
-                          <i class="bi bi-chevron-right"></i>
-                        </div>
-                        <div class="text-center mt-3">
-                          <button class="btn btn-primary">Log out</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End User Details -->
-
-          </div>
-        </div><!-- End Left side columns -->
-
-        <!-- Right side columns -->
-        <div class="col-lg-4">
-
-          <!-- Settings Card -->
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Settings</h5>
-              <form id="settingsForm">
-                <div class="settings-list">
-                  <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                    <span>Notification</span>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" name="notifications" {{ 'checked' if settings and settings.notifications }}>
-                    </div>
-                  </div>
-                  <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                    <span>Pin Lock</span>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" name="pin_lock" {{ 'checked' if settings and settings.pin_lock }}>
-                    </div>
-                  </div>
-                  <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                    <span>Apple Health</span>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" name="apple_health" {{ 'checked' if settings and settings.apple_health }}>
-                    </div>
-                  </div>
-                  <div class="setting-item d-flex justify-content-between align-items-center py-2">
-                    <span>Dark Mode</span>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" name="dark_mode" {{ 'checked' if settings and settings.dark_mode }}>
-                    </div>
-                  </div>
-                </div>
-                <button class="btn btn-primary mt-3" type="submit">Save</button>
-              </form>
             </div>
-          </div><!-- End Settings Card -->
-
-          <!-- Weight Tracking -->
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Weight tracking</h5>
-              <div class="weight-entries">
-                {% for entry in weight_history %}
-                <div class="weight-entry d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <div class="date">{{ entry.recorded_at.strftime('%b %d, %Y') }}</div>
-                    <div class="weight">{{ entry.weight }} kg</div>
-                  </div>
-                  <div class="change {{ 'text-success' if entry.change >= 0 else 'text-danger' }}">
-                    {{ entry.change }} kg
-                  </div>
-                </div>
-                {% else %}
-                <p class="text-muted small">No weight records yet.</p>
-                {% endfor %}
-              </div>
+            <div class="col-md-3 text-center">
+              <button class="btn btn-light btn-lg w-100" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="bi bi-pencil-square me-2"></i>Edit Profile
+              </button>
             </div>
           </div>
-
-
-
-
-        </div><!-- End Right side columns -->
-
+        </div>
       </div>
-    </section>
+
+      <!-- Quick Stats Row -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-primary-subtle text-primary mb-2">
+                <i class="bi bi-heart-pulse fs-3"></i>
+              </div>
+              <h4 class="mb-1" id="currentWeight">{{ profile.weight if profile else '--' }}</h4>
+              <small class="text-muted">Weight (kg)</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-success-subtle text-success mb-2">
+                <i class="bi bi-rulers fs-3"></i>
+              </div>
+              <h4 class="mb-1">{{ profile.height if profile else '--' }}</h4>
+              <small class="text-muted">Height (cm)</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-warning-subtle text-warning mb-2">
+                <i class="bi bi-speedometer2 fs-3"></i>
+              </div>
+              <h4 class="mb-1" id="bmiValue">--</h4>
+              <small class="text-muted">BMI</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-danger-subtle text-danger mb-2">
+                <i class="bi bi-activity fs-3"></i>
+              </div>
+              <h4 class="mb-1">{{ hr.heart_rate if hr else '--' }}</h4>
+              <small class="text-muted">Max HR</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- This Week Overview -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">This Week Overview</h5>
+            <a href="{{ url_for('athlete.my_stats') }}" class="btn btn-sm btn-outline-primary">View Details</a>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="week-stat">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="bi bi-fire text-danger fs-4"></i>
+                    <h3 class="mb-0 mt-2" id="weekCalories">0</h3>
+                    <small class="text-muted">Calories Burned</small>
+                  </div>
+                  <div class="progress-ring">
+                    <svg width="60" height="60">
+                      <circle cx="30" cy="30" r="25" fill="none" stroke="#e9ecef" stroke-width="5"/>
+                      <circle id="caloriesCircle" cx="30" cy="30" r="25" fill="none" stroke="#dc3545" 
+                              stroke-width="5" stroke-dasharray="157" stroke-dashoffset="157" 
+                              transform="rotate(-90 30 30)"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="week-stat">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="bi bi-clock-history text-primary fs-4"></i>
+                    <h3 class="mb-0 mt-2" id="weekDuration">0h</h3>
+                    <small class="text-muted">Training Time</small>
+                  </div>
+                  <div class="progress-ring">
+                    <svg width="60" height="60">
+                      <circle cx="30" cy="30" r="25" fill="none" stroke="#e9ecef" stroke-width="5"/>
+                      <circle id="durationCircle" cx="30" cy="30" r="25" fill="none" stroke="#0d6efd" 
+                              stroke-width="5" stroke-dasharray="157" stroke-dashoffset="157" 
+                              transform="rotate(-90 30 30)"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="week-stat">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="bi bi-lightning-charge text-warning fs-4"></i>
+                    <h3 class="mb-0 mt-2" id="weekWorkouts">0</h3>
+                    <small class="text-muted">Workouts Done</small>
+                  </div>
+                  <div class="progress-ring">
+                    <svg width="60" height="60">
+                      <circle cx="30" cy="30" r="25" fill="none" stroke="#e9ecef" stroke-width="5"/>
+                      <circle id="workoutsCircle" cx="30" cy="30" r="25" fill="none" stroke="#ffc107" 
+                              stroke-width="5" stroke-dasharray="157" stroke-dashoffset="157" 
+                              transform="rotate(-90 30 30)"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Recent Workouts</h5>
+            <a href="{{ url_for('athlete.get_workouts') }}" class="btn btn-sm btn-outline-primary">View All</a>
+          </div>
+          <div id="recentWorkoutsList">
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- End Left Column -->
+
+    <!-- Right Column (Sidebar) -->
+    <div class="col-lg-4">
+
+      <!-- Quick Actions -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Quick Actions</h5>
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('athlete.workout_hub_page') }}" class="btn btn-primary">
+              <i class="bi bi-plus-lg me-2"></i>Log Workout
+            </a>
+            <a href="{{ url_for('athlete.goals') }}" class="btn btn-outline-primary">
+              <i class="bi bi-trophy me-2"></i>View Goals
+            </a>
+            <a href="{{ url_for('athlete.training_plans') }}" class="btn btn-outline-primary">
+              <i class="bi bi-calendar-check me-2"></i>My Plans
+            </a>
+            <a href="{{ url_for('athlete.my_stats') }}" class="btn btn-outline-primary">
+              <i class="bi bi-graph-up me-2"></i>Progress
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Goals Progress -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Active Goals</h5>
+            <a href="{{ url_for('athlete.goals') }}" class="text-primary small">View All</a>
+          </div>
+          <div id="activeGoalsList">
+            <div class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+     
+
+      <!-- Achievements -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Recent Achievements 🏆</h5>
+          <div id="recentAchievements">
+            <div class="achievement-badge">
+              <div class="badge-icon">💪</div>
+              <div class="badge-info">
+                <div class="badge-title">First Workout</div>
+                <small class="text-muted">Keep it up!</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- End Right Column -->
+
+  </div>
+</section>
 
 <!-- Edit Profile Modal -->
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
     <form id="profileForm" class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Edit Profile</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <!-- صورة -->
-        <div class="mb-3 text-center">
-          <img id="previewImage" src="{{ url_for('static', filename='uploads/' ~ (user.profile_image or 'default.jpg')) }}" 
-              class="rounded-circle mb-2" width="100" alt="Profile">
-          <input type="file" class="form-control" name="profile_image" id="profileImageInput">
-        </div>
-
-        <!-- بيانات -->
-        <div class="mb-3">
-          <label class="form-label">Full Name</label>
-          <input type="text" name="full_name" class="form-control" value="{{ user.name }}">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Age</label>
-          <input type="number" name="age" class="form-control" value="{{ profile.age if profile else '' }}">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Gender</label>
-          <select name="gender" class="form-select">
-            <option value="Male" {{ 'selected' if profile and profile.gender == 'Male' }}>Male</option>
-            <option value="Female" {{ 'selected' if profile and profile.gender == 'Female' }}>Female</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Weight (kg)</label>
-          <input type="number" step="0.1" name="weight" class="form-control" value="{{ profile.weight if profile else '' }}">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Height (cm)</label>
-          <input type="number" step="0.1" name="height" class="form-control" value="{{ profile.height if profile else '' }}">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Max Heart Rate (bpm)</label>
-          <input type="number" name="max_hr" class="form-control" value="{{ hr.heart_rate if hr else '' }}">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" value="{{ user.name }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Age</label>
+            <input type="number" name="age" class="form-control" value="{{ profile.age if profile else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              <option value="Male" {{ 'selected' if profile and profile.gender == 'Male' }}>Male</option>
+              <option value="Female" {{ 'selected' if profile and profile.gender == 'Female' }}>Female</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" step="0.1" name="weight" class="form-control" 
+                   value="{{ profile.weight if profile else '' }}" id="weightInput">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Height (cm)</label>
+            <input type="number" step="0.1" name="height" class="form-control" 
+                   value="{{ profile.height if profile else '' }}" id="heightInput">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Max Heart Rate (bpm)</label>
+            <input type="number" name="max_hr" class="form-control" 
+                   value="{{ hr.heart_rate if hr else '' }}">
+          </div>
+          <div class="col-12">
+            <div class="alert alert-info small mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>BMI:</strong> <span id="bmiPreview">--</span> | 
+              <strong>Category:</strong> <span id="bmiCategory">--</span>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-check-lg me-1"></i>Save Changes
+        </button>
       </div>
     </form>
   </div>
 </div>
 
+<style>
+.stat-pill {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.stat-card {
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.week-stat {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.profile-image-container {
+  display: inline-block;
+}
+
+.achievement-badge {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.badge-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+}
+
+.badge-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.workout-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  transition: background 0.3s;
+}
+
+.workout-item:hover {
+  background: #f8f9fa;
+}
+
+.workout-item:last-child {
+  border-bottom: none;
+}
+
+.goal-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.goal-item:last-child {
+  border-bottom: none;
+}
+
+.schedule-item {
+  padding: 0.75rem;
+  border-left: 3px solid #0d6efd;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+}
+</style>
+
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 <script>
-function alertShow(m,t="info"){const c=document.getElementById("alert-container")||document.body,w=document.createElement("div");w.innerHTML=`<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" role="alert" style="z-index:1055;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;c.appendChild(w);setTimeout(()=>w.remove(),4e3);}
+function alertShow(m, t="info") {
+  const w = document.createElement("div");
+  w.innerHTML = `<div class="alert alert-${t} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow-sm" style="z-index:1055;">${m}<button class="btn-close" data-bs-dismiss="alert"></button></div>`;
+  document.body.appendChild(w);
+  setTimeout(() => w.remove(), 4000);
+}
 
-document.getElementById("profileForm").addEventListener("submit", async function(e) {
+const token = localStorage.getItem("access_token");
+
+// Calculate BMI
+function calculateBMI(weight, height) {
+  if (!weight || !height || height === 0) return null;
+  const heightM = height / 100;
+  return (weight / (heightM * heightM)).toFixed(1);
+}
+
+function getBMICategory(bmi) {
+  if (bmi < 18.5) return "Underweight";
+  if (bmi < 25) return "Normal";
+  if (bmi < 30) return "Overweight";
+  return "Obese";
+}
+
+// Update BMI display
+function updateBMI() {
+  const weight = parseFloat(document.getElementById("weightInput")?.value);
+  const height = parseFloat(document.getElementById("heightInput")?.value);
+  const bmi = calculateBMI(weight, height);
+  
+  if (bmi) {
+    document.getElementById("bmiPreview").textContent = bmi;
+    document.getElementById("bmiCategory").textContent = getBMICategory(parseFloat(bmi));
+    document.getElementById("bmiValue").textContent = bmi;
+  }
+}
+
+// Profile image upload
+document.getElementById("profileImageInput")?.addEventListener("change", async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const formData = new FormData();
+  formData.append("image", file);
+  
+  try {
+    const res = await fetch("/athlete/api/profile/upload", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}` },
+      body: formData
+    });
+    
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById("profileImageDisplay").src = data.image_url + "?t=" + Date.now();
+      alertShow("Profile image updated!", "success");
+    } else {
+      alertShow(data.error || "Upload failed", "danger");
+    }
+  } catch (error) {
+    alertShow("Error uploading image", "danger");
+  }
+});
+
+// Profile form submit
+document.getElementById("profileForm")?.addEventListener("submit", async function(e) {
   e.preventDefault();
-  let formData = new FormData(this);
-
-  const res = await fetch("/athlete/profile/update", {
-    method: "POST",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") },
-    body: formData
-  });
-
-  const data = await res.json();
-  if (res.ok) {
-    alertShow("Profile updated successfully!",'success');
-    location.reload();
-  } else {
-    alertShow(data.error || "Update failed",'danger');
+  const formData = new FormData(this);
+  
+  try {
+    const res = await fetch("/athlete/profile/update", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}` },
+      body: formData
+    });
+    
+    const data = await res.json();
+    if (res.ok) {
+      alertShow("Profile updated successfully!", "success");
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      alertShow(data.error || "Update failed", "danger");
+    }
+  } catch (error) {
+    alertShow("Error updating profile", "danger");
   }
 });
 
-// 🟢 صورة live preview
-document.getElementById("profileImageInput").addEventListener("change", function(event) {
-  const file = event.target.files[0];
-  if (file) {
-    document.getElementById("previewImage").src = URL.createObjectURL(file);
+// BMI calculator in modal
+document.getElementById("weightInput")?.addEventListener("input", updateBMI);
+document.getElementById("heightInput")?.addEventListener("input", updateBMI);
+
+// Load dashboard data
+async function loadDashboardData() {
+  try {
+    // Load week stats
+    const workouts = await fetch("/athlete/api/workouts", {
+      headers: { "Authorization": `Bearer ${token}` }
+    }).then(r => r.json());
+    
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    const weekWorkouts = workouts.filter(w => {
+      const d = new Date(w.date);
+      return d >= weekAgo && w.completion_status === "completed";
+    });
+    
+    const weekCalories = weekWorkouts.reduce((s, w) => s + (w.calories_burned || 0), 0);
+    const weekDuration = weekWorkouts.reduce((s, w) => s + (w.actual_duration || 0), 0);
+    
+    document.getElementById("weekCalories").textContent = weekCalories.toLocaleString();
+    document.getElementById("weekDuration").textContent = (weekDuration / 60).toFixed(1) + "h";
+    document.getElementById("weekWorkouts").textContent = weekWorkouts.length;
+    document.getElementById("totalWorkoutsHeader").textContent = workouts.length + " Workouts";
+    
+    // Animate circles
+    animateCircle("caloriesCircle", Math.min(weekCalories / 3500, 1));
+    animateCircle("durationCircle", Math.min(weekDuration / 300, 1));
+    animateCircle("workoutsCircle", Math.min(weekWorkouts.length / 5, 1));
+    
+    // Load recent workouts
+    displayRecentWorkouts(workouts.slice(0, 5));
+    
+    // Load goals
+    const goals = await fetch("/athlete/api/goals", {
+      headers: { "Authorization": `Bearer ${token}` }
+    }).then(r => r.json());
+    
+    displayActiveGoals(goals.filter(g => g.status === "active").slice(0, 3));
+    
+  } catch (error) {
+    console.error("Error loading dashboard:", error);
   }
-});
+}
 
-document.getElementById("settingsForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  let formData = new FormData(this);
+function animateCircle(id, progress) {
+  const circle = document.getElementById(id);
+  if (!circle) return;
+  const circumference = 157;
+  const offset = circumference - (progress * circumference);
+  circle.style.strokeDashoffset = offset;
+}
 
-  const res = await fetch("/athlete/settings/update", {
-    method: "POST",
-    headers: { Authorization: "Bearer " + localStorage.getItem("access_token") },
-    body: formData
-  });
-
-  const data = await res.json();
-  if (res.ok) {
-    alertShow("Settings saved!",'success');
-  } else {
-    alertShow(data.error || "Update failed",'danger');
+function displayRecentWorkouts(workouts) {
+  const container = document.getElementById("recentWorkoutsList");
+  if (!workouts || workouts.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center py-3">No recent workouts</p>';
+    return;
   }
-});
+  
+  container.innerHTML = workouts.map(w => `
+    <div class="workout-item">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong>${w.title || "Workout"}</strong>
+          <div class="small text-muted">${new Date(w.date).toLocaleDateString()} • ${w.actual_duration || 0} min</div>
+        </div>
+        <div class="text-end">
+          <div class="badge bg-success">${w.calories_burned || 0} kcal</div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
 
+function displayActiveGoals(goals) {
+  const container = document.getElementById("activeGoalsList");
+  if (!goals || goals.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center py-3 small">No active goals</p>';
+    return;
+  }
+  
+  container.innerHTML = goals.map(g => `
+    <div class="goal-item">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <small class="fw-semibold">${g.title || "Goal"}</small>
+        <small class="text-primary">${g.progress || 0}%</small>
+      </div>
+      <div class="progress" style="height: 5px;">
+        <div class="progress-bar bg-primary" style="width: ${g.progress || 0}%"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// Initialize
+document.addEventListener("DOMContentLoaded", function() {
+  loadDashboardData();
+  updateBMI();
+});
 </script>
-
-{% endblock%}
+{% endblock %}
