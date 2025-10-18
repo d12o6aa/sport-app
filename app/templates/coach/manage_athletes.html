@@ -889,7 +889,7 @@ function populateAthleteDetails(data) {
   }
   
   const avatar = document.getElementById('detailAthleteAvatar');
-  if (avatar) avatar.src = data.profile_image || '/static/images/default.jpeg';
+  if (avatar) avatar.src = data.profile_image || '/static/uploads/profile/default.jpg';
   
   const detailAge = document.getElementById('detailAge');
   if (detailAge) detailAge.textContent = data.age || '-';

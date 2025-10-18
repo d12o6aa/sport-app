@@ -185,6 +185,42 @@ def get_progress_data():
         print(f"Error in get_progress_data: {traceback.format_exc()}")
         return jsonify({"msg": str(e)}), 400
 
+
+@athlete_bp.route("/api/workouts/progress", methods=["GET"])
+@jwt_required()
+def get_workouts_progress_data():
+    """Get progress data for workout charts (calories/weight over time)"""
+    try:
+        athlete_id = get_jwt_identity()
+        days = request.args.get('days', 30, type=int)
+        start_date = datetime.utcnow() - timedelta(days=days)
+
+        workouts_data = WorkoutLog.query.filter_by(athlete_id=athlete_id).filter(
+            WorkoutLog.date >= start_date.date()
+        ).order_by(WorkoutLog.date).all()
+        
+        progress_data = AthleteProgress.query.filter_by(athlete_id=athlete_id).filter(
+            AthleteProgress.date >= start_date.date()
+        ).order_by(AthleteProgress.date).all()
+        
+        dates = sorted(list(set([w.date.isoformat() for w in workouts_data] + [p.date.isoformat() for p in progress_data])))
+        
+        workout_map = {w.date.isoformat(): w for w in workouts_data}
+        progress_map = {p.date.isoformat(): p for p in progress_data}
+        
+        calories_burned = [workout_map.get(d).calories_burned or 0 for d in dates if d in workout_map]
+        weights = [progress_map.get(d).weight or 0 for d in dates if d in progress_map]
+        
+        return jsonify({
+            "labels": dates,
+            "calories_burned": calories_burned,
+            "weights": weights
+        }), 200
+
+    except Exception as e:
+        print(f"Error in get_workouts_progress_data: {traceback.format_exc()}")
+        return jsonify({"msg": str(e)}), 400
+
 @athlete_bp.route("/api/workouts/filter", methods=["POST"])
 @jwt_required()
 def filter_workouts_api():

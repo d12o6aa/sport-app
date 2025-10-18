@@ -227,7 +227,7 @@ def get_coach_athletes():
             else:
                 last_activity = "N/A"
 
-            profile_image_url = url_for('static', filename='uploads/' + (user.profile_image or 'default.jpeg'))
+            profile_image_url = url_for('static', filename='uploads/profile/' + (user.profile_image or 'default.jpeg'))
 
             athlete_list.append({
                 "id": user.id,
@@ -315,7 +315,7 @@ def get_athlete_details(athlete_id):
 
     recent_activities = get_recent_activities(athlete_id)
     
-    profile_image_url = url_for('static', filename='uploads/' + (athlete.profile_image or 'default.jpeg'))
+    profile_image_url = url_for('static', filename='uploads/profile/' + (athlete.profile_image or 'default.jpeg'))
 
     # ✅ تم إضافة الحقول الجديدة إلى الـ JSON response
     return jsonify({

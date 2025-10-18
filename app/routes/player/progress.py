@@ -433,8 +433,21 @@ def get_progress():
             AthleteProgress.athlete_id == athlete_id
         ).order_by(AthleteProgress.date.desc()).first()
         
+        # If no progress records exist, create initial one
         if not latest:
-            return jsonify({"records": [], "current_metrics": {}})
+            try:
+                latest = save_calculated_progress_optimized(athlete_id)
+            except:
+                # Return empty data if calculation fails
+                return jsonify({"records": [], "current_metrics": {
+                    "workout_score": 0,
+                    "consistency_score": 0,
+                    "plan_adherence": 0,
+                    "health_score": 0,
+                    "completed_goals": 0,
+                    "total_goals": 0,
+                    "avg_goal_progress": 0
+                }}), 200
         
         records_data = [{
             "id": p.id,
@@ -455,13 +468,13 @@ def get_progress():
             "avg_goal_progress": float(latest.avg_goal_progress or 0)
         }
         
-        return jsonify({"records": records_data, "current_metrics": current_metrics})
+        return jsonify({"records": records_data, "current_metrics": current_metrics}), 200
         
     except Exception as e:
         current_app.logger.error(f"Error getting progress: {e}")
-        return jsonify({"msg": f"Error: {str(e)}"}), 500
-
-
+        import traceback
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({"msg": "Failed to load progress data", "error": str(e)}), 500
 @athlete_bp.route("/api/calculate_progress", methods=["POST"])
 @jwt_required()
 def calculate_and_save_progress():
