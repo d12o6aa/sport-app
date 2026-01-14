@@ -67,3 +67,9 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
     JWT_COOKIE_SECURE = False
 
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}
