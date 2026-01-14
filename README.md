@@ -31,7 +31,7 @@ A production-ready REST API for managing sports training platforms with athletes
 ```bash
 # Clone repository
 git clone https://github.com/d12o6aa/sport-app.git
-cd sports-platform-backend
+cd sport-app
 
 # Create virtual environment
 python3 -m venv venv
