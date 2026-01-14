@@ -1,36 +1,188 @@
-# 🏋️ Sports Platform Backend
+🏋️ Sports Platform Backend
 
-A production-ready backend system for managing athletes, coaches, subscriptions, workouts, and real-time interactions.  
-Built with **Flask**, **PostgreSQL**, **JWT authentication**, and **Socket.IO**.
+A production-ready backend system for managing athletes, coaches, subscriptions, workouts, and real-time interactions.
+Built with Flask, PostgreSQL, JWT authentication, and Socket.IO.
 
----
+🚀 Features
 
-## 🚀 Features
+Role-based system (Admin / Coach / Athlete)
 
-- Role-based system (Admin / Coach / Athlete)
-- Secure authentication using JWT (httpOnly cookies)
-- CSRF protection
-- File uploads (profiles, workouts)
-- Subscriptions & payments integration
-- Real-time features using Socket.IO
-- Database migrations with Flask-Migrate
-- Production-ready configuration (Dev / Prod / Test)
+Secure authentication using JWT (httpOnly cookies)
 
----
+CSRF protection
 
-## 🛠 Tech Stack
+File uploads (profiles, workouts)
 
-- **Python 3.10+**
-- **Flask**
-- **Flask-JWT-Extended**
-- **Flask-SQLAlchemy**
-- **Flask-Migrate**
-- **Flask-Marshmallow**
-- **Flask-SocketIO (eventlet)**
-- **PostgreSQL**
-- **Gunicorn (Production)**
+Subscriptions & payments integration
 
----
+Real-time features using Socket.IO
 
-## 📁 Project Structure
+Database migrations with Flask-Migrate
 
+Production-ready configuration (Dev / Prod / Test)
+
+🛠 Tech Stack
+
+Python 3.10+
+
+Flask
+
+Flask-JWT-Extended
+
+Flask-SQLAlchemy
+
+Flask-Migrate
+
+Flask-Marshmallow
+
+Flask-SocketIO (eventlet)
+
+PostgreSQL
+
+Gunicorn (Production)
+
+📁 Project Structure
+project/
+│
+├── app/
+│   ├── routes/
+│   ├── models/
+│   ├── services/
+│   ├── schemas/
+│   ├── templates/
+│   ├── static/
+│   ├── utils/
+│   ├── config.py
+│   └── __init__.py
+│
+├── migrations/
+├── static/
+├── uploads/
+│
+├── run.py
+├── requirements.txt
+├── .env.example
+└── README.md
+
+⚙️ Environment Configuration
+1️⃣ Create .env file
+
+Copy the example file:
+
+cp .env.example .env
+
+2️⃣ Required Environment Variables
+# Flask
+FLASK_ENV=production
+SECRET_KEY=your-secret-key
+
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# JWT
+JWT_SECRET_KEY=your-jwt-secret-key
+
+# Base URL
+APP_BASE_URL=https://yourdomain.com
+
+# Payment Gateways (Optional)
+PAYMOB_API_KEY=
+PAYMOB_INTEGRATION_ID_CARD=
+PAYMOB_IFRAME_ID=
+PAYMOB_HMAC_SECRET=
+
+PAYPAL_CLIENT_ID=
+PAYPAL_SECRET=
+PAYPAL_MODE=live
+
+
+⚠️ Never commit .env to version control
+
+🗄 Database Setup
+Apply migrations
+flask db upgrade
+
+
+All database tables are created using migrations
+db.create_all() is not used in production.
+
+👤 Admin / First User Setup
+
+The project does not create default users automatically.
+
+Recommended options:
+
+Create the first admin manually from the database
+
+Or provide a secure internal script (not included in delivery)
+
+This is intentional for security reasons.
+
+▶️ Running the Application
+Development
+export FLASK_ENV=development
+python run.py
+
+Production (recommended)
+gunicorn -k eventlet -w 1 run:app
+
+🔐 Security Notes
+
+JWT stored in httpOnly cookies
+
+CSRF protection enabled
+
+HTTPS required in production
+
+No secrets are hardcoded
+
+Role-based access control enforced
+
+File upload size & extensions restricted
+
+🌐 CORS Configuration
+
+CORS origins are configurable via environment variables or config file.
+
+Example:
+
+CORS_ORIGINS = [
+  "https://your-frontend-domain.com"
+]
+
+🔔 Webhooks
+Paymob
+POST /athlete/webhook/paymob
+
+PayPal
+POST /athlete/webhook/paypal
+
+🧪 Testing
+export FLASK_ENV=testing
+pytest
+
+
+Testing uses an in-memory SQLite database.
+
+📦 Deployment Checklist
+
+ Set all environment variables
+
+ Enable HTTPS
+
+ Run database migrations
+
+ Configure payment webhooks
+
+ Use Gunicorn / Supervisor
+
+ Disable debug mode
+
+📄 License
+
+This project is delivered as a custom software solution.
+Redistribution or reuse requires written permission.
+
+🤝 Support
+
+For setup or deployment questions, please contact the project maintainer.
