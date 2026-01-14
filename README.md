@@ -30,7 +30,7 @@ A production-ready REST API for managing sports training platforms with athletes
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/d12o6aa/sport-app.git
 cd sports-platform-backend
 
 # Create virtual environment
