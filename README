@@ -1,14 +1,36 @@
-flask db migrate -m "Add is_superadmin to User"
-flask db migrate -m "Add coach_id to User"
-flask db upgrade
+# 🏋️ Sports Platform Backend
 
+A production-ready backend system for managing athletes, coaches, subscriptions, workouts, and real-time interactions.  
+Built with **Flask**, **PostgreSQL**, **JWT authentication**, and **Socket.IO**.
 
-flask db migrate
-flask db upgrade
-sudo -u postgres psql
+---
 
-flask db init
+## 🚀 Features
 
-psql -U myapp_user -d myapp_dev
+- Role-based system (Admin / Coach / Athlete)
+- Secure authentication using JWT (httpOnly cookies)
+- CSRF protection
+- File uploads (profiles, workouts)
+- Subscriptions & payments integration
+- Real-time features using Socket.IO
+- Database migrations with Flask-Migrate
+- Production-ready configuration (Dev / Prod / Test)
 
-psql -U myapp_user -h localhost -d myapp_dev
+---
+
+## 🛠 Tech Stack
+
+- **Python 3.10+**
+- **Flask**
+- **Flask-JWT-Extended**
+- **Flask-SQLAlchemy**
+- **Flask-Migrate**
+- **Flask-Marshmallow**
+- **Flask-SocketIO (eventlet)**
+- **PostgreSQL**
+- **Gunicorn (Production)**
+
+---
+
+## 📁 Project Structure
+
