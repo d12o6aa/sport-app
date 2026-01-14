@@ -9,3 +9,4 @@ ma = Marshmallow()
 jwt = JWTManager()
 migrate = Migrate()
 socketio = SocketIO(cors_allowed_origins="*")
+

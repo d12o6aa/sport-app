@@ -1,68 +1,67 @@
-from flask import Flask, jsonify, url_for, render_template, redirect
+from flask import Flask, redirect, url_for
 from flask_cors import CORS
-from app.extensions import db, ma, jwt, migrate,socketio
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-from app.models import User, Subscription, WorkoutFile
-from app.filters import register_filters
-from flask_apscheduler import APScheduler
-from datetime import datetime, timedelta
-from sqlalchemy import desc 
+from flask_jwt_extended import (
+    get_jwt_identity,
+    verify_jwt_in_request
+)
 
-def create_app():
-    # --- FLASK SETUP ---
+from app.extensions import db, ma, jwt, migrate, socketio
+from app.filters import register_filters
+from app.config import config
+from app.models import User
+
+
+def create_app(config_name=None):
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = 'supersecretkey'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://myapp_user:your_secure_password@localhost:5432/myapp_dev'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = 'jwt-secret'
-    app.config["JWT_HEADER_NAME"] = "Authorization"
-    app.config["JWT_HEADER_TYPE"] = "Bearer"
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 36000
-    app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-    app.config['JWT_COOKIE_SECURE'] = False 
-    app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
-    app.config['JWT_COOKIE_CSRF_PROTECT'] = False 
+    # Load configuration
+    config_name = config_name or app.config.get(
+        "ENV", "development"
+    )
+    app.config.from_object(config[config_name])
 
+    # Init extensions
     db.init_app(app)
     ma.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
-    CORS(app, resources={r"/*": {
-        "origins": ["http://127.0.0.1:5000", "http://localhost:3000"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "methods": ["GET", "POST", "OPTIONS"]
-    }})
-    socketio.init_app(app, async_mode='eventlet')
-    
-  
+    socketio.init_app(app, async_mode="eventlet")
 
+    # CORS (configurable)
+    CORS(
+        app,
+        supports_credentials=True,
+        resources={r"/*": {"origins": app.config.get("CORS_ORIGINS", "*")}},
+    )
+
+    # JWT callbacks
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
-        return redirect(url_for('auth.login_page'))
+        return redirect(url_for("auth.login_page"))
 
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
-        return redirect(url_for('auth.login_page'))
-        
-    @jwt.unauthorized_loader 
-    def unauthorized_callback(callback):
-        return redirect(url_for('auth.login_page'))
-        
+        return redirect(url_for("auth.login_page"))
+
+    @jwt.unauthorized_loader
+    def unauthorized_callback(error):
+        return redirect(url_for("auth.login_page"))
+
+    # Inject current user
     @app.context_processor
     def inject_user():
         try:
             verify_jwt_in_request(optional=True)
             identity = get_jwt_identity()
             if identity:
-                user = User.query.get(identity)
-                return dict(user=user)
+                return {"user": User.query.get(identity)}
         except Exception:
             pass
-        return dict(user=None)
-    
+        return {"user": None}
+
     register_filters(app)
-    
+
+    # Blueprints
     from app.routes.home import home_bp
     from app.routes.auth import auth_bp
     from app.routes.user import user_bp
@@ -71,20 +70,17 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.player import athlete_bp
 
-    app.register_blueprint(athlete_bp, url_prefix="/athlete")
-    app.register_blueprint(coach_bp, url_prefix="/coach")
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(home_bp)
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(user_bp, url_prefix="/user")
-    
+    app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(coach_bp, url_prefix="/coach")
+    app.register_blueprint(athlete_bp, url_prefix="/athlete")
+    app.register_blueprint(dashboard_bp)
 
     return app
 
-# JWT callback
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
     return User.query.get(identity)
-
