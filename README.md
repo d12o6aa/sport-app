@@ -72,6 +72,8 @@ SECRET_KEY=your-random-secret-key-here
 FLASK_ENV=development
 
 # Database
+# ⚠️ Important: Make sure PostgreSQL is installed and running.
+# Replace 'username', 'password', and 'sports_platform' with your actual DB credentials
 DATABASE_URL=postgresql://username:password@localhost:5432/sports_platform
 
 # JWT
@@ -85,6 +87,15 @@ FRONTEND_URL=http://localhost:3000
 PAYMOB_API_KEY=your-paymob-key
 PAYPAL_CLIENT_ID=your-paypal-id
 ```
+
+💡 **Note for Clients**: Each client must have PostgreSQL installed and a database created with a user that has proper privileges. Example:
+
+```bash
+sudo -u postgres createuser -P myuser   # Set password when prompted
+sudo -u postgres createdb -O myuser sports_platform
+```
+
+Then use these credentials in `DATABASE_URL`. This ensures the app connects successfully and avoids `password authentication failed` errors.
 
 ### 4. Initialize Database
 
