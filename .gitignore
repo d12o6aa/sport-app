@@ -209,3 +209,6 @@ __marimo__/
 db.py
 create_user.py
 run.py
+
+migrations/
+

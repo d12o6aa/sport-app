@@ -4,7 +4,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     verify_jwt_in_request
 )
-
+from flask import request
 from app.extensions import db, ma, jwt, migrate, socketio
 from app.filters import register_filters
 from app.config import config
@@ -78,9 +78,25 @@ def create_app(config_name=None):
     app.register_blueprint(athlete_bp, url_prefix="/athlete")
     app.register_blueprint(dashboard_bp)
 
+    @app.before_request
+    def check_first_run():
+        allowed_endpoints = ['admin.super_setup_page', 'admin.super_setup_post', 'static']
+        
+        if request.endpoint in allowed_endpoints:
+            return
+
+        try:
+            if User.query.first() is None:
+                return redirect(url_for('admin.super_setup_page'))
+        except Exception:
+            pass
+
     return app
+
+
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
     return User.query.get(identity)
+

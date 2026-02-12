@@ -946,3 +946,66 @@ def update_password():
     db.session.commit()
     return jsonify({"msg": "Password updated successfully"}), 200
 
+# =========================================================
+# System Initialization (Super Setup)
+# =========================================================
+
+@admin_bp.route("/super-setup", methods=["GET"])
+def super_setup_page():
+    if User.query.first() is not None:
+        return redirect(url_for('auth.login_page'))
+    return render_template("admin/super_setup.html")
+
+@admin_bp.route("/super-setup", methods=["POST"])
+def super_setup_post():
+    if User.query.first() is not None:
+        return jsonify({"msg": "Initialization already completed"}), 403
+
+    data = request.get_json()
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+
+    if not all([name, email, password]):
+        return jsonify({"msg": "All fields are required"}), 400
+
+    try:
+        new_admin = User(
+            name=name,
+            email=email.lower().strip(),
+            role='admin',
+            status='active' 
+        )
+        new_admin.set_password(password)
+        
+        full_permissions = {
+            "can_create_admins": True,
+            "can_manage_users": True,
+            "can_export_data": True,
+            "can_edit_settings": True
+        }
+        
+        new_admin.admin_profile = AdminProfile(
+            is_superadmin=True,
+            permissions=full_permissions
+        )
+        
+
+        activity = ActivityLog(
+            user=new_admin, 
+            action="System Initialized",
+            details={"message": "First Super Admin created successfully"},
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(new_admin)
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({"msg": "System initialized successfully. You can now login."}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Setup Error: {str(e)}") 
+        return jsonify({"msg": f"Initialization failed: {str(e)}"}), 500

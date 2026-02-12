@@ -50,3 +50,5 @@ joblib
 pillow
 python-dateutil
 pytz
+reportlab
+xlsxwriter

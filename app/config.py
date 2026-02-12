@@ -1,13 +1,15 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
 
+load_dotenv()
 class Config:
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-secret-key')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
@@ -47,9 +49,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     JWT_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DATABASE_URL', 'sqlite:///app.db'
-    )
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
 class ProductionConfig(Config):
     DEBUG = False
@@ -58,8 +58,9 @@ class ProductionConfig(Config):
     PREFERRED_URL_SCHEME = 'https'
 
     # Safety checks
-    if not os.getenv('JWT_SECRET_KEY'):
-        raise RuntimeError("JWT_SECRET_KEY is required in production")
+    def __init__(self):
+        if not os.getenv('JWT_SECRET_KEY'):
+            raise RuntimeError("JWT_SECRET_KEY is required in production")
 
 class TestingConfig(Config):
     TESTING = True
